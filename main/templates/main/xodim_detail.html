@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ xodim.ism }} {{ xodim.familya }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-3 py-3 max-w-4xl">
+
+    <!-- Header - Orqaga va sozlamalar -->
+    <div class="flex items-center justify-between mb-4">
+        <div onclick="history.back()" class="flex items-center gap-1 cursor-pointer">
+            <i class="ri-arrow-left-s-line text-2xl"></i>
+            <span class="text-sm">Orqaga</span>
+        </div>
+
+        {% if user.is_staff %}
+        <div class="relative">
+            <button onclick="toggleMenu()" class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <i class="ri-more-2-fill text-gray-600 text-lg"></i>
+            </button>
+            <div id="settingsMenu" class="absolute right-0 top-10 w-48 bg-white rounded-xl shadow-xl border py-2 hidden z-50">
+                <a href="{% url 'xodim_tahrirlash' xodim.pk %}" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 text-sm">
+                    <i class="ri-edit-line text-blue-500"></i> Tahrirlash
+                </a>
+                <a href="{% url 'bonus_ball_yechish' xodim.pk %}" class="flex items-center gap-2 px-3 py-2 hover:bg-green-50 text-green-600 text-sm">
+                    <i class="ri-star-line"></i> Bonus ball yechish
+                </a>
+                <a href="{% url 'bonus_pul_yechish' xodim.pk %}" class="flex items-center gap-2 px-3 py-2 hover:bg-green-50 text-green-600 text-sm">
+                    <i class="ri-money-dollar-circle-line"></i> Bonus pul yechish
+                </a>
+                <a href="{% url 'jarima_ball_yechish' xodim.pk %}" class="flex items-center gap-2 px-3 py-2 hover:bg-red-50 text-red-600 text-sm">
+                    <i class="ri-fire-line"></i> Jarima ball yechish
+                </a>
+                <a href="{% url 'jarima_pul_yechish' xodim.pk %}" class="flex items-center gap-2 px-3 py-2 hover:bg-red-50 text-red-600 text-sm">
+                    <i class="ri-refund-line"></i> Jarima pul yechish
+                </a>
+                <a href="{% url 'xodim_tarixlar' xodim.pk %}" class="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 text-sm">
+                    <i class="ri-history-line"></i> Tarixlar
+                </a>
+                <div class="border-t my-1"></div>
+                <button onclick="ochirishModaliniOch()" class="w-full flex items-center gap-2 px-3 py-2 hover:bg-red-50 text-red-500 text-sm">
+                    <i class="ri-delete-bin-line"></i> O'chirish
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Profil Header (mening_profilim bilan bir xil) -->
+    <div class="bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] rounded-2xl p-4 mb-4 text-white shadow-lg">
+        <div class="flex items-center gap-3">
+            <!-- Avatar -->
+            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border-2 border-white/30 shadow-xl overflow-hidden">
+                {% if xodim.rasm and xodim.rasm.url %}
+                    <img src="{{ xodim.rasm.url }}" alt="{{ xodim.ism }}" class="w-full h-full object-cover">
+                {% else %}
+                    <span class="text-2xl font-bold text-white">{{ xodim.ism|first }}{{ xodim.familya|first }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="flex-1 min-w-0">
+                <h2 class="text-lg font-bold truncate">{{ xodim.ism }} {{ xodim.familya }}</h2>
+                <div class="flex items-center gap-1 mt-0.5 text-white/80">
+                    <i class="ri-phone-line text-xs"></i>
+                    <span class="text-xs truncate">{{ xodim.telefon }}</span>
+                </div>
+                {% if xodim.lavozim %}
+                <div class="flex items-center gap-1 mt-0.5 text-white/80">
+                    <i class="ri-briefcase-line text-xs"></i>
+                    <span class="text-xs truncate">{{ xodim.lavozim }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Stats Grid - 4 ta kartochka -->
+        <div class="grid grid-cols-2 gap-2 mt-3">
+            <!-- Reyting o'rni -->
+            <div class="bg-white/10 rounded-xl p-2">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] opacity-80">Reyting o'rni</span>
+                    <div class="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                        <i class="ri-trophy-fill text-[10px]"></i>
+                    </div>
+                </div>
+                <div class="text-sm font-bold">#{{ joylashuv|default:"?" }}</div>
+                <div class="text-[8px] opacity-70">/ {{ jami_xodimlar|default:"0" }}</div>
+            </div>
+            
+            <!-- Sof reyting -->
+            <div class="bg-white/10 rounded-xl p-2">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] opacity-80">Sof reyting</span>
+                    <div class="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                        <i class="ri-star-fill text-[10px]"></i>
+                    </div>
+                </div>
+                <div class="text-sm font-bold">{{ xodim.sof_reyting_ball }} ball</div>
+                <div class="text-[8px] opacity-70">{{ xodim.sof_reyting_pul|floatformat:0 }} so'm</div>
+            </div>
+            
+            <!-- Bonus -->
+            <div class="bg-white/10 rounded-xl p-2">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] opacity-80">Bonus</span>
+                    <div class="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                        <i class="ri-star-smile-fill text-[10px]"></i>
+                    </div>
+                </div>
+                <div class="text-sm font-bold">{{ xodim.bonus_ball }} ball</div>
+                <div class="text-[8px] opacity-70">Qolgan: {{ xodim.jami_bonus_ball }} ball</div>
+                <div class="text-[8px] opacity-70">{{ xodim.jami_bonus_pul|floatformat:0 }} so'm</div>
+                {% if xodim.bonus_ball_yechilgan > 0 %}
+                <div class="text-[7px] text-orange-300 mt-0.5">📤 Yechilgan: {{ xodim.bonus_ball_yechilgan }} ball</div>
+                {% endif %}
+            </div>
+            
+            <!-- Jarima -->
+            <div class="bg-white/10 rounded-xl p-2">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[10px] opacity-80">Jarima</span>
+                    <div class="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center">
+                        <i class="ri-close-circle-fill text-[10px]"></i>
+                    </div>
+                </div>
+                <div class="text-sm font-bold">{{ xodim.jarima_ball }} ball</div>
+                <div class="text-[8px] opacity-70">Qolgan: {{ xodim.jami_jarima_ball }} ball</div>
+                <div class="text-[8px] opacity-70">{{ xodim.jami_jarima_pul|floatformat:0 }} so'm</div>
+                {% if xodim.jarima_ball_yechilgan > 0 %}
+                <div class="text-[7px] text-green-300 mt-0.5">📤 Yechilgan: {{ xodim.jarima_ball_yechilgan }} ball</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tablar -->
+    <div class="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide">
+        <button onclick="showTab('bonus')" id="tabBonus" class="px-3 py-1.5 bg-[#2001FF] text-white rounded-lg text-xs whitespace-nowrap flex items-center gap-1">
+            <i class="ri-star-fill text-xs"></i> Bonuslar
+        </button>
+        <button onclick="showTab('jarima')" id="tabJarima" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs whitespace-nowrap flex items-center gap-1">
+            <i class="ri-close-circle-fill text-xs"></i> Jarimalar
+        </button>
+        <button onclick="showTab('yechilgan')" id="tabYechilgan" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs whitespace-nowrap flex items-center gap-1">
+            <i class="ri-download-2-line text-xs"></i> Yechilganlar
+        </button>
+        <button onclick="showTab('stat')" id="tabStat" class="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs whitespace-nowrap flex items-center gap-1">
+            <i class="ri-pie-chart-fill text-xs"></i> Statistika
+        </button>
+    </div>
+
+    <!-- Bonuslar tab -->
+    <div id="bonusTab" class="tab-content block">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-2 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="font-semibold text-xs text-gray-900 flex items-center gap-1">
+                    <i class="ri-star-fill text-yellow-500 text-xs"></i> Bonuslar tarixi
+                </h3>
+                <span class="text-[9px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full">
+                    Jami: {{ xodim.bonus_ball }} ball
+                </span>
+            </div>
+            
+            <div class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                {% for bonus in bonuslar %}
+                <div class="p-2 hover:bg-green-50">
+                    <div class="flex items-start gap-2">
+                        <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="ri-star-fill text-green-600 text-[10px]"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between flex-wrap gap-1">
+                                <div>
+                                    <span class="font-medium text-[11px] text-gray-900">{{ bonus.sabab.nom|default:"Bonus" }}</span>
+                                    <span class="text-[8px] text-gray-500 ml-1">{{ bonus.sana|date:"d.m.Y H:i" }}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-green-600 font-semibold text-[11px]">+{{ bonus.ball_miqdori }}</span>
+                                    <span class="text-[8px] text-gray-500 block">+{{ bonus.pul_miqdori|floatformat:0 }} so'm</span>
+                                </div>
+                            </div>
+                            {% if bonus.izoh %}
+                            <div class="mt-1 text-[9px] text-gray-600 bg-gray-50 rounded p-1">{{ bonus.izoh|truncatechars:50 }}</div>
+                            {% endif %}
+                        </div>
+                        {% if user.is_staff %}
+                        <a href="{% url 'bonus_ochirish' bonus.pk %}" class="text-red-400 hover:text-red-600 p-1" onclick="return confirm('O\'chirmoqchimisiz?')">
+                            <i class="ri-delete-bin-line text-[10px]"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-4 text-center">
+                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-1">
+                        <i class="ri-star-line text-base text-gray-400"></i>
+                    </div>
+                    <p class="text-[10px] text-gray-500">Hali bonuslar mavjud emas</p>
+                    {% if user.is_staff %}
+                    <a href="{% url 'bonus_qoshish' %}" class="mt-2 inline-block text-[10px] text-blue-500">+ Qo'shish</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Jarimalar tab -->
+    <div id="jarimaTab" class="tab-content hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-2 border-b border-gray-100 flex items-center justify-between">
+                <h3 class="font-semibold text-xs text-gray-900 flex items-center gap-1">
+                    <i class="ri-close-circle-fill text-red-500 text-xs"></i> Jarimalar tarixi
+                </h3>
+                <span class="text-[9px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full">
+                    Jami: {{ xodim.jarima_ball }} ball
+                </span>
+            </div>
+            
+            <div class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                {% for jarima in jarimalar %}
+                <div class="p-2 hover:bg-red-50">
+                    <div class="flex items-start gap-2">
+                        <div class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="ri-close-circle-fill text-red-600 text-[10px]"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between flex-wrap gap-1">
+                                <div>
+                                    <span class="font-medium text-[11px] text-gray-900">{{ jarima.sabab.nom|default:"Jarima" }}</span>
+                                    <span class="text-[8px] text-gray-500 ml-1">{{ jarima.sana|date:"d.m.Y H:i" }}</span>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-red-600 font-semibold text-[11px]">{{ jarima.ball_miqdori }}</span>
+                                    <span class="text-[8px] text-gray-500 block">{{ jarima.pul_miqdori|floatformat:0 }} so'm</span>
+                                </div>
+                            </div>
+                            {% if jarima.izoh %}
+                            <div class="mt-1 text-[9px] text-gray-600 bg-gray-50 rounded p-1">{{ jarima.izoh|truncatechars:50 }}</div>
+                            {% endif %}
+                        </div>
+                        {% if user.is_staff %}
+                        <a href="{% url 'jarima_ochirish' jarima.pk %}" class="text-red-400 hover:text-red-600 p-1" onclick="return confirm('O\'chirmoqchimisiz?')">
+                            <i class="ri-delete-bin-line text-[10px]"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="p-4 text-center">
+                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-1">
+                        <i class="ri-close-circle-line text-base text-gray-400"></i>
+                    </div>
+                    <p class="text-[10px] text-gray-500">Hali jarimalar mavjud emas</p>
+                    {% if user.is_staff %}
+                    <a href="{% url 'jarima_qoshish' %}" class="mt-2 inline-block text-[10px] text-blue-500">+ Qo'shish</a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Yechilganlar tab -->
+    <div id="yechilganTab" class="tab-content hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="p-2 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-orange-100">
+                <h3 class="font-semibold text-xs text-orange-700 flex items-center gap-1">
+                    <i class="ri-download-2-line"></i> Yechilgan bonus va jarimalar
+                </h3>
+            </div>
+            
+            <div class="p-2 space-y-2">
+                <!-- Bonus yechilganlar -->
+                <div class="bg-green-50 rounded-lg p-2">
+                    <div class="flex items-center gap-1 mb-1">
+                        <i class="ri-money-dollar-circle-line text-green-600 text-xs"></i>
+                        <span class="font-semibold text-[11px] text-green-700">Bonus</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1">
+                        <div class="bg-white/50 rounded p-1.5 text-center">
+                            <div class="text-[8px] text-gray-500">Yechilgan ball</div>
+                            <div class="font-bold text-green-600 text-sm">{{ xodim.bonus_ball_yechilgan|default:"0" }}</div>
+                        </div>
+                        <div class="bg-white/50 rounded p-1.5 text-center">
+                            <div class="text-[8px] text-gray-500">Yechilgan pul</div>
+                            <div class="font-bold text-green-600 text-sm">{{ xodim.bonus_pul_yechilgan|default:"0"|floatformat:0 }}</div>
+                        </div>
+                        <div class="bg-white/50 rounded p-1.5 text-center">
+                            <div class="text-[8px] text-gray-500">Qolgan ball</div>
+                            <div class="font-bold text-sm">{{ xodim.jami_bonus_ball|default:"0" }}</div>
+                        </div>
+                        <div class="bg-white/50 rounded p-1.5 text-center">
+                            <div class="text-[8px] text-gray-500">Qolgan pul</div>
+                            <div class="font-bold text-sm">{{ xodim.jami_bonus_pul|default:"0"|floatformat:0 }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Jarima yechilganlar -->
+                <div class="bg-red-50 rounded-lg p-2">
+                    <div class="flex items-center gap-1 mb-1">
+                        <i class="ri-refund-line text-red-600 text-xs"></i>
+                        <span class="font-semibold text-[11px] text-red-700">Jarima</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1">
+                        <div class="bg-white/50 rounded p-1.5 text-center">
+                            <div class="text-[8px] text-gray-500">Yechilgan ball</div>
+                            <div class="font-bold text-red-600 text-sm">{{ xodim.jarima_ball_yechilgan|default:"0" }}</div>
+                        </div>
+                        <div class="bg-white/50 rounded p-1.5 text-center">
+                            <div class="text-[8px] text-gray-500">Yechilgan pul</div>
+                            <div class="font-bold text-red-600 text-sm">{{ xodim.jarima_pul_yechilgan|default:"0"|floatformat:0 }}</div>
+                        </div>
+                        <div class="bg-white/50 rounded p-1.5 text-center">
+                            <div class="text-[8px] text-gray-500">Qolgan ball</div>
+                            <div class="font-bold text-sm">{{ xodim.jami_jarima_ball|default:"0" }}</div>
+                        </div>
+                        <div class="bg-white/50 rounded p-1.5 text-center">
+                            <div class="text-[8px] text-gray-500">Qolgan pul</div>
+                            <div class="font-bold text-sm">{{ xodim.jami_jarima_pul|default:"0"|floatformat:0 }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sof reyting -->
+                <div class="bg-blue-50 rounded-lg p-2">
+                    <div class="flex items-center gap-1 mb-1">
+                        <i class="ri-bar-chart-2-line text-blue-600 text-xs"></i>
+                        <span class="font-semibold text-[11px] text-blue-700">Sof reyting (yechilganlardan keyin)</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1">
+                        <div class="bg-white/50 rounded p-1.5 text-center">
+                            <div class="text-[8px] text-gray-500">Sof ball</div>
+                            <div class="font-bold text-blue-600 text-sm">{{ xodim.sof_reyting_ball }}</div>
+                        </div>
+                        <div class="bg-white/50 rounded p-1.5 text-center">
+                            <div class="text-[8px] text-gray-500">Sof pul</div>
+                            <div class="font-bold text-blue-600 text-sm">{{ xodim.sof_reyting_pul|floatformat:0 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistika tab -->
+    <div id="statTab" class="tab-content hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
+            <h3 class="font-semibold text-xs text-gray-900 mb-2">Batafsil statistika</h3>
+            
+            <div class="space-y-2">
+                <div>
+                    <div class="flex justify-between mb-0.5">
+                        <span class="text-[9px]">Bonus ball</span>
+                        <span class="text-[9px] text-green-600">{{ xodim.bonus_ball }}</span>
+                    </div>
+                    <div class="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-green-500 rounded-full" style="width: min({{ xodim.bonus_ball }}%, 100%)"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-0.5">
+                        <span class="text-[9px]">Jarima ball</span>
+                        <span class="text-[9px] text-red-600">{{ xodim.jarima_ball }}</span>
+                    </div>
+                    <div class="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full bg-red-500 rounded-full" style="width: min({{ xodim.jarima_ball }}%, 100%)"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-0.5">
+                        <span class="text-[9px]">Sof reyting</span>
+                        <span class="text-[9px] {% if xodim.reyting_ball >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ xodim.reyting_ball }}
+                        </span>
+                    </div>
+                    <div class="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="h-full {% if xodim.reyting_ball >= 0 %}bg-green-500{% else %}bg-red-500{% endif %} rounded-full" 
+                             style="width: min({{ xodim.reyting_ball|stringformat:'d'|cut:'-' }}%, 100%)"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-1 mt-3">
+                <div class="bg-gray-50 rounded p-1.5 text-center">
+                    <div class="text-[8px] text-gray-500">Bonus pul</div>
+                    <div class="font-semibold text-[11px]">{{ xodim.bonus_pul|floatformat:0 }}</div>
+                </div>
+                <div class="bg-gray-50 rounded p-1.5 text-center">
+                    <div class="text-[8px] text-gray-500">Jarima pul</div>
+                    <div class="font-semibold text-[11px]">{{ xodim.jarima_pul|floatformat:0 }}</div>
+                </div>
+                <div class="bg-gray-50 rounded p-1.5 text-center">
+                    <div class="text-[8px] text-gray-500">Sof pul</div>
+                    <div class="font-semibold text-[11px] {% if xodim.reyting_pul >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                        {{ xodim.reyting_pul|floatformat:0 }}
+                    </div>
+                </div>
+                <div class="bg-gray-50 rounded p-1.5 text-center">
+                    <div class="text-[8px] text-gray-500">Jami yozuvlar</div>
+                    <div class="font-semibold text-[11px]">{{ bonuslar|length|add:jarimalar|length }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- O'chirish modali -->
+{% if user.is_staff %}
+<div id="deleteModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-5 mx-4 w-full max-w-xs">
+        <div class="text-center">
+            <div class="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i class="ri-delete-bin-line text-2xl text-red-500"></i>
+            </div>
+            <h3 class="font-semibold text-gray-800 mb-1">Xodimni o'chirish</h3>
+            <p class="text-xs text-gray-500 mb-4">{{ xodim.ism }} {{ xodim.familya }} ni o'chirmoqchimisiz?</p>
+            <form method="POST" action="{% url 'xodim_ochirish' xodim.pk %}">
+                {% csrf_token %}
+                <div class="flex gap-2">
+                    <button type="button" onclick="ochirishModaliniYop()" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg text-sm">Bekor</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-red-500 text-white rounded-lg text-sm">O'chirish</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function toggleMenu() {
+    document.getElementById('settingsMenu').classList.toggle('hidden');
+}
+
+function ochirishModaliniOch() {
+    document.getElementById('deleteModal').classList.remove('hidden');
+    document.getElementById('settingsMenu').classList.add('hidden');
+}
+
+function ochirishModaliniYop() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+
+function showTab(tabName) {
+    document.getElementById('bonusTab').classList.add('hidden');
+    document.getElementById('jarimaTab').classList.add('hidden');
+    document.getElementById('yechilganTab').classList.add('hidden');
+    document.getElementById('statTab').classList.add('hidden');
+    document.getElementById(tabName + 'Tab').classList.remove('hidden');
+    
+    const btns = ['tabBonus', 'tabJarima', 'tabYechilgan', 'tabStat'];
+    btns.forEach(btn => {
+        const el = document.getElementById(btn);
+        if (el) {
+            el.classList.remove('bg-[#2001FF]', 'text-white');
+            el.classList.add('bg-white', 'border', 'border-gray-200', 'text-gray-600');
+        }
+    });
+    
+    const activeBtn = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+    if (activeBtn) {
+        activeBtn.classList.remove('bg-white', 'border', 'border-gray-200', 'text-gray-600');
+        activeBtn.classList.add('bg-[#2001FF]', 'text-white');
+    }
+}
+
+document.addEventListener('click', function(e) {
+    const menu = document.getElementById('settingsMenu');
+    const menuBtn = document.querySelector('[onclick="toggleMenu()"]');
+    if (menu && !menu.contains(e.target) && menuBtn && !menuBtn.contains(e.target)) {
+        menu.classList.add('hidden');
+    }
+    const modal = document.getElementById('deleteModal');
+    if (modal && e.target === modal) {
+        ochirishModaliniYop();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    showTab('bonus');
+});
+</script>
+
+<style>
+.hidden { display: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.overflow-y-auto { -webkit-overflow-scrolling: touch; }
+</style>
+{% endblock %}

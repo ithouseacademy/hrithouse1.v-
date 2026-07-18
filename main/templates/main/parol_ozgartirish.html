@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Parolni O'zgartirish{% endblock %}
+
+{% block content %}
+<!-- Header qismi -->
+<div class="bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] -mx-4 px-4 py-8 mb-6 text-white">
+    <div class="flex items-center gap-3">
+        <a href="{% url 'profil_sozlamalari' %}" class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+            <i class="ri-arrow-left-line text-xl"></i>
+        </a>
+        <div>
+            <h1 class="text-2xl font-bold">Parolni o'zgartirish</h1>
+            <p class="text-white/80 text-sm">Xavfsizlik uchun parolni muntazam yangilang</p>
+        </div>
+    </div>
+</div>
+
+<!-- Asosiy qism -->
+<div class="px-4">
+    <!-- Xavfsizlik darajasi -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="ri-shield-check-line text-green-600"></i>
+                </div>
+                <span class="font-medium text-gray-900">Parol xavfsizligi</span>
+            </div>
+            <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">Yaxshi</span>
+        </div>
+        <div class="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div class="h-full bg-green-500 rounded-full" style="width: 75%"></div>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">Oxirgi o'zgartirish: 30 kun oldin</p>
+    </div>
+
+    <!-- Parol o'zgartirish formasi -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <!-- Forma header -->
+        <div class="p-5 border-b border-gray-100">
+            <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                <i class="ri-lock-password-line text-[#2001FF]"></i>
+                Yangi parol kiriting
+            </h3>
+            <p class="text-xs text-gray-500 mt-1">Kuchli parol tanlashga harakat qiling</p>
+        </div>
+        
+        <!-- Forma -->
+        <div class="p-5">
+            <form method="POST" id="passwordForm">
+                {% csrf_token %}
+                
+                <!-- Eski parol -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="ri-lock-line mr-1"></i>
+                        Eski parol <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <i class="ri-key-2-line"></i>
+                        </div>
+                        {{ form.old_password }}
+                        <button type="button" onclick="togglePassword('old_password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <i class="ri-eye-line" id="old_password_icon"></i>
+                        </button>
+                    </div>
+                    {% if form.old_password.errors %}
+                        <div class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-lg">
+                            <i class="ri-error-warning-line mr-1"></i>
+                            {{ form.old_password.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Yangi parol -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="ri-lock-line mr-1"></i>
+                        Yangi parol <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <i class="ri-key-line"></i>
+                        </div>
+                        {{ form.new_password1 }}
+                        <button type="button" onclick="togglePassword('new_password1')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <i class="ri-eye-line" id="new_password1_icon"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Parol kuchi indikatori -->
+                    <div class="mt-3">
+                        <div class="flex gap-1 mb-1">
+                            <div class="h-1 flex-1 bg-gray-200 rounded-full" id="strength1"></div>
+                            <div class="h-1 flex-1 bg-gray-200 rounded-full" id="strength2"></div>
+                            <div class="h-1 flex-1 bg-gray-200 rounded-full" id="strength3"></div>
+                        </div>
+                        <p class="text-xs" id="strengthText">Parol kuchini kiriting</p>
+                    </div>
+                    
+                    {% if form.new_password1.errors %}
+                        <div class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-lg">
+                            <i class="ri-error-warning-line mr-1"></i>
+                            {{ form.new_password1.errors.0 }}
+                        </div>
+                    {% else %}
+                        <div class="text-xs text-gray-400 mt-2 space-y-1">
+                            <p class="flex items-center gap-1">
+                                <i class="ri-checkbox-circle-line" id="check1"></i>
+                                <span>Kamida 8 belgi</span>
+                            </p>
+                            <p class="flex items-center gap-1">
+                                <i class="ri-checkbox-circle-line" id="check2"></i>
+                                <span>Katta va kichik harflar</span>
+                            </p>
+                            <p class="flex items-center gap-1">
+                                <i class="ri-checkbox-circle-line" id="check3"></i>
+                                <span>Raqamlar va belgilar</span>
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Yangi parol (takroran) -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="ri-lock-line mr-1"></i>
+                        Yangi parol (takroran) <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <i class="ri-key-line"></i>
+                        </div>
+                        {{ form.new_password2 }}
+                        <button type="button" onclick="togglePassword('new_password2')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+                            <i class="ri-eye-line" id="new_password2_icon"></i>
+                        </button>
+                    </div>
+                    {% if form.new_password2.errors %}
+                        <div class="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded-lg">
+                            <i class="ri-error-warning-line mr-1"></i>
+                            {{ form.new_password2.errors.0 }}
+                        </div>
+                    {% endif %}
+                    <div class="mt-2 flex items-center gap-2" id="matchIndicator">
+                        <div class="w-4 h-4 rounded-full bg-gray-300"></div>
+                        <span class="text-xs text-gray-400">Parollar mos kelishini tekshiring</span>
+                    </div>
+                </div>
+                
+                <!-- Tugmalar -->
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] text-white rounded-xl hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2">
+                        <i class="ri-save-line"></i>
+                        Saqlash
+                    </button>
+                    <a href="{% url 'profil_sozlamalari' %}" class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center">
+                        <i class="ri-close-line text-xl"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Xavfsizlik maslahatlari -->
+    <div class="mt-4 bg-yellow-50 rounded-xl p-4">
+        <h4 class="text-sm font-medium text-yellow-800 mb-2 flex items-center gap-2">
+            <i class="ri-shield-keyhole-line"></i>
+            Xavfsizlik maslahatlari
+        </h4>
+        <ul class="space-y-2 text-xs text-yellow-700">
+            <li class="flex items-start gap-2">
+                <i class="ri-checkbox-circle-fill text-yellow-600 mt-0.5"></i>
+                <span>Parolingizni hech kimga aytmang</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <i class="ri-checkbox-circle-fill text-yellow-600 mt-0.5"></i>
+                <span>Har 3 oyda parolni o'zgartiring</span>
+            </li>
+            <li class="flex items-start gap-2">
+                <i class="ri-checkbox-circle-fill text-yellow-600 mt-0.5"></i>
+                <span>Tug'ilgan sana, ism-sharif ishlatmang</span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+// Parolni ko'rsatish/yashirish
+function togglePassword(fieldId) {
+    const field = document.querySelector(`input[name="${fieldId}"]`);
+    const icon = document.getElementById(`${fieldId}_icon`);
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.remove('ri-eye-line');
+        icon.classList.add('ri-eye-off-line');
+    } else {
+        field.type = 'password';
+        icon.classList.remove('ri-eye-off-line');
+        icon.classList.add('ri-eye-line');
+    }
+}
+
+// Parol kuchini tekshirish
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.querySelector('input[name="new_password1"]');
+    const confirmInput = document.querySelector('input[name="new_password2"]');
+    
+    if (passwordInput) {
+        passwordInput.addEventListener('input', checkPasswordStrength);
+    }
+    
+    if (confirmInput) {
+        confirmInput.addEventListener('input', checkPasswordMatch);
+    }
+});
+
+function checkPasswordStrength() {
+    const password = document.querySelector('input[name="new_password1"]').value;
+    const strength1 = document.getElementById('strength1');
+    const strength2 = document.getElementById('strength2');
+    const strength3 = document.getElementById('strength3');
+    const strengthText = document.getElementById('strengthText');
+    
+    // Tekshirishlar
+    const hasLength = password.length >= 8;
+    const hasUpperLower = /[a-z]/.test(password) && /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    
+    // Ranglarni yangilash
+    strength1.style.backgroundColor = password.length > 0 ? '#ef4444' : '#e5e7eb';
+    
+    if (hasLength) {
+        strength2.style.backgroundColor = '#f59e0b';
+    } else {
+        strength2.style.backgroundColor = '#e5e7eb';
+    }
+    
+    if (hasLength && (hasUpperLower || hasNumber || hasSpecial)) {
+        strength3.style.backgroundColor = '#10b981';
+    } else {
+        strength3.style.backgroundColor = '#e5e7eb';
+    }
+    
+    // Matnni yangilash
+    if (password.length === 0) {
+        strengthText.textContent = 'Parol kuchini kiriting';
+        strengthText.className = 'text-xs text-gray-400';
+    } else if (password.length < 8) {
+        strengthText.textContent = 'Juda zaif parol';
+        strengthText.className = 'text-xs text-red-600';
+    } else if (hasLength && (hasUpperLower || hasNumber || hasSpecial)) {
+        strengthText.textContent = 'Kuchli parol';
+        strengthText.className = 'text-xs text-green-600';
+    } else {
+        strengthText.textContent = 'O\'rtacha parol';
+        strengthText.className = 'text-xs text-yellow-600';
+    }
+    
+    // Checkboxlarni yangilash
+    document.getElementById('check1').className = hasLength ? 'ri-checkbox-circle-fill text-green-500' : 'ri-checkbox-circle-line text-gray-400';
+    document.getElementById('check2').className = (hasUpperLower) ? 'ri-checkbox-circle-fill text-green-500' : 'ri-checkbox-circle-line text-gray-400';
+    document.getElementById('check3').className = (hasNumber && hasSpecial) ? 'ri-checkbox-circle-fill text-green-500' : 'ri-checkbox-circle-line text-gray-400';
+}
+
+function checkPasswordMatch() {
+    const password = document.querySelector('input[name="new_password1"]').value;
+    const confirm = document.querySelector('input[name="new_password2"]').value;
+    const indicator = document.getElementById('matchIndicator');
+    
+    if (confirm.length === 0) {
+        indicator.innerHTML = '<div class="w-4 h-4 rounded-full bg-gray-300"></div><span class="text-xs text-gray-400">Parollar mos kelishini tekshiring</span>';
+    } else if (password === confirm) {
+        indicator.innerHTML = '<div class="w-4 h-4 rounded-full bg-green-500"></div><span class="text-xs text-green-600">Parollar mos keldi ✓</span>';
+    } else {
+        indicator.innerHTML = '<div class="w-4 h-4 rounded-full bg-red-500"></div><span class="text-xs text-red-600">Parollar mos kelmadi ✗</span>';
+    }
+}
+</script>
+
+<style>
+/* Input stilini to'g'irlash */
+input[type="password"] {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 2.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    transition: all 0.2s;
+}
+input[type="password"]:focus {
+    border-color: #2001FF;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(32, 1, 255, 0.1);
+}
+</style>
+{% endblock %}

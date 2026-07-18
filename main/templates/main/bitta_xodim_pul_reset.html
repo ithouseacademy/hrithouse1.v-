@@ -1,0 +1,84 @@
+<!-- bitta_xodim_pul_reset.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pulni reset qilish - {{ xodim.ism }} {{ xodim.familya }}{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-10">
+    <div class="bg-white rounded-2xl shadow-xl p-6">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="ri-refund-line text-2xl text-orange-500"></i>
+            </div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Pulni reset qilish</h2>
+            <p class="text-gray-500 text-sm mb-6">
+                <strong>{{ xodim.ism }} {{ xodim.familya }}</strong> ning joriy pulini 0 ga qaytarasiz.
+            </p>
+            
+            <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-500">Bonus pul:</span>
+                    <span class="font-medium text-green-600">{{ xodim.bonus_pul|floatformat:0 }} so'm</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Jarima pul:</span>
+                    <span class="font-medium text-red-600">{{ xodim.jarima_pul|floatformat:0 }} so'm</span>
+                </div>
+                <div class="border-t border-gray-200 mt-3 pt-3">
+                    <div class="flex justify-between text-sm font-medium">
+                        <span class="text-gray-600">Jami pul:</span>
+                        <span class="{% if xodim.reyting_pul > 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ xodim.reyting_pul|floatformat:0 }} so'm
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+                <div class="flex items-start gap-2">
+                    <i class="ri-information-line text-yellow-600 text-sm mt-0.5"></i>
+                    <div class="text-xs text-yellow-700">
+                        <strong>Eslatma:</strong> Faqat pul summasi 0 ga qaytariladi. 
+                        Ballar (bonus_ball, jarima_ball) va reyting ball o'zgarmaydi.
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Qaysi oy uchun?</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <select name="oy" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            {% for oy in oylar %}
+                                <option value="{{ oy.value }}" {% if oy.value == oy %}selected{% endif %}>{{ oy.nom }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="yil" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                            {% for y in yillar %}
+                                <option value="{{ y }}" {% if y == yil %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Izoh (ixtiyoriy)</label>
+                    <textarea name="izoh" rows="2" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none" 
+                              placeholder="Reset qilish sababini yozing..."></textarea>
+                </div>
+                
+                <div class="flex gap-3">
+                    <a href="{% url 'xodim_detail' xodim.pk %}" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-lg text-center text-sm">
+                        Bekor qilish
+                    </a>
+                    <button type="submit" class="flex-1 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-medium">
+                        Reset qilish
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

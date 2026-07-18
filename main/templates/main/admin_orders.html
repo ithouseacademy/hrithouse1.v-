@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Buyurtmalar boshqaruvi{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+  <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">📋 Buyurtmalar boshqaruvi</h1>
+    <div class="flex gap-2">
+      <a href="{% url 'admin_order_list' %}" class="px-3 py-1.5 rounded-lg text-sm font-medium {% if not status_filter %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+        Barcha
+      </a>
+      <a href="?status=PENDING" class="px-3 py-1.5 rounded-lg text-sm font-medium {% if status_filter == 'PENDING' %}bg-yellow-500 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+        Pending
+      </a>
+      <a href="?status=APPROVED" class="px-3 py-1.5 rounded-lg text-sm font-medium {% if status_filter == 'APPROVED' %}bg-green-600 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+        Approved
+      </a>
+      <a href="?status=REJECTED" class="px-3 py-1.5 rounded-lg text-sm font-medium {% if status_filter == 'REJECTED' %}bg-red-600 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+        Rejected
+      </a>
+    </div>
+  </div>
+
+  {% if not orders %}
+  <div class="text-center py-20">
+    <i class="ri-inbox-line text-6xl text-gray-300"></i>
+    <p class="text-gray-500 mt-4">Buyurtmalar mavjud emas</p>
+  </div>
+  {% endif %}
+
+  <div class="overflow-x-auto">
+    <table class="w-full bg-white rounded-2xl shadow-sm border border-gray-100">
+      <thead>
+        <tr class="border-b border-gray-100 bg-gray-50">
+          <th class="text-left p-4 text-sm font-semibold text-gray-600">ID</th>
+          <th class="text-left p-4 text-sm font-semibold text-gray-600">Xodim</th>
+          <th class="text-left p-4 text-sm font-semibold text-gray-600">Mahsulot</th>
+          <th class="text-left p-4 text-sm font-semibold text-gray-600">Narxi</th>
+          <th class="text-left p-4 text-sm font-semibold text-gray-600">Sana</th>
+          <th class="text-left p-4 text-sm font-semibold text-gray-600">Holati</th>
+          <th class="text-left p-4 text-sm font-semibold text-gray-600">Harakat</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
+          <td class="p-4 text-sm text-gray-800">#{{ order.id }}</td>
+          <td class="p-4 text-sm text-gray-800">{{ order.user.get_full_name|default:order.user.username }}</td>
+          <td class="p-4 text-sm text-gray-800">{{ order.product.name }}</td>
+          <td class="p-4 text-sm font-semibold text-blue-600">{{ order.points_spent }} ball</td>
+          <td class="p-4 text-sm text-gray-500">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+          <td class="p-4">
+            {% if order.status == 'PENDING' %}
+            <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+            {% elif order.status == 'APPROVED' %}
+            <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Approved</span>
+            {% elif order.status == 'REJECTED' %}
+            <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>
+            {% endif %}
+          </td>
+          <td class="p-4">
+            {% if order.status == 'PENDING' %}
+            <div class="flex gap-2">
+              <form method="POST" action="{% url 'admin_order_approve' order.id %}"
+                    onsubmit="return confirm('Buyurtmani tasdiqlaysizmi?')">
+                {% csrf_token %}
+                <button type="submit" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-semibold hover:bg-green-600 transition">
+                  Tasdiqlash
+                </button>
+              </form>
+              <a href="{% url 'admin_order_reject' order.id %}" class="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-semibold hover:bg-red-600 transition">
+                Rad etish
+              </a>
+            </div>
+            {% elif order.status == 'REJECTED' and order.reject_reason %}
+            <span class="text-xs text-gray-500 cursor-help" title="{{ order.reject_reason }}">{{ order.reject_reason|truncatechars:20 }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

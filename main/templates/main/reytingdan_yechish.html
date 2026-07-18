@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4" style="max-width: 600px;">
+  <div class="card shadow-sm">
+    <div class="card-header bg-warning text-dark">
+      <h5 class="mb-0">
+        ⚖️ Ballni o'zgartirish —
+        <strong>{{ xodim.ism }} {{ xodim.familya }}</strong>
+      </h5>
+    </div>
+
+    <div class="card-body">
+
+      <!-- Joriy holat (qolgan/available qiymatlar) -->
+      <div class="row mb-3 text-center">
+        <div class="col-4">
+          <div class="border rounded p-2 bg-success bg-opacity-10">
+            <small class="text-muted d-block">Bonus ball (qolgan)</small>
+            <strong class="text-success fs-5">+{{ xodim.jami_bonus_ball }}</strong>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="border rounded p-2 bg-danger bg-opacity-10">
+            <small class="text-muted d-block">Jarima ball (qolgan)</small>
+            <strong class="text-danger fs-5">-{{ xodim.jami_jarima_ball }}</strong>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="border rounded p-2 bg-primary bg-opacity-10">
+            <small class="text-muted d-block">Sof reyting ball</small>
+            <strong class="text-primary fs-5">{{ xodim.sof_reyting_ball }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class="row mb-4 text-center">
+        <div class="col-4">
+          <div class="border rounded p-2 bg-success bg-opacity-10">
+            <small class="text-muted d-block">Bonus pul (qolgan)</small>
+            <strong class="text-success">{{ xodim.jami_bonus_pul|floatformat:0 }} so'm</strong>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="border rounded p-2 bg-danger bg-opacity-10">
+            <small class="text-muted d-block">Jarima pul (qolgan)</small>
+            <strong class="text-danger">{{ xodim.jami_jarima_pul|floatformat:0 }} so'm</strong>
+          </div>
+        </div>
+        <div class="col-4">
+          <div class="border rounded p-2 bg-primary bg-opacity-10">
+            <small class="text-muted d-block">Sof reyting pul</small>
+            <strong class="text-primary">{{ xodim.sof_reyting_pul|floatformat:0 }} so'm</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Forma -->
+      <form method="post">
+        {% csrf_token %}
+
+        <!-- Qayerdan -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Qayerdan o'zgartirish</label>
+          <div class="d-flex gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio"
+                     name="qayerdan" id="qd_bonus" value="bonus" checked>
+              <label class="form-check-label" for="qd_bonus">
+                <span class="badge bg-success">Bonusdan</span>
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio"
+                     name="qayerdan" id="qd_jarima" value="jarima">
+              <label class="form-check-label" for="qd_jarima">
+                <span class="badge bg-danger">Jarimadan</span>
+              </label>
+            </div>
+          </div>
+          <small class="text-muted">
+            Bonusdan yechilsa → bonus kamayadi → reyting tushadi.<br>
+            Jarimadan yechilsa → jarima kamayadi → reyting ko'tariladi.
+          </small>
+        </div>
+
+        <!-- Ball -->
+        <div class="mb-3">
+          <label for="ball" class="form-label fw-semibold">Ball miqdori</label>
+          <input type="number" name="ball" id="ball"
+                 class="form-control" value="0" step="1"
+                 placeholder="Masalan: 50 yoki -50">
+          <div class="form-text">
+            <span class="text-danger">Musbat (+50)</span> → yechadi &nbsp;|&nbsp;
+            <span class="text-success">Manfiy (-50)</span> → qaytaradi (oshiradi)
+          </div>
+        </div>
+
+        <!-- Pul -->
+        <div class="mb-3">
+          <label for="pul" class="form-label fw-semibold">Pul miqdori (so'm)</label>
+          <input type="number" name="pul" id="pul"
+                 class="form-control" value="0" step="1000"
+                 placeholder="Masalan: 100000 yoki -100000">
+          <div class="form-text">
+            <span class="text-danger">Musbat (+100000)</span> → yechadi &nbsp;|&nbsp;
+            <span class="text-success">Manfiy (-100000)</span> → qaytaradi
+          </div>
+        </div>
+
+        <!-- Natija preview -->
+        <div class="alert alert-secondary mb-3" id="preview">
+          <small>Ball va pul kiriting — natija ko'rinadi</small>
+        </div>
+
+        <!-- Sabab -->
+        <div class="mb-3">
+          <label for="sabab" class="form-label fw-semibold">
+            Sabab <span class="text-danger">*</span>
+          </label>
+          <textarea name="sabab" id="sabab" class="form-control"
+                    rows="2" required placeholder="O'zgartirish sababi..."></textarea>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-warning fw-bold px-4">
+            ✅ Saqlash
+          </button>
+          <a href="{% url 'xodim_detail' xodim.pk %}" class="btn btn-outline-secondary">
+            Bekor qilish
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  const ballInput  = document.getElementById('ball');
+  const pulInput   = document.getElementById('pul');
+  const preview    = document.getElementById('preview');
+  const radios     = document.querySelectorAll('input[name="qayerdan"]');
+
+  const curBonus   = {{ xodim.jami_bonus_ball }};
+  const curJarima  = {{ xodim.jami_jarima_ball }};
+  const curReyting = {{ xodim.sof_reyting_ball }};
+  const curBonusPul   = {{ xodim.jami_bonus_pul|floatformat:0 }};
+  const curJarimaPul  = {{ xodim.jami_jarima_pul|floatformat:0 }};
+  const curReytingPul = {{ xodim.sof_reyting_pul|floatformat:0 }};
+
+  function fmt(n) {
+    return n.toLocaleString('uz-UZ');
+  }
+
+  function updatePreview() {
+    const ball = parseInt(ballInput.value) || 0;
+    const pul  = parseFloat(pulInput.value) || 0;
+    const qayerdan = document.querySelector('input[name="qayerdan"]:checked').value;
+
+    let yangi_bonus   = curBonus;
+    let yangi_jarima  = curJarima;
+    let yangi_bonusPul  = curBonusPul;
+    let yangi_jarimaPul = curJarimaPul;
+
+    if (qayerdan === 'bonus') {
+      yangi_bonus   -= ball;
+      yangi_bonusPul -= pul;
+    } else {
+      yangi_jarima   -= ball;
+      yangi_jarimaPul -= pul;
+    }
+
+    const yangi_reyting    = yangi_bonus - yangi_jarima;
+    const yangi_reytingPul = yangi_bonusPul - yangi_jarimaPul;
+    const diff_ball = yangi_reyting - curReyting;
+    const diff_pul  = yangi_reytingPul - curReytingPul;
+
+    const color = diff_ball >= 0 ? 'success' : 'danger';
+    const arrow = diff_ball >= 0 ? '▲' : '▼';
+
+    preview.className = `alert alert-${color} mb-3`;
+    preview.innerHTML = `
+      <strong>Natija:</strong><br>
+      Reyting ball: <strong>${curReyting}</strong> →
+      <strong>${yangi_reyting}</strong>
+      <span class="text-${color}">${arrow} ${Math.abs(diff_ball)} ball</span><br>
+      Reyting pul: <strong>${fmt(curReytingPul)}</strong> →
+      <strong>${fmt(yangi_reytingPul)}</strong>
+      <span class="text-${color}">${arrow} ${fmt(Math.abs(diff_pul))} so'm</span>
+    `;
+  }
+
+  ballInput.addEventListener('input', updatePreview);
+  pulInput.addEventListener('input', updatePreview);
+  radios.forEach(r => r.addEventListener('change', updatePreview));
+</script>
+
+{% endblock %}

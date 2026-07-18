@@ -1,0 +1,437 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mahsulotlar{% endblock %}
+
+{% block content %}
+<style>
+  .cat-card {
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+  .cat-card:hover {
+    transform: translateY(-2px);
+  }
+  .cat-card.active {
+    border-color: #6366f1;
+    ring: 2px solid #6366f1;
+  }
+  .product-row {
+    transition: all 0.2s ease;
+  }
+  .product-row:hover {
+    background: linear-gradient(to right, #f8faff, #f0f4ff);
+  }
+  .product-row.hidden-row {
+    display: none;
+  }
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+</style>
+
+<div class="max-w-6xl mx-auto">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+        <i class="ri-shopping-bag-3-fill text-blue-600"></i> Mahsulotlar
+      </h1>
+      <p class="text-sm text-gray-500">Barcha mahsulot va kategoriyalarni boshqarish</p>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="document.getElementById('kategoriyaModal').classList.remove('hidden')" class="bg-white border-2 border-emerald-200 text-emerald-600 px-4 py-2.5 rounded-2xl hover:bg-emerald-50 hover:border-emerald-300 transition-all text-sm font-medium flex items-center gap-2 shadow-sm">
+        <i class="ri-add-circle-line"></i> Kategoriya
+      </button>
+      <a href="{% url 'mahsulot_qoshish' %}" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2.5 rounded-2xl hover:shadow-lg hover:shadow-blue-200 transition-all text-sm font-medium flex items-center gap-2 shadow-sm">
+        <i class="ri-add-circle-line"></i> Mahsulot
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+          <i class="ri-shopping-bag-3-line text-lg"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-800">{{ total_count }}</p>
+          <p class="text-xs text-gray-500">Jami mahsulot</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
+          <i class="ri-time-line text-lg"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-800">{{ coming_soon_count }}</p>
+          <p class="text-xs text-gray-500">Tez orada</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+          <i class="ri-apps-2-line text-lg"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-800">{{ categories|length }}</p>
+          <p class="text-xs text-gray-500">Kategoriya</p>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
+          <i class="ri-stack-line text-lg"></i>
+        </div>
+        <div>
+          <p class="text-2xl font-bold text-gray-800">{{ products|length }}</p>
+          <p class="text-xs text-gray-500">Jami dona</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kategoriyalar -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <i class="ri-apps-2-fill text-emerald-500"></i>
+        <h2 class="font-bold text-gray-800">Kategoriyalar</h2>
+      </div>
+      <button onclick="document.getElementById('kategoriyaModal').classList.remove('hidden')" class="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1">
+        <i class="ri-add-line"></i> Yangi
+      </button>
+    </div>
+    {% if categories %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+      <!-- Barchasi -->
+      <div onclick="filterCategory(0)" class="cat-card bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200 shadow-sm relative overflow-hidden group active" id="cat-all">
+        <div class="relative z-10">
+          <div class="flex items-start justify-between">
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold text-gray-800 text-sm">Barchasi</h3>
+              <p class="text-xs text-gray-500 mt-0.5">Barcha mahsulotlar</p>
+            </div>
+            <span class="text-lg font-bold text-gray-800 ml-2">{{ products|length }}</span>
+          </div>
+        </div>
+      </div>
+      {% for cat in categories %}
+      <div onclick="filterCategory({{ cat.id }})" class="cat-card bg-gradient-to-br {% cycle 'from-blue-50 to-blue-100/50' 'from-purple-50 to-purple-100/50' 'from-emerald-50 to-emerald-100/50' 'from-amber-50 to-amber-100/50' 'from-rose-50 to-rose-100/50' 'from-cyan-50 to-cyan-100/50' 'from-orange-50 to-orange-100/50' 'from-teal-50 to-teal-100/50' %} rounded-2xl p-4 border border-gray-100/80 shadow-sm relative overflow-hidden group" data-cat-id="{{ cat.id }}">
+        <div class="relative z-10">
+          <div class="flex items-start justify-between">
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold text-gray-800 text-sm truncate">{{ cat.name }}</h3>
+              <p class="text-xs text-gray-500 mt-0.5">{{ cat.product_count }} ta mahsulot</p>
+            </div>
+            <span class="text-lg font-bold text-gray-800 ml-2">{{ cat.product_count }}</span>
+          </div>
+          <div class="mt-3 flex items-center gap-2">
+            <div class="flex-1 h-1.5 bg-white/60 rounded-full overflow-hidden">
+              <div class="h-full rounded-full bg-gradient-to-r from-current to-current opacity-30" style="width: {{ cat.product_count }}0%;"></div>
+            </div>
+            <form method="POST" action="{% url 'kategoriya_ochirish' cat.id %}" class="inline" onsubmit="return confirm('&laquo;{{ cat.name }}&raquo; kategoriyasini o\'chirishni tasdiqlaysizmi?')" onclick="event.stopPropagation()">
+              {% csrf_token %}
+              <button type="submit" class="text-red-300 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50 opacity-0 group-hover:opacity-100">
+                <i class="ri-delete-bin-5-line text-sm"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-8">
+      <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
+        <i class="ri-apps-2-line text-2xl text-gray-300"></i>
+      </div>
+      <p class="text-gray-500 mt-3 text-sm">Hozircha kategoriya mavjud emas</p>
+      <button onclick="document.getElementById('kategoriyaModal').classList.remove('hidden')" class="mt-3 text-sm text-emerald-600 font-medium hover:text-emerald-700">
+        + Birinchi kategoriyani qo'shish
+      </button>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Mahsulotlar -->
+  {% if products %}
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i class="ri-shopping-bag-3-fill text-blue-500"></i>
+        <h2 class="font-bold text-gray-800" id="product-section-title">Barcha mahsulotlar</h2>
+        <span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full" id="product-count-badge">{{ products|length }}</span>
+      </div>
+      <a href="{% url 'mahsulot_qoshish' %}" class="text-sm text-blue-600 font-medium hover:text-blue-700 flex items-center gap-1">
+        <i class="ri-add-line"></i> Yangi
+      </a>
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden md:block overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-gray-50/80 text-left text-xs text-gray-500 uppercase tracking-wider">
+            <th class="p-4 font-semibold">Mahsulot</th>
+            <th class="p-4 font-semibold">Kategoriya</th>
+            <th class="p-4 font-semibold">Narxi</th>
+            <th class="p-4 font-semibold">Omborda</th>
+            <th class="p-4 font-semibold">Holati</th>
+            <th class="p-4 font-semibold text-right">Amallar</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for product in products %}
+          <tr class="product-row" data-cat-id="{{ product.category_id|default:'0' }}">
+            <td class="p-4">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
+                  {% if product.image %}
+                  <img src="{{ product.image.url }}" class="w-full h-full object-cover">
+                  {% else %}
+                  <div class="w-full h-full flex items-center justify-center text-gray-300">
+                    <i class="ri-image-line text-lg"></i>
+                  </div>
+                  {% endif %}
+                </div>
+                <div>
+                  <p class="font-semibold text-gray-900 text-sm">{{ product.name }}</p>
+                  {% if product.description %}
+                  <p class="text-xs text-gray-400 truncate max-w-[200px]">{{ product.description }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td class="p-4">
+              {% if product.category %}
+              <span class="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-100">
+                <span class="status-dot bg-blue-500"></span>
+                {{ product.category.name }}
+              </span>
+              {% else %}
+              <span class="text-xs text-gray-300">&mdash;</span>
+              {% endif %}
+            </td>
+            <td class="p-4">
+              <div class="flex items-center gap-1">
+                <i class="ri-coins-fill text-yellow-500 text-xs"></i>
+                <span class="font-bold text-gray-800 text-sm">{{ product.price_points }}</span>
+              </div>
+            </td>
+            <td class="p-4">
+              {% if product.is_coming_soon %}
+              <span class="text-xs text-gray-300">&mdash;</span>
+              {% else %}
+              <span class="inline-flex items-center gap-1.5 text-sm font-medium {% if product.stock > 5 %}text-emerald-600{% elif product.stock > 0 %}text-amber-600{% else %}text-red-500{% endif %}">
+                <span class="status-dot {% if product.stock > 5 %}bg-emerald-500{% elif product.stock > 0 %}bg-amber-500{% else %}bg-red-500{% endif %}"></span>
+                {{ product.stock }} dona
+              </span>
+              {% endif %}
+            </td>
+            <td class="p-4">
+              <div class="flex flex-wrap gap-1.5">
+                {% if product.is_coming_soon %}
+                <span class="inline-flex items-center gap-1 bg-purple-50 text-purple-700 text-[10px] font-medium px-2 py-0.5 rounded-full border border-purple-100">
+                  <i class="ri-time-line text-[10px]"></i> Tez orada
+                </span>
+                {% endif %}
+                {% if product.is_active %}
+                <span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-medium px-2 py-0.5 rounded-full border border-emerald-100">
+                  <span class="status-dot bg-emerald-500"></span> Aktiv
+                </span>
+                {% else %}
+                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-500 text-[10px] font-medium px-2 py-0.5 rounded-full">
+                  <span class="status-dot bg-gray-400"></span> Noaktiv
+                </span>
+                {% endif %}
+              </div>
+            </td>
+            <td class="p-4 text-right">
+              <div class="flex items-center justify-end gap-1">
+                <a href="{% url 'mahsulot_tahrirlash' product.id %}" class="p-2 hover:bg-blue-50 rounded-xl text-blue-500 hover:text-blue-700 transition-all" title="Tahrirlash">
+                  <i class="ri-pencil-line text-base"></i>
+                </a>
+                <a href="{% url 'mahsulot_ochirish' product.id %}" class="p-2 hover:bg-red-50 rounded-xl text-red-400 hover:text-red-600 transition-all" title="Ochirish">
+                  <i class="ri-delete-bin-5-line text-base"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Mobile cards -->
+    <div class="md:hidden divide-y divide-gray-50">
+      {% for product in products %}
+      <div class="p-4 product-row" data-cat-id="{{ product.category_id|default:'0' }}">
+        <div class="flex gap-3">
+          <div class="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" class="w-full h-full object-cover">
+            {% else %}
+            <div class="w-full h-full flex items-center justify-center text-gray-300">
+              <i class="ri-image-line text-xl"></i>
+            </div>
+            {% endif %}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-start justify-between">
+              <div>
+                <h3 class="font-bold text-gray-900 text-sm truncate">{{ product.name }}</h3>
+                <div class="flex items-center gap-2 mt-0.5">
+                  {% if product.category %}
+                  <span class="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 rounded-full border border-blue-100">{{ product.category.name }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="flex items-center gap-1 ml-2">
+                <a href="{% url 'mahsulot_tahrirlash' product.id %}" class="p-1.5 hover:bg-blue-50 rounded-lg text-blue-500">
+                  <i class="ri-pencil-line text-sm"></i>
+                </a>
+                <a href="{% url 'mahsulot_ochirish' product.id %}" class="p-1.5 hover:bg-red-50 rounded-lg text-red-400">
+                  <i class="ri-delete-bin-5-line text-sm"></i>
+                </a>
+              </div>
+            </div>
+            <div class="flex items-center gap-3 mt-2 flex-wrap">
+              <div class="flex items-center gap-1">
+                <i class="ri-coins-fill text-yellow-500 text-xs"></i>
+                <span class="font-bold text-gray-800 text-sm">{{ product.price_points }}</span>
+              </div>
+              {% if not product.is_coming_soon %}
+              <span class="text-xs font-medium {% if product.stock > 5 %}text-emerald-600{% elif product.stock > 0 %}text-amber-600{% else %}text-red-500{% endif %}">
+                {{ product.stock }} dona
+              </span>
+              {% endif %}
+              {% if product.is_coming_soon %}
+              <span class="bg-purple-50 text-purple-700 text-[10px] px-2 py-0.5 rounded-full border border-purple-100">Tez orada</span>
+              {% endif %}
+              {% if product.is_active %}
+              <span class="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full">Aktiv</span>
+              {% else %}
+              <span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded-full">Noaktiv</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <!-- Empty state -->
+  <div class="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-sm">
+    <div class="w-20 h-20 bg-gradient-to-br from-gray-50 to-gray-100 rounded-full flex items-center justify-center mx-auto shadow-inner">
+      <i class="ri-shopping-bag-3-line text-4xl text-gray-300"></i>
+    </div>
+    <p class="text-gray-500 mt-4 font-medium">Hozircha mahsulot mavjud emas</p>
+    <p class="text-xs text-gray-400 mt-1">Birinchi mahsulotni qoshish orqali boshlang</p>
+    <a href="{% url 'mahsulot_qoshish' %}" class="inline-flex items-center gap-1.5 mt-5 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-medium shadow-lg shadow-blue-200 hover:shadow-xl transition-all text-sm">
+      <i class="ri-add-circle-line"></i> Mahsulot qoshish
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- Shopga otish -->
+  <div class="mt-6 text-center">
+    <a href="{% url 'shop' %}" class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-blue-600 transition-colors">
+      <i class="ri-arrow-left-s-line"></i> Shop sahifasiga otish
+    </a>
+  </div>
+</div>
+
+<!-- Kategoriya qoshish modal -->
+<div id="kategoriyaModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+  <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl">
+    <div class="flex items-center justify-between mb-5">
+      <div class="flex items-center gap-2">
+        <div class="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
+          <i class="ri-apps-2-add-line text-lg"></i>
+        </div>
+        <h3 class="text-lg font-bold text-gray-800">Yangi kategoriya</h3>
+      </div>
+      <button onclick="document.getElementById('kategoriyaModal').classList.add('hidden')" class="w-8 h-8 flex items-center justify-center rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-500 transition-colors">
+        <i class="ri-close-line"></i>
+      </button>
+    </div>
+    <form method="POST" action="{% url 'kategoriya_qoshish' %}">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Kategoriya nomi</label>
+        <input type="text" name="name" required
+               class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm bg-gray-50"
+               placeholder="Masalan: Elektronika">
+      </div>
+      <div class="mb-5">
+        <label class="block text-sm font-medium text-gray-700 mb-1.5">Tartib raqami</label>
+        <input type="number" name="order" value="0" min="0"
+               class="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm bg-gray-50">
+      </div>
+      <div class="flex gap-3">
+        <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-2xl font-medium hover:shadow-lg hover:shadow-emerald-200 transition-all text-sm">
+          <i class="ri-check-line mr-1"></i> Qoshish
+        </button>
+        <button type="button" onclick="document.getElementById('kategoriyaModal').classList.add('hidden')" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-2xl font-medium hover:bg-gray-200 transition-colors text-sm">
+          Bekor qilish
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// Kategoriya filter
+function filterCategory(catId) {
+  // Update active state on cards
+  document.querySelectorAll('.cat-card').forEach(function(c) {
+    if (catId === 0) {
+      c.classList.toggle('active', c.id === 'cat-all');
+    } else {
+      c.classList.toggle('active', parseInt(c.dataset.catId) === catId);
+    }
+  });
+  if (catId === 0) {
+    document.getElementById('cat-all').classList.add('active');
+  }
+
+  // Filter products
+  var visibleCount = 0;
+  document.querySelectorAll('.product-row').forEach(function(row) {
+    var rowCat = parseInt(row.dataset.catId) || 0;
+    if (catId === 0 || rowCat === catId) {
+      row.classList.remove('hidden-row');
+      visibleCount++;
+    } else {
+      row.classList.add('hidden-row');
+    }
+  });
+
+  // Update title and count
+  var title = document.getElementById('product-section-title');
+  var badge = document.getElementById('product-count-badge');
+  if (catId === 0) {
+    title.textContent = 'Barcha mahsulotlar';
+  } else {
+    var catName = document.querySelector('.cat-card.active .font-bold')?.textContent || 'Mahsulotlar';
+    title.textContent = catName;
+  }
+  badge.textContent = visibleCount;
+}
+
+document.getElementById('kategoriyaModal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.add('hidden');
+});
+</script>
+{% endblock %}

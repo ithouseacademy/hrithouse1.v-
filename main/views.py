@@ -1,0 +1,2127 @@
+from datetime import datetime, timedelta, date
+import csv
+from decimal import Decimal
+
+from django.contrib import messages
+from django.contrib.auth import update_session_auth_hash, login, authenticate, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm, UserCreationForm, AuthenticationForm
+from django.contrib.admin.views.decorators import staff_member_required
+from django.core.paginator import Paginator
+from django.db.models import Q, Sum, Count, Avg
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
+from django.db.models import Sum, Q, Count, DecimalField, F, Value
+from django.db.models.functions import Coalesce
+from django.views.decorators.csrf import csrf_exempt
+from decimal import Decimal
+from datetime import datetime, timedelta, date
+from django.utils import timezone
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect, Http404
+from django.urls import reverse
+from django.template.loader import render_to_string
+import json
+
+from .forms import (
+    XodimForm, BonusRecordForm, JarimaRecordForm,
+    ProductForm, OrderRejectForm,
+)
+from .models import (
+    Xodim, BonusRecord, JarimaRecord,
+    BonusSabab, JarimaSabab, OzgartirishTarixi,
+    Category, Product, ProductOrder, PointTransaction,
+    Notification, PushSubscription
+)
+from .services import (
+    get_available_shop_ball, purchase_product,
+    approve_order, reject_order,
+    send_notification, send_notification_to_admins
+)
+from .forms import (
+    XodimForm, XodimTahrirlashForm, XodimRasmForm,
+    BonusRecordForm, JarimaRecordForm, UserEditForm,
+    OrderRejectForm
+)
+from .services import (
+    get_available_shop_ball, purchase_product,
+    approve_order, reject_order,
+    send_notification, send_notification_to_admins
+)
+
+
+# ============================================================
+# YORDAMCHI FUNKSIYALAR
+# ============================================================
+
+def oy_oraligi(yil, oy):
+    boshi = date(yil, oy, 1)
+    if oy == 12:
+        oxiri = date(yil + 1, 1, 1) - timedelta(days=1)
+    else:
+        oxiri = date(yil, oy + 1, 1) - timedelta(days=1)
+    return boshi, oxiri
+
+
+OYLAR = {
+    1: 'Yanvar', 2: 'Fevral', 3: 'Mart', 4: 'Aprel',
+    5: 'May', 6: 'Iyun', 7: 'Iyul', 8: 'Avgust',
+    9: 'Sentabr', 10: 'Oktabr', 11: 'Noyabr', 12: 'Dekabr'
+}
+
+OYLAR_LIST = [{'value': k, 'nom': v} for k, v in OYLAR.items()]
+
+
+def hisobot_data_yig(oy_boshi, oy_oxiri, filtrlar=None):
+    if filtrlar is None:
+        filtrlar = {}
+
+    xodimlar = Xodim.objects.filter(active=True).order_by('-reyting_ball')
+
+    bonus_map = {
+        row['xodim']: row
+        for row in BonusRecord.objects.filter(
+            sana__date__gte=oy_boshi,
+            sana__date__lte=oy_oxiri
+        ).values('xodim').annotate(
+            jami_ball=Sum('ball_miqdori'),
+            jami_pul=Sum('pul_miqdori')
+        )
+    }
+
+    jarima_map = {
+        row['xodim']: row
+        for row in JarimaRecord.objects.filter(
+            sana__date__gte=oy_boshi,
+            sana__date__lte=oy_oxiri
+        ).values('xodim').annotate(
+            jami_ball=Sum('ball_miqdori'),
+            jami_pul=Sum('pul_miqdori')
+        )
+    }
+
+    hisobot_data = []
+    jami_bonus_ball = 0
+    jami_bonus_pul = Decimal('0')
+    jami_jarima_ball = 0
+    jami_jarima_pul = Decimal('0')
+
+    for xodim in xodimlar:
+        b = bonus_map.get(xodim.pk, {})
+        j = jarima_map.get(xodim.pk, {})
+
+        bonus_ball = b.get('jami_ball') or 0
+        bonus_pul = b.get('jami_pul') or Decimal('0')
+        jarima_ball = j.get('jami_ball') or 0
+        jarima_pul = j.get('jami_pul') or Decimal('0')
+
+        bonus_filtri = filtrlar.get('bonus', '')
+        jarima_filtri = filtrlar.get('jarima', '')
+        if bonus_filtri == 'olgan' and bonus_ball == 0:
+            continue
+        if bonus_filtri == 'olmagan' and bonus_ball > 0:
+            continue
+        if jarima_filtri == 'olgan' and jarima_ball == 0:
+            continue
+        if jarima_filtri == 'olmagan' and jarima_ball > 0:
+            continue
+
+        jami_ball = bonus_ball - jarima_ball
+        jami_pul = float(bonus_pul) - float(jarima_pul)
+
+        jami_bonus_ball += bonus_ball
+        jami_bonus_pul += bonus_pul
+        jami_jarima_ball += jarima_ball
+        jami_jarima_pul += jarima_pul
+
+        hisobot_data.append({
+            'xodim': xodim,
+            'bonus_ball': bonus_ball,
+            'bonus_pul': float(bonus_pul),
+            'jarima_ball': jarima_ball,
+            'jarima_pul': float(jarima_pul),
+            'jami_ball': jami_ball,
+            'jami_pul': jami_pul,
+        })
+
+    hisobot_data.sort(key=lambda x: (-x['jami_ball'], -x['bonus_ball'], x['jarima_ball']))
+
+    jami = {
+        'bonus_ball': jami_bonus_ball,
+        'bonus_pul': float(jami_bonus_pul),
+        'jarima_ball': jami_jarima_ball,
+        'jarima_pul': float(jami_jarima_pul),
+        'ball': jami_bonus_ball - jami_jarima_ball,
+        'pul': float(jami_bonus_pul) - float(jami_jarima_pul),
+    }
+    return hisobot_data, jami
+
+
+# ============================================================
+# AUTHENTICATION
+# ============================================================
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f"Xush kelibsiz, {username}!")
+                return redirect('dashboard')
+        messages.error(request, "Login yoki parol xato!")
+    else:
+        form = AuthenticationForm()
+    
+    return render(request, 'main/login.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, "Tizimdan chiqdingiz!")
+    return redirect('login')
+
+
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            messages.success(request, "Ro'yxatdan o'tdingiz!")
+            return redirect('dashboard')
+    else:
+        form = UserCreationForm()
+    
+    return render(request, 'main/register.html', {'form': form})
+
+
+# ============================================================
+# DASHBOARD
+# ============================================================
+
+@login_required
+def dashboard(request):
+    try:
+        joriy_xodim = request.user.xodim
+    except Exception:
+        joriy_xodim = None
+
+    hozir = timezone.localtime(timezone.now())
+    bugun = hozir.date()
+
+    bugun_boshi = timezone.make_aware(datetime.combine(bugun, datetime.min.time()))
+    bugun_oxiri = timezone.make_aware(datetime.combine(bugun, datetime.max.time()))
+
+    kunlik_bonuslar = BonusRecord.objects.filter(
+        sana__gte=bugun_boshi, sana__lte=bugun_oxiri
+    ).select_related('xodim', 'sabab').order_by('-sana')
+
+    kunlik_jarimalar = JarimaRecord.objects.filter(
+        sana__gte=bugun_boshi, sana__lte=bugun_oxiri
+    ).select_related('xodim', 'sabab').order_by('-sana')
+
+    kunlik_xaridlar = ProductOrder.objects.filter(
+        created_at__gte=bugun_boshi, created_at__lte=bugun_oxiri
+    ).select_related('user__xodim', 'product').order_by('-created_at')
+
+    def harakat_dict(obj, tur):
+        mahalliy = timezone.localtime(obj.sana if hasattr(obj, 'sana') else obj.created_at)
+        sabab_nomi = obj.sabab.nom if hasattr(obj, 'sabab') and obj.sabab else (tur.capitalize())
+        return {
+            'tur': tur,
+            'xodim': obj.xodim if hasattr(obj, 'xodim') else obj.user.xodim,
+            'ball': obj.ball_miqdori if hasattr(obj, 'ball_miqdori') else obj.points_spent,
+            'pul': obj.pul_miqdori if hasattr(obj, 'pul_miqdori') else 0,
+            'sabab': sabab_nomi if tur != 'xarid' else obj.product.name,
+            'sabab_izoh': obj.izoh if hasattr(obj, 'izoh') and not getattr(obj, 'sabab', None) else None,
+            'sana': mahalliy,
+            'vaqt': mahalliy.strftime('%H:%M'),
+        }
+
+    kunlik_harakatlar = (
+        [harakat_dict(b, 'bonus') for b in kunlik_bonuslar] +
+        [harakat_dict(j, 'jarima') for j in kunlik_jarimalar] +
+        [harakat_dict(x, 'xarid') for x in kunlik_xaridlar]
+    )
+    kunlik_harakatlar.sort(key=lambda x: x['sana'], reverse=True)
+
+    xodimlar = Xodim.objects.filter(active=True).order_by('-reyting_ball')
+
+    return render(request, 'main/dashboard.html', {
+        'joriy_xodim': joriy_xodim,
+        'bugun': bugun,
+        'kunlik_harakatlar': kunlik_harakatlar,
+        'kunlik_harakatlar_soni': len(kunlik_harakatlar),
+        'xodimlar': xodimlar,
+        'xodimlar_soni': xodimlar.count(),
+    })
+
+
+# ============================================================
+# XODIMLAR
+# ============================================================
+
+@staff_member_required
+def xodim_qoshish(request):
+    if request.method == 'POST':
+        form = XodimForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Xodim qo'shildi!")
+            return redirect('xodimlar')
+    else:
+        form = XodimForm()
+    return render(request, 'main/xodim_form.html', {
+        'form': form, 'title': "Xodim Qo'shish"
+    })
+
+
+@login_required
+def xodimlar(request):
+    qs = Xodim.objects.filter(active=True).order_by('-reyting_ball')
+    qidiruv = request.GET.get('qidiruv', '')
+    if qidiruv:
+        qs = qs.filter(
+            Q(ism__icontains=qidiruv) |
+            Q(familya__icontains=qidiruv) |
+            Q(telefon__icontains=qidiruv)
+        )
+
+    paginator = Paginator(qs, 10)
+    xodimlar_page = paginator.get_page(request.GET.get('page', 1))
+
+    all_qs = paginator.object_list
+    return render(request, 'main/xodimlar.html', {
+        'xodimlar': xodimlar_page,
+        'umumiy_ball': sum(x.reyting_ball for x in all_qs),
+        'umumiy_bonus': sum(x.bonus_ball for x in all_qs),
+        'umumiy_jarima': sum(x.jarima_ball for x in all_qs),
+    })
+
+
+@login_required
+def xodim_detail(request, pk):
+    xodim = get_object_or_404(Xodim, pk=pk)
+    bonuslar = BonusRecord.objects.filter(xodim=xodim).order_by('-sana')[:30]
+    jarimalar = JarimaRecord.objects.filter(xodim=xodim).order_by('-sana')[:30]
+    tarixlar = OzgartirishTarixi.objects.filter(xodim=xodim).order_by('-sana')[:20]
+    joylashuv = Xodim.objects.filter(reyting_ball__gt=xodim.reyting_ball).count() + 1
+    jami_xodimlar = Xodim.objects.filter(active=True).count()
+    return render(request, 'main/xodim_detail.html', {
+        'xodim': xodim,
+        'bonuslar': bonuslar,
+        'jarimalar': jarimalar,
+        'tarixlar': tarixlar,
+        'joylashuv': joylashuv,          # QO'SHILDI
+        'jami_xodimlar': jami_xodimlar,  # QO'SHILDI
+    })
+
+
+@staff_member_required
+def xodim_tahrirlash(request, pk):
+    xodim = get_object_or_404(Xodim, pk=pk)
+    
+    if request.method == 'POST':
+        form = XodimTahrirlashForm(request.POST, request.FILES, instance=xodim)
+        if form.is_valid():
+            # Eski qiymatlarni saqlash
+            eski_bonus_ball = xodim.bonus_ball
+            eski_bonus_pul = xodim.bonus_pul
+            eski_jarima_ball = xodim.jarima_ball
+            eski_jarima_pul = xodim.jarima_pul
+            eski_reyting_ball = xodim.reyting_ball
+            eski_reyting_pul = xodim.reyting_pul
+            eski_bonus_yechilgan = xodim.bonus_pul_yechilgan
+            eski_jarima_yechilgan = xodim.jarima_pul_yechilgan
+            
+            yangilangan_xodim = form.save(commit=False)
+            
+            # Bonus/jarima maydonlarini qayta tiklash
+            yangilangan_xodim.bonus_ball = eski_bonus_ball
+            yangilangan_xodim.bonus_pul = eski_bonus_pul
+            yangilangan_xodim.jarima_ball = eski_jarima_ball
+            yangilangan_xodim.jarima_pul = eski_jarima_pul
+            yangilangan_xodim.reyting_ball = eski_reyting_ball
+            yangilangan_xodim.reyting_pul = eski_reyting_pul
+            yangilangan_xodim.bonus_pul_yechilgan = eski_bonus_yechilgan
+            yangilangan_xodim.jarima_pul_yechilgan = eski_jarima_yechilgan
+            
+            yangilangan_xodim.save()
+            
+            messages.success(request, f"{yangilangan_xodim.ism} {yangilangan_xodim.familya} ma'lumotlari yangilandi!")
+            return redirect('xodim_detail', pk=yangilangan_xodim.pk)
+    else:
+        form = XodimTahrirlashForm(instance=xodim)
+    
+    tarixlar = OzgartirishTarixi.objects.filter(xodim=xodim).order_by('-sana')[:20]
+    return render(request, 'main/xodim_tahrirlash.html', {
+        'form': form,
+        'xodim': xodim,
+        'tarixlar': tarixlar,
+        'title': f"{xodim.ism} {xodim.familya} — Tahrirlash",
+    })
+
+
+@staff_member_required
+def xodim_ochirish(request, pk):
+    xodim = get_object_or_404(Xodim, pk=pk)
+    
+    if request.method == 'POST':
+        xodim_ismi = f"{xodim.ism} {xodim.familya}"
+        if xodim.user:
+            xodim.user.delete()
+        xodim.delete()
+        messages.success(request, f"'{xodim_ismi}' o'chirildi!")
+        return redirect('xodimlar')
+    
+    return redirect('xodim_detail', pk=pk)
+
+
+# ============================================================
+# BONUS VA JARIMA QO'SHISH
+# ============================================================
+
+@staff_member_required
+def bonus_qoshish(request):
+    if request.method == 'POST':
+        if request.POST.get('sabab'):
+            form = BonusRecordForm(request.POST)
+            if form.is_valid():
+                record = form.save(commit=False)
+                record.created_by = request.user
+                record.save()
+                messages.success(request, "Bonus qo'shildi!")
+                return redirect('dashboard')
+            messages.error(request, 'Formada xatolik!')
+        else:
+            xodim_id = request.POST.get('xodim')
+            try:
+                pul = float(request.POST.get('manual_pul', 0) or 0)
+                ball = int(request.POST.get('manual_ball', 0) or 0)
+            except ValueError:
+                pul, ball = 0.0, 0
+
+            if xodim_id and (pul > 0 or ball > 0):
+                xodim = get_object_or_404(Xodim, pk=xodim_id)
+                sabab_nom = request.POST.get('manual_sabab_nom', "Qo'lda kiritilgan")
+                izoh = request.POST.get('izoh', '')
+                toliq_izoh = sabab_nom + (f". {izoh}" if izoh else '')
+
+                BonusRecord.objects.create(
+                    xodim=xodim, sabab=None,
+                    pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
+                    izoh=toliq_izoh, created_by=request.user
+                )
+                messages.success(request, "Bonus qo'shildi!")
+                return redirect('dashboard')
+            messages.error(request, "Xodim va miqdorlarni to'g'ri kiriting!")
+
+    sabablar = BonusSabab.objects.filter(active=True)
+    return render(request, 'main/bonus_form.html', {
+        'form': BonusRecordForm(), 'sabablar': sabablar,
+        'title': "Bonus Qo'shish"
+    })
+
+
+@staff_member_required
+def jarima_qoshish(request):
+    if request.method == 'POST':
+        if request.POST.get('sabab'):
+            form = JarimaRecordForm(request.POST)
+            if form.is_valid():
+                record = form.save(commit=False)
+                record.created_by = request.user
+                record.save()
+                messages.success(request, "Jarima qo'shildi!")
+                return redirect('dashboard')
+            messages.error(request, 'Formada xatolik!')
+        else:
+            xodim_id = request.POST.get('xodim')
+            try:
+                pul = float(request.POST.get('manual_pul', 0) or 0)
+                ball = int(request.POST.get('manual_ball', 0) or 0)
+            except ValueError:
+                pul, ball = 0.0, 0
+
+            if xodim_id and (pul > 0 or ball > 0):
+                xodim = get_object_or_404(Xodim, pk=xodim_id)
+                sabab_nom = request.POST.get('manual_sabab_nom', "Qo'lda kiritilgan")
+                izoh = request.POST.get('izoh', '')
+
+                JarimaRecord.objects.create(
+                    xodim=xodim, sabab=None,
+                    pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
+                    izoh=f"{sabab_nom}. {izoh}".strip(' .'),
+                    created_by=request.user
+                )
+                messages.success(request, "Jarima qo'shildi!")
+                return redirect('dashboard')
+            messages.error(request, "Xodim va miqdorlarni to'g'ri kiriting!")
+
+    sabablar = JarimaSabab.objects.filter(active=True)
+    return render(request, 'main/jarima_form.html', {
+        'form': JarimaRecordForm(), 'sabablar': sabablar,
+        'title': "Jarima Qo'shish"
+    })
+
+
+# ============================================================
+# BONUS VA JARIMA O'CHIRISH
+# ============================================================
+
+@staff_member_required
+def bonus_ochirish(request, pk):
+    bonus = get_object_or_404(BonusRecord, pk=pk)
+    xodim = bonus.xodim
+
+    if request.method == 'POST':
+        sabab = request.POST.get('sabab', '').strip()
+        if not sabab:
+            messages.error(request, "O'chirish sababini yozishingiz kerak!")
+            return redirect('bonus_ochirish', pk=bonus.pk)
+
+        ball = bonus.ball_miqdori
+        pul = bonus.pul_miqdori
+        bonus.delete()
+
+        OzgartirishTarixi.objects.create(
+            xodim=xodim, admin=request.user,
+            sabab=f"Bonus o'chirildi. Sabab: {sabab}",
+        )
+        messages.success(request, f"Bonus o'chirildi! ({ball} ball)")
+        return redirect('xodim_detail', pk=xodim.pk)
+
+    return render(request, 'main/ochirish_tasdiqlash.html', {
+        'bonus': bonus, 'xodim': xodim, 'tur': 'bonus',
+        'ball': bonus.ball_miqdori, 'pul': bonus.pul_miqdori, 'sana': bonus.sana,
+    })
+
+
+@staff_member_required
+def jarima_ochirish(request, pk):
+    jarima = get_object_or_404(JarimaRecord, pk=pk)
+    xodim = jarima.xodim
+
+    if request.method == 'POST':
+        sabab = request.POST.get('sabab', '').strip()
+        if not sabab:
+            messages.error(request, "O'chirish sababini yozishingiz kerak!")
+            return redirect('jarima_ochirish', pk=jarima.pk)
+
+        ball = jarima.ball_miqdori
+        pul = jarima.pul_miqdori
+        jarima.delete()
+
+        OzgartirishTarixi.objects.create(
+            xodim=xodim, admin=request.user,
+            sabab=f"Jarima o'chirildi. Sabab: {sabab}",
+        )
+        messages.success(request, f"Jarima o'chirildi! ({ball} ball)")
+        return redirect('xodim_detail', pk=xodim.pk)
+
+    return render(request, 'main/ochirish_tasdiqlash.html', {
+        'jarima': jarima, 'xodim': xodim, 'tur': 'jarima',
+        'ball': jarima.ball_miqdori, 'pul': jarima.pul_miqdori, 'sana': jarima.sana,
+    })
+
+
+# ============================================================
+# PUL YECHISH (MUHIM - TUZATILGAN)
+# ============================================================
+# views.py - bonus_pul_yechish funksiyasini tuzatilgan versiyasi
+
+@staff_member_required
+def bonus_pul_yechish(request, pk):
+    """Bonus pulini yechish"""
+    xodim = get_object_or_404(Xodim, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            yechiladigan_pul = Decimal(str(float(request.POST.get('pul', 0))))
+            sabab = request.POST.get('sabab', '').strip()
+            
+            if yechiladigan_pul <= 0:
+                messages.error(request, "Pul miqdori 0 dan katta bo'lishi kerak!")
+                return redirect('bonus_pul_yechish', pk=xodim.pk)
+            
+            if not sabab:
+                messages.error(request, "Sababni yozishingiz kerak!")
+                return redirect('bonus_pul_yechish', pk=xodim.pk)
+            
+            if yechiladigan_pul > xodim.jami_bonus_pul:
+                messages.error(request, f"Yetarli bonus pul mavjud emas! Mavjud: {xodim.jami_bonus_pul:,.0f} so'm")
+                return redirect('bonus_pul_yechish', pk=xodim.pk)
+            
+            # Eski qiymatlarni saqlash
+            eski_bonus_pul = xodim.bonus_pul
+            eski_bonus_yechilgan = xodim.bonus_pul_yechilgan
+            
+            # Yechish
+            xodim.bonus_pul_yechilgan += yechiladigan_pul
+            xodim.reyting_pul = xodim.jami_bonus_pul - xodim.jami_jarima_pul
+            xodim.save(update_fields=['bonus_pul_yechilgan', 'reyting_pul'])
+            
+            # TO'G'RI - FAQAT MAVJUD MAYDONLAR
+            OzgartirishTarixi.objects.create(
+                xodim=xodim,
+                admin=request.user,
+                sabab=f"Bonus pulidan {yechiladigan_pul:,.0f} so'm yechildi. Sabab: {sabab}",
+                eski_bonus_pul=eski_bonus_pul,
+                yangi_bonus_pul=xodim.bonus_pul,
+                # eski_bonus_yechilgan va yangi_bonus_yechilgan maydonlarini olib tashladik
+            )
+            
+            messages.success(request, f"✅ {yechiladigan_pul:,.0f} so'm bonus pul yechildi! Qolgan: {xodim.jami_bonus_pul:,.0f} so'm")
+            return redirect('xodim_detail', pk=xodim.pk)
+            
+        except (ValueError, TypeError) as e:
+            messages.error(request, f"Xatolik: {e}")
+            return redirect('bonus_pul_yechish', pk=xodim.pk)
+    
+    return render(request, 'main/pul_yechish.html', {
+        'xodim': xodim,
+        'tur': 'bonus',
+        'umumiy': xodim.bonus_pul,
+        'yechilgan': xodim.bonus_pul_yechilgan,
+        'qoldiq': xodim.jami_bonus_pul,
+    })
+
+
+@staff_member_required
+def jarima_pul_yechish(request, pk):
+    """Jarima pulini yechish"""
+    xodim = get_object_or_404(Xodim, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            yechiladigan_pul = Decimal(str(float(request.POST.get('pul', 0))))
+            sabab = request.POST.get('sabab', '').strip()
+            
+            if yechiladigan_pul <= 0:
+                messages.error(request, "Pul miqdori 0 dan katta bo'lishi kerak!")
+                return redirect('jarima_pul_yechish', pk=xodim.pk)
+            
+            if not sabab:
+                messages.error(request, "Sababni yozishingiz kerak!")
+                return redirect('jarima_pul_yechish', pk=xodim.pk)
+            
+            if yechiladigan_pul > xodim.jami_jarima_pul:
+                messages.error(request, f"Yetarli jarima pul mavjud emas! Mavjud: {xodim.jami_jarima_pul:,.0f} so'm")
+                return redirect('jarima_pul_yechish', pk=xodim.pk)
+            
+            # Eski qiymatlarni saqlash
+            eski_jarima_pul = xodim.jarima_pul
+            
+            # Yechish
+            xodim.jarima_pul_yechilgan += yechiladigan_pul
+            xodim.reyting_pul = xodim.jami_bonus_pul - xodim.jami_jarima_pul
+            xodim.save(update_fields=['jarima_pul_yechilgan', 'reyting_pul'])
+            
+            # TO'G'RI - FAQAT MAVJUD MAYDONLAR
+            OzgartirishTarixi.objects.create(
+                xodim=xodim,
+                admin=request.user,
+                sabab=f"Jarima pulidan {yechiladigan_pul:,.0f} so'm yechildi. Sabab: {sabab}",
+                eski_jarima_pul=eski_jarima_pul,
+                yangi_jarima_pul=xodim.jarima_pul,
+            )
+            
+            messages.success(request, f"✅ {yechiladigan_pul:,.0f} so'm jarima pul yechildi! Qolgan: {xodim.jami_jarima_pul:,.0f} so'm")
+            return redirect('xodim_detail', pk=xodim.pk)
+            
+        except (ValueError, TypeError) as e:
+            messages.error(request, f"Xatolik: {e}")
+            return redirect('jarima_pul_yechish', pk=xodim.pk)
+    
+    return render(request, 'main/pul_yechish.html', {
+        'xodim': xodim,
+        'tur': 'jarima',
+        'umumiy': xodim.jarima_pul,
+        'yechilgan': xodim.jarima_pul_yechilgan,
+        'qoldiq': xodim.jami_jarima_pul,
+    })
+
+
+@staff_member_required
+def jarima_pul_yechish(request, pk):
+    """Jarima pulini yechish - PUL HAQIQATAN KAMAYADI"""
+    xodim = get_object_or_404(Xodim, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            yechiladigan_pul = Decimal(str(float(request.POST.get('pul', 0))))
+            sabab = request.POST.get('sabab', '').strip()
+            
+            if yechiladigan_pul <= 0:
+                messages.error(request, "Pul miqdori 0 dan katta bo'lishi kerak!")
+                return redirect('jarima_pul_yechish', pk=xodim.pk)
+            
+            if not sabab:
+                messages.error(request, "Sababni yozishingiz kerak!")
+                return redirect('jarima_pul_yechish', pk=xodim.pk)
+            
+            jami_mavjud = xodim.jarima_pul - xodim.jarima_pul_yechilgan
+            if yechiladigan_pul > jami_mavjud:
+                messages.error(request, f"Yetarli jarima pul mavjud emas! Mavjud: {jami_mavjud:,.0f} so'm")
+                return redirect('jarima_pul_yechish', pk=xodim.pk)
+            
+            # YECHISH
+            xodim.jarima_pul_yechilgan += yechiladigan_pul
+            xodim.reyting_pul = (xodim.bonus_pul - xodim.bonus_pul_yechilgan) - (xodim.jarima_pul - xodim.jarima_pul_yechilgan)
+            xodim.save(update_fields=['jarima_pul_yechilgan', 'reyting_pul'])
+            
+            OzgartirishTarixi.objects.create(
+                xodim=xodim,
+                admin=request.user,
+                sabab=f"Jarima pulidan {yechiladigan_pul:,.0f} so'm yechildi. Sabab: {sabab}",
+            )
+            
+            qolgan_pul = xodim.jarima_pul - xodim.jarima_pul_yechilgan
+            messages.success(request, f"✅ {yechiladigan_pul:,.0f} so'm jarima pul yechildi! Qolgan: {qolgan_pul:,.0f} so'm")
+            return redirect('xodim_detail', pk=xodim.pk)
+            
+        except (ValueError, TypeError) as e:
+            messages.error(request, f"Xatolik: {e}")
+            return redirect('jarima_pul_yechish', pk=xodim.pk)
+    
+    jami_mavjud = xodim.jarima_pul - xodim.jarima_pul_yechilgan
+    return render(request, 'main/pul_yechish.html', {
+        'xodim': xodim,
+        'tur': 'jarima',
+        'umumiy': xodim.jarima_pul,
+        'yechilgan': xodim.jarima_pul_yechilgan,
+        'qoldiq': jami_mavjud,
+    })
+# main/views.py ga qo'shing
+
+@staff_member_required
+def oylik_hisobot_csv(request):
+    """Oylik hisobotni CSV formatda yuklab olish"""
+    oy = int(request.GET.get('oy', timezone.now().month))
+    yil = int(request.GET.get('yil', timezone.now().year))
+    bonus_filtri = request.GET.get('bonus_filtri', '')
+    jarima_filtri = request.GET.get('jarima_filtri', '')
+
+    oy_boshi, oy_oxiri = oy_oraligi(yil, oy)
+    hisobot_data, jami = hisobot_data_yig(
+        oy_boshi, oy_oxiri,
+        filtrlar={'bonus': bonus_filtri, 'jarima': jarima_filtri}
+    )
+    oy_nomi = OYLAR.get(oy, '')
+
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="oylik_hisobot_{oy_nomi}_{yil}.csv"'
+    response.write('\ufeff')  # BOM - Excel uchun
+
+    writer = csv.writer(response)
+    writer.writerow([f"OYLIK HISOBOT — {oy_nomi} {yil}"])
+    writer.writerow([f"Hisobot davri: {oy_boshi.strftime('%d.%m.%Y')} — {oy_oxiri.strftime('%d.%m.%Y')}"])
+    writer.writerow([])
+    writer.writerow([
+        '№', 'Xodim', 'Bonus Ball', "Bonus Pul (so'm)",
+        'Jarima Ball', "Jarima Pul (so'm)",
+        'Jami Ball', "Jami Pul (so'm)", 'Reyting'
+    ])
+
+    for idx, item in enumerate(hisobot_data, 1):
+        writer.writerow([
+            idx,
+            f"{item['xodim'].ism} {item['xodim'].familya}",
+            item['bonus_ball'], item['bonus_pul'],
+            item['jarima_ball'], item['jarima_pul'],
+            item['jami_ball'], item['jami_pul'],
+            item['xodim'].reyting_ball,
+        ])
+
+    writer.writerow([])
+    writer.writerow([
+        'JAMI', '',
+        jami['bonus_ball'], jami['bonus_pul'],
+        jami['jarima_ball'], jami['jarima_pul'],
+        jami['ball'], jami['pul'],
+        '',
+    ])
+    return response
+
+
+@staff_member_required
+def oylik_hisobot_pdf(request):
+    """Oylik hisobotni PDF formatda yuklab olish"""
+    oy = int(request.GET.get('oy', timezone.now().month))
+    yil = int(request.GET.get('yil', timezone.now().year))
+    bonus_filtri = request.GET.get('bonus_filtri', '')
+    jarima_filtri = request.GET.get('jarima_filtri', '')
+
+    oy_boshi, oy_oxiri = oy_oraligi(yil, oy)
+    hisobot_data, jami = hisobot_data_yig(
+        oy_boshi, oy_oxiri,
+        filtrlar={'bonus': bonus_filtri, 'jarima': jarima_filtri}
+    )
+    oy_nomi = OYLAR.get(oy, '')
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="oylik_hisobot_{oy_nomi}_{yil}.pdf"'
+
+    doc = SimpleDocTemplate(
+        response, pagesize=landscape(A4),
+        rightMargin=10, leftMargin=10, topMargin=20, bottomMargin=20
+    )
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle', parent=styles['Heading1'],
+        fontSize=16, alignment=1, spaceAfter=20,
+        textColor=colors.HexColor('#2001FF')
+    )
+
+    table_data = [[
+        '№', 'Xodim', 'Bonus Ball', "Bonus Pul (so'm)",
+        'Jarima Ball', "Jarima Pul (so'm)",
+        'Jami Ball', "Jami Pul (so'm)", 'Reyting'
+    ]]
+
+    for idx, item in enumerate(hisobot_data, 1):
+        table_data.append([
+            str(idx),
+            f"{item['xodim'].ism} {item['xodim'].familya}",
+            f"+{item['bonus_ball']}",
+            f"{item['bonus_pul']:,.0f}",
+            f"-{item['jarima_ball']}",
+            f"{item['jarima_pul']:,.0f}",
+            str(item['jami_ball']),
+            f"{item['jami_pul']:,.0f}",
+            str(item['xodim'].reyting_ball),
+        ])
+
+    table_data.append([
+        'JAMI', '',
+        f"+{jami['bonus_ball']}", f"{jami['bonus_pul']:,.0f}",
+        f"-{jami['jarima_ball']}", f"{jami['jarima_pul']:,.0f}",
+        str(jami['ball']), f"{jami['pul']:,.0f}",
+        '',
+    ])
+
+    table = Table(table_data, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2001FF')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#E8E8E8')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -2), 0.5, colors.grey),
+        ('GRID', (0, -1), (-1, -1), 0.5, colors.black),
+        ('ALIGN', (0, 1), (0, -1), 'CENTER'),
+        ('ALIGN', (2, 1), (2, -1), 'CENTER'),
+        ('ALIGN', (4, 1), (4, -1), 'CENTER'),
+        ('ALIGN', (6, 1), (6, -1), 'CENTER'),
+        ('ALIGN', (3, 1), (3, -1), 'RIGHT'),
+        ('ALIGN', (5, 1), (5, -1), 'RIGHT'),
+        ('ALIGN', (7, 1), (7, -1), 'RIGHT'),
+        ('FONTSIZE', (0, 1), (-1, -2), 9),
+    ]))
+    table._argW = [30, 120, 50, 65, 50, 65, 50, 65, 50]
+
+    title = Paragraph(f"<b>OYLIK HISOBOT — {oy_nomi} {yil}</b>", title_style)
+    sub_title = Paragraph(
+        f"<font size=9>"
+        f"Hisobot davri: {oy_boshi.strftime('%d.%m.%Y')} — {oy_oxiri.strftime('%d.%m.%Y')}<br/>"
+        f"Jami xodimlar: {len(hisobot_data)} ta | "
+        f"Jami ball: {jami['ball']} | "
+        f"Jami pul: {jami['pul']:,.0f} so'm"
+        f"</font>",
+        styles['Normal']
+    )
+    doc.build([title, Spacer(1, 10), sub_title, Spacer(1, 20), table])
+    return response
+
+
+
+@staff_member_required
+def jarima_pul_yechish(request, pk):
+    """Jarima pulini yechish"""
+    xodim = get_object_or_404(Xodim, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            # Pul miqdorini olish
+            yechiladigan_pul_str = request.POST.get('pul', '0')
+            yechiladigan_pul = Decimal(str(float(yechiladigan_pul_str)))
+            sabab = request.POST.get('sabab', '').strip()
+            
+            print(f"DEBUG: Yechiladigan pul: {yechiladigan_pul}, Sabab: {sabab}")  # Debug uchun
+            
+            # TEKSHIRISHLAR
+            if yechiladigan_pul <= 0:
+                messages.error(request, "❌ Pul miqdori 0 dan katta bo'lishi kerak!")
+                return redirect('jarima_pul_yechish', pk=xodim.pk)
+            
+            if not sabab:
+                messages.error(request, "❌ Sababni yozishingiz kerak!")
+                return redirect('jarima_pul_yechish', pk=xodim.pk)
+            
+            # Mavjud jarima pulini hisoblash
+            mavjud_jarima_pul = xodim.jarima_pul - xodim.jarima_pul_yechilgan
+            print(f"DEBUG: Mavjud jarima pul: {mavjud_jarima_pul}")  # Debug uchun
+            
+            if yechiladigan_pul > mavjud_jarima_pul:
+                messages.error(request, f"❌ Yetarli jarima pul mavjud emas! Mavjud: {mavjud_jarima_pul:,.0f} so'm")
+                return redirect('jarima_pul_yechish', pk=xodim.pk)
+            
+            # ============================================
+            # JARIMA PULINI YECHISH
+            # ============================================
+            
+            # 1. Yechilgan pulni ko'paytirish
+            xodim.jarima_pul_yechilgan += yechiladigan_pul
+            
+            # 2. Reyting pulni qayta hisoblash
+            # Sof reyting pul = (bonus - yechilgan_bonus) - (jarima - yechilgan_jarima)
+            xodim.reyting_pul = (xodim.bonus_pul - xodim.bonus_pul_yechilgan) - (xodim.jarima_pul - xodim.jarima_pul_yechilgan)
+            
+            # 3. Saqlash
+            xodim.save(update_fields=['jarima_pul_yechilgan', 'reyting_pul'])
+            
+            # 4. Tarixga yozish
+            OzgartirishTarixi.objects.create(
+                xodim=xodim,
+                admin=request.user,
+                sabab=f"Jarima pulidan {yechiladigan_pul:,.0f} so'm yechildi. Sabab: {sabab}",
+            )
+            
+            # 5. Natijani ko'rsatish
+            qolgan_pul = xodim.jarima_pul - xodim.jarima_pul_yechilgan
+            messages.success(
+                request, 
+                f"✅ {yechiladigan_pul:,.0f} so'm jarima pul yechildi!\n"
+                f"💰 Umumiy jarima: {xodim.jarima_pul:,.0f} so'm\n"
+                f"📤 Yechilgan: {xodim.jarima_pul_yechilgan:,.0f} so'm\n"
+                f"💵 Qolgan: {qolgan_pul:,.0f} so'm"
+            )
+            return redirect('xodim_detail', pk=xodim.pk)
+            
+        except (ValueError, TypeError) as e:
+            print(f"DEBUG XATO: {e}")  # Debug uchun
+            messages.error(request, f"❌ Xatolik: {e}. Iltimos, to'g'ri pul miqdorini kiriting!")
+            return redirect('jarima_pul_yechish', pk=xodim.pk)
+        except Exception as e:
+            print(f"DEBUG UMUMIY XATO: {e}")  # Debug uchun
+            messages.error(request, f"❌ Kutilmagan xatolik: {e}")
+            return redirect('jarima_pul_yechish', pk=xodim.pk)
+    
+    # GET so'rov - Formani ko'rsatish
+    mavjud_pul = xodim.jarima_pul - xodim.jarima_pul_yechilgan
+    context = {
+        'xodim': xodim,
+        'tur': 'jarima',
+        'umumiy': xodim.jarima_pul,
+        'yechilgan': xodim.jarima_pul_yechilgan,
+        'qoldiq': mavjud_pul,
+    }
+    return render(request, 'main/pul_yechish.html', context)
+
+# ============================================================
+# REYTINGDAN YECHISH
+# ============================================================
+
+@staff_member_required
+def reytingdan_yechish(request, pk):
+    xodim = get_object_or_404(Xodim, pk=pk)
+
+    if request.method == 'POST':
+        sabab = request.POST.get('sabab', '').strip()
+        if not sabab:
+            messages.error(request, "Sababni yozishingiz kerak!")
+            return redirect('reytingdan_yechish', pk=xodim.pk)
+
+        try:
+            ball = int(request.POST.get('ball', 0))
+            pul = Decimal(str(float(request.POST.get('pul', 0))))
+        except (ValueError, TypeError):
+            messages.error(request, "Ball va pul to'g'ri kiriting!")
+            return redirect('reytingdan_yechish', pk=xodim.pk)
+
+        if ball == 0 and pul == 0:
+            messages.error(request, "Kamida bitta qiymat kiriting!")
+            return redirect('reytingdan_yechish', pk=xodim.pk)
+
+        qayerdan = request.POST.get('qayerdan', 'reyting')
+
+        if qayerdan == 'bonus':
+            if ball > 0:
+                if ball > xodim.jami_bonus_ball:
+                    messages.error(request, f"Yetarli bonus ball mavjud emas! Mavjud: {xodim.jami_bonus_ball} ball")
+                    return redirect('reytingdan_yechish', pk=xodim.pk)
+                xodim.bonus_ball_yechilgan += ball
+            elif ball < 0:
+                qaytarish = abs(ball)
+                if qaytarish > xodim.bonus_ball_yechilgan:
+                    messages.error(request, f"Yechilgan bonus balldan ko'p qaytarib bo'lmaydi! Yechilgan: {xodim.bonus_ball_yechilgan} ball")
+                    return redirect('reytingdan_yechish', pk=xodim.pk)
+                xodim.bonus_ball_yechilgan -= qaytarish
+            if pul > 0:
+                if pul > xodim.jami_bonus_pul:
+                    messages.error(request, f"Yetarli bonus pul mavjud emas! Mavjud: {xodim.jami_bonus_pul:,.0f} so'm")
+                    return redirect('reytingdan_yechish', pk=xodim.pk)
+                xodim.bonus_pul_yechilgan += pul
+            elif pul < 0:
+                qaytarish = abs(pul)
+                if qaytarish > xodim.bonus_pul_yechilgan:
+                    messages.error(request, f"Yechilgan bonus puldan ko'p qaytarib bo'lmaydi!")
+                    return redirect('reytingdan_yechish', pk=xodim.pk)
+                xodim.bonus_pul_yechilgan -= qaytarish
+            izoh_tekst = "Bonusdan yechildi"
+        elif qayerdan == 'jarima':
+            if ball > 0:
+                if ball > xodim.jami_jarima_ball:
+                    messages.error(request, f"Yetarli jarima ball mavjud emas! Mavjud: {xodim.jami_jarima_ball} ball")
+                    return redirect('reytingdan_yechish', pk=xodim.pk)
+                xodim.jarima_ball_yechilgan += ball
+            elif ball < 0:
+                qaytarish = abs(ball)
+                if qaytarish > xodim.jarima_ball_yechilgan:
+                    messages.error(request, f"Yechilgan jarima balldan ko'p qaytarib bo'lmaydi!")
+                    return redirect('reytingdan_yechish', pk=xodim.pk)
+                xodim.jarima_ball_yechilgan -= qaytarish
+            if pul > 0:
+                if pul > xodim.jami_jarima_pul:
+                    messages.error(request, f"Yetarli jarima pul mavjud emas! Mavjud: {xodim.jami_jarima_pul:,.0f} so'm")
+                    return redirect('reytingdan_yechish', pk=xodim.pk)
+                xodim.jarima_pul_yechilgan += pul
+            elif pul < 0:
+                qaytarish = abs(pul)
+                if qaytarish > xodim.jarima_pul_yechilgan:
+                    messages.error(request, f"Yechilgan jarima puldan ko'p qaytarib bo'lmaydi!")
+                    return redirect('reytingdan_yechish', pk=xodim.pk)
+                xodim.jarima_pul_yechilgan -= qaytarish
+            izoh_tekst = "Jarimadan yechildi"
+        else:
+            xodim.reyting_ball -= ball
+            xodim.reyting_pul -= pul
+            izoh_tekst = "Reytingdan yechildi"
+
+        xodim.reyting_ball = xodim.jami_bonus_ball - xodim.jami_jarima_ball
+        xodim.reyting_pul = xodim.jami_bonus_pul - xodim.jami_jarima_pul
+        xodim.save()
+
+        OzgartirishTarixi.objects.create(
+            xodim=xodim, admin=request.user,
+            sabab=f"{izoh_tekst}: {ball} ball, {pul} so'm. Sabab: {sabab}",
+        )
+        messages.success(request, f"{izoh_tekst}: {ball} ball, {float(pul):,.0f} so'm!")
+        return redirect('xodim_detail', pk=xodim.pk)
+
+    return render(request, 'main/reytingdan_yechish.html', {'xodim': xodim})
+
+
+# ============================================================
+# REYTINGLAR
+# ============================================================
+
+@login_required
+def reytinglar(request):
+    davr = request.GET.get('davr', 'umumiy')
+    bugun = timezone.now().date()
+
+    hafta_boshi = bugun - timedelta(days=bugun.weekday())
+    hafta_oxiri = hafta_boshi + timedelta(days=6)
+
+    try:
+        tanlangan_oy = int(request.GET.get('oy', bugun.month))
+        tanlangan_yil = int(request.GET.get('yil', bugun.year))
+    except (TypeError, ValueError):
+        tanlangan_oy = bugun.month
+        tanlangan_yil = bugun.year
+
+    oy_nomi = OYLAR.get(tanlangan_oy, '')
+    oy_boshi, oy_oxiri = oy_oraligi(tanlangan_yil, tanlangan_oy)
+    yil_boshi = date(tanlangan_yil, 1, 1)
+    yil_oxiri = date(tanlangan_yil, 12, 31)
+
+    xodimlar = Xodim.objects.filter(active=True)
+
+    def ballo_map(Model, filter_kwargs):
+        return {
+            row['xodim']: row
+            for row in Model.objects.filter(**filter_kwargs).values('xodim').annotate(
+                jami_ball=Sum('ball_miqdori'),
+                jami_pul=Sum('pul_miqdori')
+            )
+        }
+
+    kbm = ballo_map(BonusRecord, {'sana__date': bugun})
+    kjm = ballo_map(JarimaRecord, {'sana__date': bugun})
+    hbm = ballo_map(BonusRecord, {'sana__date__gte': hafta_boshi, 'sana__date__lte': hafta_oxiri})
+    hjm = ballo_map(JarimaRecord, {'sana__date__gte': hafta_boshi, 'sana__date__lte': hafta_oxiri})
+    obm = ballo_map(BonusRecord, {'sana__date__gte': oy_boshi, 'sana__date__lte': oy_oxiri})
+    ojm = ballo_map(JarimaRecord, {'sana__date__gte': oy_boshi, 'sana__date__lte': oy_oxiri})
+    ybm = ballo_map(BonusRecord, {'sana__date__gte': yil_boshi, 'sana__date__lte': yil_oxiri})
+    yjm = ballo_map(JarimaRecord, {'sana__date__gte': yil_boshi, 'sana__date__lte': yil_oxiri})
+
+    def get_bb(m, pk): return m.get(pk, {}).get('jami_ball') or 0
+    def get_bp(m, pk): return float(m.get(pk, {}).get('jami_pul') or 0)
+
+    xodimlar_list = []
+    for xodim in xodimlar:
+        pk = xodim.pk
+        d = {'xodim': xodim}
+
+        for prefix, bm, jm in [
+            ('kunlik', kbm, kjm),
+            ('haftalik', hbm, hjm),
+            ('oylik', obm, ojm),
+            ('yillik', ybm, yjm),
+        ]:
+            bb = get_bb(bm, pk)
+            bp = get_bp(bm, pk)
+            jb = get_bb(jm, pk)
+            jp = get_bp(jm, pk)
+            d[f'{prefix}_bonus_ball'] = bb
+            d[f'{prefix}_bonus_pul'] = bp
+            d[f'{prefix}_jarima_ball'] = jb
+            d[f'{prefix}_jarima_pul'] = jp
+            d[f'{prefix}_reyting_ball'] = bb - jb
+            d[f'{prefix}_reyting_pul'] = bp - jp
+
+        d['umumiy_bonus_ball'] = xodim.bonus_ball
+        d['umumiy_bonus_pul'] = float(xodim.bonus_pul)
+        d['umumiy_jarima_ball'] = xodim.jarima_ball
+        d['umumiy_jarima_pul'] = float(xodim.jarima_pul)
+        d['umumiy_reyting_ball'] = xodim.reyting_ball
+        d['umumiy_reyting_pul'] = float(xodim.reyting_pul)
+
+        xodimlar_list.append(d)
+
+    sort_key = f'{davr}_reyting_ball'
+    sorted_xodimlar = sorted(
+        xodimlar_list,
+        key=lambda x: (
+            -x.get(sort_key, 0),
+            x.get(f'{davr}_jarima_ball', 0),
+            -x.get(f'{davr}_bonus_ball', 0),
+            x['xodim'].id
+        )
+    )
+
+    jami_ball_davr = sum(x.get(sort_key, 0) for x in xodimlar_list)
+    jami_pul_davr = sum(x.get(f'{davr}_reyting_pul', 0) for x in xodimlar_list)
+
+    podium = {}
+    for i, xd in enumerate(sorted_xodimlar[:3], 1):
+        xodim = xd['xodim']
+        podium[i] = {
+            'name': f"{xodim.ism} {xodim.familya[0]}." if xodim.familya else xodim.ism,
+            'full_name': f"{xodim.ism} {xodim.familya}",
+            'initials': f"{xodim.ism[0]}{xodim.familya[0]}" if xodim.ism and xodim.familya else '?',
+            'score': xd.get(sort_key, 0),
+            'pul': xd.get(f'{davr}_reyting_pul', 0),
+        }
+
+    return render(request, 'main/reytinglar.html', {
+        'xodimlar': sorted_xodimlar,
+        'jami_xodimlar': xodimlar.count(),
+        'podium': podium,
+        'davr': davr,
+        'bugun': bugun,
+        'hafta_boshi': hafta_boshi,
+        'hafta_oxiri': hafta_oxiri,
+        'oylar': OYLAR_LIST,
+        'yillar': range(bugun.year - 4, bugun.year + 1),
+        'tanlangan_oy': tanlangan_oy,
+        'tanlangan_yil': tanlangan_yil,
+        'oy_nomi': oy_nomi,
+        'jami_ball_davr': jami_ball_davr,
+        'jami_pul_davr': jami_pul_davr,
+    })
+
+
+# ============================================================
+# OYLIK HISOBOT
+# ============================================================
+
+@staff_member_required
+def oylik_hisobot(request):
+    oy = int(request.GET.get('oy', timezone.now().month))
+    yil = int(request.GET.get('yil', timezone.now().year))
+    bonus_filtri = request.GET.get('bonus_filtri', '')
+    jarima_filtri = request.GET.get('jarima_filtri', '')
+
+    oy_boshi, oy_oxiri = oy_oraligi(yil, oy)
+    hisobot_data, jami = hisobot_data_yig(
+        oy_boshi, oy_oxiri,
+        filtrlar={'bonus': bonus_filtri, 'jarima': jarima_filtri}
+    )
+
+    bugun = timezone.now().date()
+
+    return render(request, 'main/oylik_hisobot.html', {
+        'hisobot_data': hisobot_data,
+        'oy_nomi': OYLAR.get(oy, ''),
+        'tanlangan_oy': oy,
+        'tanlangan_yil': yil,
+        'oylar': OYLAR_LIST,
+        'yillar': range(bugun.year - 3, bugun.year + 1),
+        'oy_boshi': oy_boshi,
+        'oy_oxiri': oy_oxiri,
+        'jami_bonus_ball': jami['bonus_ball'],
+        'jami_jarima_ball': jami['jarima_ball'],
+        'jami_ball': jami['ball'],
+        'jami_pul': jami['pul'],
+        'xodimlar_soni': len(hisobot_data),
+        'bonus_filtri': bonus_filtri,
+        'jarima_filtri': jarima_filtri,
+    })
+
+
+@staff_member_required
+def oylik_hisobot_excel(request):
+    oy = int(request.GET.get('oy', timezone.now().month))
+    yil = int(request.GET.get('yil', timezone.now().year))
+
+    oy_boshi, oy_oxiri = oy_oraligi(yil, oy)
+    hisobot_data, jami = hisobot_data_yig(oy_boshi, oy_oxiri)
+    oy_nomi = OYLAR.get(oy, '')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"{oy_nomi}_{yil}"
+
+    blue_fill = PatternFill(start_color='2001FF', end_color='2001FF', fill_type='solid')
+    grey_fill = PatternFill(start_color='E8E8E8', end_color='E8E8E8', fill_type='solid')
+    center_align = Alignment(horizontal='center', vertical='center')
+
+    ws.merge_cells('A1:I1')
+    ws['A1'] = f"OYLIK HISOBOT — {oy_nomi} {yil}"
+    ws['A1'].font = Font(bold=True, size=14)
+    ws['A1'].alignment = center_align
+
+    headers = ['№', 'Xodim', 'Bonus Ball', "Bonus Pul (so'm)", 'Jarima Ball', "Jarima Pul (so'm)", 'Jami Ball', "Jami Pul (so'm)", 'Reyting']
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col, value=header)
+        cell.font = Font(bold=True, color='FFFFFF')
+        cell.fill = blue_fill
+        cell.alignment = center_align
+
+    for idx, item in enumerate(hisobot_data, 1):
+        row = idx + 3
+        ws.cell(row=row, column=1, value=idx)
+        ws.cell(row=row, column=2, value=f"{item['xodim'].ism} {item['xodim'].familya}")
+        ws.cell(row=row, column=3, value=item['bonus_ball'])
+        ws.cell(row=row, column=4, value=item['bonus_pul'])
+        ws.cell(row=row, column=5, value=item['jarima_ball'])
+        ws.cell(row=row, column=6, value=item['jarima_pul'])
+        ws.cell(row=row, column=7, value=item['jami_ball'])
+        ws.cell(row=row, column=8, value=item['jami_pul'])
+        ws.cell(row=row, column=9, value=item['xodim'].reyting_ball)
+
+    total_row = len(hisobot_data) + 4
+    ws.cell(row=total_row, column=1, value='JAMI')
+    ws.cell(row=total_row, column=3, value=jami['bonus_ball'])
+    ws.cell(row=total_row, column=4, value=jami['bonus_pul'])
+    ws.cell(row=total_row, column=5, value=jami['jarima_ball'])
+    ws.cell(row=total_row, column=6, value=jami['jarima_pul'])
+    ws.cell(row=total_row, column=7, value=jami['ball'])
+    ws.cell(row=total_row, column=8, value=jami['pul'])
+
+    for col in range(1, 10):
+        cell = ws.cell(row=total_row, column=col)
+        cell.font = Font(bold=True)
+        cell.fill = grey_fill
+
+    for i, width in enumerate([5, 30, 12, 15, 12, 15, 12, 15, 12], 1):
+        ws.column_dimensions[get_column_letter(i)].width = width
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="oylik_hisobot_{oy_nomi}_{yil}.xlsx"'
+    wb.save(response)
+    return response
+
+
+# ============================================================
+# PROFIL
+# ============================================================
+
+@login_required
+def mening_profilim(request):
+    """Xodimning shaxsiy profil sahifasi"""
+    try:
+        xodim = request.user.xodim
+    except Exception:
+        messages.error(request, "Siz xodim sifatida ro'yxatdan o'tmagansiz!")
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        if 'rasm_yuklash' in request.POST:
+            form = XodimRasmForm(request.POST, request.FILES, instance=xodim)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Rasm yuklandi!')
+                return redirect('mening_profilim')
+            else:
+                messages.error(request, 'Rasm yuklashda xatolik yuz berdi!')
+                return redirect('mening_profilim')
+        elif 'rasm_ochirish' in request.POST:
+            if xodim.rasm:
+                xodim.rasm.delete()
+                xodim.rasm = None
+                xodim.save()
+                messages.success(request, "Rasm o'chirildi!")
+            else:
+                messages.error(request, "Rasm mavjud emas!")
+            return redirect('mening_profilim')
+
+    # Bonus va jarimalarni olish
+    bonuslar = BonusRecord.objects.filter(xodim=xodim).select_related('sabab').order_by('-sana')[:50]
+    jarimalar = JarimaRecord.objects.filter(xodim=xodim).select_related('sabab').order_by('-sana')[:50]
+    
+    # Xaridlar tarixi
+    xaridlar = ProductOrder.objects.filter(user=request.user).select_related('product').order_by('-created_at')[:50]
+    
+    # Reytingdagi o'rni
+    joylashuv = Xodim.objects.filter(reyting_ball__gt=xodim.reyting_ball).count() + 1
+    
+    # Jami xodimlar soni
+    jami_xodimlar = Xodim.objects.filter(active=True).count()
+    
+    # Yechilgan pullarni hisoblash (agar modelda bo'lmasa)
+    bonus_ball_yechilgan = getattr(xodim, 'bonus_ball_yechilgan', 0)
+    bonus_pul_yechilgan = getattr(xodim, 'bonus_pul_yechilgan', 0)
+    jarima_ball_yechilgan = getattr(xodim, 'jarima_ball_yechilgan', 0)
+    jarima_pul_yechilgan = getattr(xodim, 'jarima_pul_yechilgan', 0)
+    
+    # Jami bonus va jarima (qolgan) - xarid_ball ni ham hisobga olish
+    xarid_ball = getattr(xodim, 'xarid_ball', 0)
+    jami_bonus_ball = xodim.bonus_ball - bonus_ball_yechilgan - xarid_ball
+    jami_bonus_pul = xodim.bonus_pul - bonus_pul_yechilgan
+    jami_jarima_ball = xodim.jarima_ball - jarima_ball_yechilgan
+    jami_jarima_pul = xodim.jarima_pul - jarima_pul_yechilgan
+    
+    # Sof reyting
+    sof_reyting_ball = jami_bonus_ball - jami_jarima_ball
+    sof_reyting_pul = jami_bonus_pul - jami_jarima_pul
+
+    context = {
+        'xodim': xodim,
+        'bonuslar': bonuslar,
+        'jarimalar': jarimalar,
+        'xaridlar': xaridlar,
+        'joylashuv': joylashuv,
+        'jami_xodimlar': jami_xodimlar,
+        
+        # Umumiy qiymatlar
+        'umumiy_bonus_ball': xodim.bonus_ball,
+        'umumiy_bonus_pul': xodim.bonus_pul,
+        'umumiy_jarima_ball': xodim.jarima_ball,
+        'umumiy_jarima_pul': xodim.jarima_pul,
+        
+        # Yechilgan qiymatlar
+        'bonus_ball_yechilgan': bonus_ball_yechilgan,
+        'bonus_pul_yechilgan': bonus_pul_yechilgan,
+        'jarima_ball_yechilgan': jarima_ball_yechilgan,
+        'jarima_pul_yechilgan': jarima_pul_yechilgan,
+        
+        # Qolgan (jami) qiymatlar
+        'jami_bonus_ball': jami_bonus_ball,
+        'jami_bonus_pul': jami_bonus_pul,
+        'jami_jarima_ball': jami_jarima_ball,
+        'jami_jarima_pul': jami_jarima_pul,
+        
+        # Sof reyting
+        'reyting_ball': xodim.reyting_ball,
+        'reyting_pul': xodim.reyting_pul,
+        'sof_reyting_ball': sof_reyting_ball,
+        'sof_reyting_pul': sof_reyting_pul,
+    }
+    
+    return render(request, 'main/mening_profilim.html', context)
+# main/views.py
+
+@login_required
+def profil_sozlamalari(request):
+    """Profil sozlamalari sahifasi"""
+    user = request.user
+    xodim = getattr(user, 'xodim', None)
+
+    login_form = UserEditForm(instance=user)
+    password_form = PasswordChangeForm(user)
+
+    if request.method == 'POST':
+        if 'login_form' in request.POST:
+            login_form = UserEditForm(request.POST, instance=user)
+            if login_form.is_valid():
+                login_form.save()
+                messages.success(request, "Login o'zgartirildi!")
+                return redirect('profil_sozlamalari')
+            else:
+                messages.error(request, "Xatolik yuz berdi!")
+        elif 'password_form' in request.POST:
+            password_form = PasswordChangeForm(user, request.POST)
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, "Parol o'zgartirildi!")
+                return redirect('profil_sozlamalari')
+            else:
+                messages.error(request, "Parol xatolik!")
+
+    return render(request, 'main/profil_sozlamalari.html', {
+        'user': user,
+        'xodim': xodim,
+        'login_form': login_form,
+        'password_form': password_form,
+    })
+
+
+@login_required
+def login_ozgartirish(request):
+    """Login o'zgartirish sahifasi"""
+    if request.method == 'POST':
+        form = UserEditForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Login o'zgartirildi!")
+            return redirect('profil_sozlamalari')
+        else:
+            messages.error(request, "Xatolik yuz berdi!")
+    else:
+        form = UserEditForm(instance=request.user)
+    
+    return render(request, 'main/login_ozgartirish.html', {
+        'form': form,
+        'title': "Login o'zgartirish"
+    })
+
+
+@login_required
+def parol_ozgartirish(request):
+    """Parol o'zgartirish sahifasi"""
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            messages.success(request, "Parol o'zgartirildi!")
+            return redirect('profil_sozlamalari')
+        else:
+            messages.error(request, "Parol xatolik!")
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    return render(request, 'main/parol_ozgartirish.html', {
+        'form': form,
+        'title': "Parol o'zgartirish"
+    })
+
+
+@login_required
+def rasm_ochirish(request):
+    """Rasm o'chirish"""
+    try:
+        xodim = request.user.xodim
+        if xodim.rasm:
+            xodim.rasm.delete()
+            xodim.rasm = None
+            xodim.save()
+            messages.success(request, "Rasm o'chirildi!")
+    except Exception:
+        messages.error(request, 'Xatolik yuz berdi!')
+    return redirect('mening_profilim')
+@login_required
+def profil_sozlamalari(request):
+    user = request.user
+    xodim = getattr(user, 'xodim', None)
+
+    login_form = UserEditForm(instance=user)
+    password_form = PasswordChangeForm(user)
+
+    if request.method == 'POST':
+        if 'login_form' in request.POST:
+            login_form = UserEditForm(request.POST, instance=user)
+            if login_form.is_valid():
+                login_form.save()
+                messages.success(request, "Login o'zgartirildi!")
+                return redirect('profil_sozlamalari')
+        elif 'password_form' in request.POST:
+            password_form = PasswordChangeForm(user, request.POST)
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, "Parol o'zgartirildi!")
+                return redirect('profil_sozlamalari')
+
+    return render(request, 'main/profil_sozlamalari.html', {
+        'user': user,
+        'xodim': xodim,
+        'login_form': login_form,
+        'password_form': password_form,
+    })
+
+
+# ============================================================
+# SABABLAR BOSHQARUVI
+# ============================================================
+
+@staff_member_required
+def sabablar_boshqaruvi(request):
+    if request.method == 'POST':
+        if 'bonus_qoshish' in request.POST:
+            BonusSabab.objects.create(
+                nom=request.POST.get('bonus_nom'),
+                pul_miqdori=request.POST.get('bonus_pul'),
+                ball_miqdori=request.POST.get('bonus_ball'),
+                active=True
+            )
+            messages.success(request, "Bonus sababi qo'shildi!")
+        elif 'jarima_qoshish' in request.POST:
+            JarimaSabab.objects.create(
+                nom=request.POST.get('jarima_nom'),
+                pul_miqdori=request.POST.get('jarima_pul'),
+                ball_miqdori=request.POST.get('jarima_ball'),
+                active=True
+            )
+            messages.success(request, "Jarima sababi qo'shildi!")
+        elif 'ochirish' in request.POST:
+            tur = request.POST.get('tur')
+            pk = request.POST.get('pk')
+            if tur == 'bonus':
+                BonusSabab.objects.filter(id=pk).delete()
+            else:
+                JarimaSabab.objects.filter(id=pk).delete()
+            messages.success(request, "Sabab o'chirildi!")
+        return redirect('sabablar_boshqaruvi')
+
+    return render(request, 'main/sabablar_boshqaruvi.html', {
+        'bonus_sabablar': BonusSabab.objects.all().order_by('-ball_miqdori'),
+        'jarima_sabablar': JarimaSabab.objects.all().order_by('-ball_miqdori'),
+    })
+
+
+# ============================================================
+# TARIXLAR
+# ============================================================
+
+@login_required
+def tarixlar(request, pk=None):
+    if pk:
+        xodim = get_object_or_404(Xodim, pk=pk)
+        return render(request, 'main/tarixlar.html', {
+            'xodim': xodim,
+            'bonuslar': BonusRecord.objects.filter(xodim=xodim).select_related('sabab').order_by('-sana'),
+            'jarimalar': JarimaRecord.objects.filter(xodim=xodim).select_related('sabab').order_by('-sana'),
+            'ozgarishlar': OzgartirishTarixi.objects.filter(xodim=xodim).order_by('-sana'),
+            'yagona_xodim': True,
+        })
+
+    if not request.user.is_staff:
+        return HttpResponseForbidden("Sizda bu sahifaga kirish ruxsati yo'q!")
+
+    qidiruv = request.GET.get('qidiruv', '')
+
+    def qidirish(Model, extra_q, qidiruv):
+        base = Q(xodim__ism__icontains=qidiruv) | Q(xodim__familya__icontains=qidiruv) | extra_q
+        return Model.objects.filter(base) if qidiruv else Model.objects.all()
+
+    bonuslar = qidirish(BonusRecord, Q(izoh__icontains=qidiruv), qidiruv).select_related('xodim', 'sabab').order_by('-sana')[:100]
+    jarimalar = qidirish(JarimaRecord, Q(izoh__icontains=qidiruv), qidiruv).select_related('xodim', 'sabab').order_by('-sana')[:100]
+    ozgarishlar = qidirish(OzgartirishTarixi, Q(sabab__icontains=qidiruv), qidiruv).select_related('xodim', 'admin').order_by('-sana')[:100]
+
+    return render(request, 'main/tarixlar.html', {
+        'bonuslar': bonuslar,
+        'jarimalar': jarimalar,
+        'ozgarishlar': ozgarishlar,
+        'yagona_xodim': False,
+        'qidiruv': qidiruv,
+    })
+
+
+# ============================================================
+# ADMIN DASHBOARD
+# ============================================================
+
+@staff_member_required
+def admin_dashboard(request):
+    bugun = timezone.now().date()
+    pending_orders = ProductOrder.objects.filter(status='PENDING').count()
+    
+    oxirgi_bonuslar = BonusRecord.objects.select_related('xodim').order_by('-sana')[:20]
+    oxirgi_jarimalar = JarimaRecord.objects.select_related('xodim').order_by('-sana')[:20]
+    
+    bon_agg = BonusRecord.objects.aggregate(
+        bball=Sum('ball_miqdori'), bpul=Sum('pul_miqdori')
+    )
+    jar_agg = JarimaRecord.objects.aggregate(
+        jball=Sum('ball_miqdori'), jpul=Sum('pul_miqdori')
+    )
+    umumiy_bonus_ball = bon_agg['bball'] or 0
+    umumiy_bonus_pul = bon_agg['bpul'] or 0
+    umumiy_jarima_ball = jar_agg['jball'] or 0
+    umumiy_jarima_pul = jar_agg['jpul'] or 0
+    
+    xodimlar_soni = Xodim.objects.count()
+    bugun_bonus = BonusRecord.objects.filter(sana__date=bugun).count()
+    bugun_jarima = JarimaRecord.objects.filter(sana__date=bugun).count()
+    
+    return render(request, 'main/admin_dashboard.html', {
+        'jami_xodimlar': xodimlar_soni,
+        'jami_bonuslar': BonusRecord.objects.count(),
+        'jami_jarimalar': JarimaRecord.objects.count(),
+        'umumiy_ball': Xodim.objects.aggregate(Sum('reyting_ball'))['reyting_ball__sum'] or 0,
+        'umumiy_pul': Xodim.objects.aggregate(Sum('reyting_pul'))['reyting_pul__sum'] or 0,
+        'bugun_bonus': bugun_bonus,
+        'bugun_jarima': bugun_jarima,
+        'top_xodimlar': Xodim.objects.filter(active=True).order_by('-reyting_ball')[:10],
+        'pending_orders': pending_orders,
+        'oxirgi_bonuslar': oxirgi_bonuslar,
+        'oxirgi_jarimalar': oxirgi_jarimalar,
+        'bugun_qoshilgan': bugun_bonus + bugun_jarima,
+        'faol_sabablar': BonusSabab.objects.count() + JarimaSabab.objects.count(),
+        'umumiy_bonus_ball': umumiy_bonus_ball,
+        'umumiy_bonus_pul': umumiy_bonus_pul,
+        'umumiy_jarima_ball': umumiy_jarima_ball,
+        'umumiy_jarima_pul': umumiy_jarima_pul,
+        'xodimlar_soni': xodimlar_soni,
+    })
+
+
+def admin(request):
+    return render(request, 'main/admin.html')
+
+
+
+
+
+
+
+
+
+
+
+# main/views.py
+
+@staff_member_required
+def xodim_ballarni_tekislash(request, pk):
+    """Xodimning bonus va jarima ballarini to'g'ridan-to'g'ri tahrirlash"""
+    xodim = get_object_or_404(Xodim, pk=pk)
+    
+    if request.method == 'POST':
+        sabab = request.POST.get('sabab', '').strip()
+        if not sabab:
+            messages.error(request, "O'zgartirish sababini yozishingiz kerak!")
+            return redirect('xodim_ballarni_tekislash', pk=xodim.pk)
+        
+        try:
+            bonus_ball = int(request.POST.get('bonus_ball', 0))
+            bonus_pul = Decimal(str(float(request.POST.get('bonus_pul', 0))))
+            jarima_ball = int(request.POST.get('jarima_ball', 0))
+            jarima_pul = Decimal(str(float(request.POST.get('jarima_pul', 0))))
+        except (ValueError, TypeError):
+            messages.error(request, "Noto'g'ri qiymat kiritildi!")
+            return redirect('xodim_ballarni_tekislash', pk=xodim.pk)
+        
+        # Eski qiymatlarni saqlash
+        eski_bonus_ball = xodim.bonus_ball
+        eski_bonus_pul = xodim.bonus_pul
+        eski_jarima_ball = xodim.jarima_ball
+        eski_jarima_pul = xodim.jarima_pul
+        
+        # Yangi qiymatlarni o'rnatish
+        xodim.bonus_ball = bonus_ball
+        xodim.bonus_pul = bonus_pul
+        xodim.jarima_ball = jarima_ball
+        xodim.jarima_pul = jarima_pul
+        
+        # Reytingni qayta hisoblash
+        xodim.reyting_ball = bonus_ball - jarima_ball
+        xodim.reyting_pul = (bonus_pul - xodim.bonus_pul_yechilgan) - (jarima_pul - xodim.jarima_pul_yechilgan)
+        xodim.save()
+        
+        # Tarixga yozish
+        OzgartirishTarixi.objects.create(
+            xodim=xodim,
+            admin=request.user,
+            sabab=f"Ballarni tekislash. Sabab: {sabab}",
+            eski_bonus_ball=eski_bonus_ball,
+            eski_bonus_pul=eski_bonus_pul,
+            eski_jarima_ball=eski_jarima_ball,
+            eski_jarima_pul=eski_jarima_pul,
+            yangi_bonus_ball=bonus_ball,
+            yangi_bonus_pul=bonus_pul,
+            yangi_jarima_ball=jarima_ball,
+            yangi_jarima_pul=jarima_pul,
+        )
+        
+        messages.success(request, f"{xodim.ism} {xodim.familya} ballari yangilandi!")
+        return redirect('xodim_detail', pk=xodim.pk)
+    
+    return render(request, 'main/xodim_ballarni_tekislash.html', {'xodim': xodim})
+
+
+
+
+
+# main/views.py
+@staff_member_required
+def bonus_ball_yechish(request, pk):
+    """Bonus ballni yechish"""
+    xodim = get_object_or_404(Xodim, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            yechiladigan_ball = int(request.POST.get('ball', 0))
+            sabab = request.POST.get('sabab', '').strip()
+            
+            if yechiladigan_ball <= 0:
+                messages.error(request, "Ball miqdori 0 dan katta bo'lishi kerak!")
+                return redirect('bonus_ball_yechish', pk=xodim.pk)
+            
+            if not sabab:
+                messages.error(request, "Sababni yozishingiz kerak!")
+                return redirect('bonus_ball_yechish', pk=xodim.pk)
+            
+            if yechiladigan_ball > xodim.jami_bonus_ball:
+                messages.error(request, f"Yetarli bonus ball mavjud emas! Mavjud: {xodim.jami_bonus_ball} ball")
+                return redirect('bonus_ball_yechish', pk=xodim.pk)
+            
+            # Yechish
+            xodim.bonus_ball_yechilgan += yechiladigan_ball
+            xodim.reyting_ball = xodim.jami_bonus_ball - xodim.jami_jarima_ball
+            xodim.save(update_fields=['bonus_ball_yechilgan', 'reyting_ball'])
+            
+            # TO'G'RI - FAQAT MAVJUD MAYDONLAR
+            OzgartirishTarixi.objects.create(
+                xodim=xodim,
+                admin=request.user,
+                sabab=f"Bonus balldan {yechiladigan_ball} ball yechildi. Sabab: {sabab}",
+            )
+            
+            messages.success(request, f"✅ {yechiladigan_ball} ball bonus balldan yechildi! Qolgan: {xodim.jami_bonus_ball} ball")
+            return redirect('xodim_detail', pk=xodim.pk)
+            
+        except (ValueError, TypeError) as e:
+            messages.error(request, f"Xatolik: {e}")
+            return redirect('bonus_ball_yechish', pk=xodim.pk)
+    
+    return render(request, 'main/ball_yechish.html', {
+        'xodim': xodim,
+        'tur': 'bonus_ball',
+        'umumiy': xodim.bonus_ball,
+        'yechilgan': xodim.bonus_ball_yechilgan,
+        'qoldiq': xodim.jami_bonus_ball,
+    })
+
+@staff_member_required
+def jarima_ball_yechish(request, pk):
+    """Jarima ballni yechish"""
+    xodim = get_object_or_404(Xodim, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            yechiladigan_ball = int(request.POST.get('ball', 0))
+            sabab = request.POST.get('sabab', '').strip()
+            
+            if yechiladigan_ball <= 0:
+                messages.error(request, "Ball miqdori 0 dan katta bo'lishi kerak!")
+                return redirect('jarima_ball_yechish', pk=xodim.pk)
+            
+            if not sabab:
+                messages.error(request, "Sababni yozishingiz kerak!")
+                return redirect('jarima_ball_yechish', pk=xodim.pk)
+            
+            if yechiladigan_ball > xodim.jami_jarima_ball:
+                messages.error(request, f"Yetarli jarima ball mavjud emas! Mavjud: {xodim.jami_jarima_ball} ball")
+                return redirect('jarima_ball_yechish', pk=xodim.pk)
+            
+            # Yechish
+            xodim.jarima_ball_yechish(yechiladigan_ball)
+            
+            # Tarixga yozish
+            OzgartirishTarixi.objects.create(
+                xodim=xodim,
+                admin=request.user,
+                sabab=f"Jarima balldan {yechiladigan_ball} ball yechildi. Sabab: {sabab}",
+            )
+            
+            messages.success(request, f"✅ {yechiladigan_ball} ball jarima balldan yechildi! Qolgan: {xodim.jami_jarima_ball} ball")
+            return redirect('xodim_detail', pk=xodim.pk)
+            
+        except (ValueError, TypeError):
+            messages.error(request, "Noto'g'ri ball miqdori!")
+            return redirect('jarima_ball_yechish', pk=xodim.pk)
+    
+    return render(request, 'main/ball_yechish.html', {
+        'xodim': xodim,
+        'tur': 'jarima_ball',
+        'umumiy': xodim.jarima_ball,
+        'yechilgan': xodim.jarima_ball_yechilgan,
+        'qoldiq': xodim.jami_jarima_ball,
+    })
+
+
+# ============================================================
+# MAHSULOT QOSHISH
+# ============================================================
+
+@staff_member_required
+def mahsulot_qoshish(request):
+    from .forms import ProductForm
+    categories = Category.objects.all().order_by('order', 'name')
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            product = form.save()
+            # Notification for all users
+            xodimlar = Xodim.objects.filter(active=True)
+            for xodim in xodimlar:
+                send_notification(
+                    xodim.user,
+                    "Yangi mahsulot",
+                    f"\"{product.name}\" mahsuloti qo'shildi! {product.price_points} ball",
+                    '/shop/'
+                )
+            messages.success(request, "✅ Mahsulot muvaffaqiyatli qo'shildi!")
+            return redirect('admin_dashboard')
+        else:
+            messages.error(request, "Xatolik yuz berdi!")
+    else:
+        form = ProductForm()
+    return render(request, 'main/mahsulot_form.html', {'form': form, 'categories': categories})
+
+
+@login_required
+def shop_edit_view(request, product_id):
+    from .forms import ProductForm
+    categories = Category.objects.all().order_by('order', 'name')
+    product = get_object_or_404(Product, id=product_id)
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "✅ Mahsulot tahrirlandi!")
+            return redirect('admin_mahsulotlar')
+        else:
+            messages.error(request, "Xatolik yuz berdi!")
+    else:
+        form = ProductForm(instance=product)
+    return render(request, 'main/mahsulot_form.html', {'form': form, 'edit': True, 'categories': categories})
+
+
+@staff_member_required
+def admin_mahsulotlar(request):
+    from django.db.models import Count
+    products = Product.objects.all().select_related('category').order_by('-created_at')
+    categories = Category.objects.annotate(product_count=Count('products')).order_by('order', 'name')
+    total_count = products.count()
+    coming_soon_count = products.filter(is_coming_soon=True).count()
+    return render(request, 'main/admin_mahsulotlar.html', {
+        'products': products,
+        'categories': categories,
+        'total_count': total_count,
+        'coming_soon_count': coming_soon_count,
+    })
+
+
+@staff_member_required
+def mahsulot_ochirish(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    if request.method == 'POST':
+        product.delete()
+        messages.success(request, "❌ Mahsulot o'chirildi!")
+        return redirect('admin_mahsulotlar')
+    return render(request, 'main/mahsulot_ochirish.html', {'product': product})
+
+
+@staff_member_required
+def kategoriya_qoshish(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        order = request.POST.get('order', 0)
+        if name:
+            Category.objects.create(name=name, order=order)
+            messages.success(request, f"✅ '{name}' kategoriyasi qo'shildi!")
+        else:
+            messages.error(request, "Kategoriya nomini kiriting!")
+        return redirect('admin_mahsulotlar')
+    return redirect('admin_mahsulotlar')
+
+
+@staff_member_required
+def kategoriya_ochirish(request, pk):
+    if request.method == 'POST':
+        category = get_object_or_404(Category, pk=pk)
+        name = category.name
+        category.delete()
+        messages.success(request, f"❌ '{name}' kategoriyasi o'chirildi!")
+    return redirect('admin_mahsulotlar')
+
+
+# ============================================================
+# SHOP
+# ============================================================
+
+@login_required
+def shop_view(request):
+    categories = Category.objects.all().order_by('order', 'name')
+    products = Product.objects.filter(is_active=True).select_related('category')
+    try:
+        xodim = request.user.xodim
+        available_ball = get_available_shop_ball(xodim)
+    except Exception:
+        xodim = None
+        available_ball = 0
+
+    # Guruhlash: kategoriya bo'yicha
+    categorized = []
+    uncategorized = products.filter(category__isnull=True)
+    for cat in categories:
+        cat_products = products.filter(category=cat)
+        if cat_products.exists():
+            categorized.append({
+                'category': cat,
+                'products': cat_products
+            })
+    if uncategorized.exists():
+        categorized.append({
+            'category': None,
+            'products': uncategorized
+        })
+
+    return render(request, 'main/shop.html', {
+        'categorized': categorized,
+        'products': products,
+        'xodim': xodim,
+        'available_ball': available_ball,
+    })
+
+
+@login_required
+def purchase_view(request, product_id):
+    if request.method != 'POST':
+        return redirect('shop')
+
+    try:
+        xodim = request.user.xodim
+        order = purchase_product(request.user, product_id)
+        messages.success(
+            request,
+            f"✅ Buyurtma yaratildi! Mahsulot: {order.product.name}. "
+            f"Admin tasdiqlashini kuting."
+        )
+    except Xodim.DoesNotExist:
+        messages.error(request, "Siz xodim sifatida ro'yxatdan o'tmagansiz!")
+    except ValueError as e:
+        messages.error(request, str(e))
+    except Product.DoesNotExist:
+        messages.error(request, "Mahsulot topilmadi!")
+    except Exception as e:
+        messages.error(request, f"Xatolik yuz berdi: {e}")
+
+    return redirect('shop')
+
+
+# ============================================================
+# MY ORDERS
+# ============================================================
+
+@login_required
+def my_orders_view(request):
+    orders = ProductOrder.objects.filter(user=request.user).select_related('product')
+
+    status_colors = {
+        'PENDING': 'bg-yellow-100 text-yellow-800',
+        'APPROVED': 'bg-green-100 text-green-800',
+        'REJECTED': 'bg-red-100 text-red-800',
+    }
+
+    return render(request, 'main/my_orders.html', {
+        'orders': orders,
+        'status_colors': status_colors,
+    })
+
+
+# ============================================================
+# ADMIN ORDERS
+# ============================================================
+
+@staff_member_required
+def admin_order_list(request):
+    status_filter = request.GET.get('status', '')
+    orders = ProductOrder.objects.all().select_related('user', 'product')
+
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+
+    orders = orders.order_by('-created_at')
+
+    return render(request, 'main/admin_orders.html', {
+        'orders': orders,
+        'status_filter': status_filter,
+    })
+
+
+@staff_member_required
+def admin_order_approve(request, order_id):
+    if request.method != 'POST':
+        return redirect('admin_order_list')
+
+    try:
+        order = approve_order(order_id)
+        messages.success(request, f"✅ Buyurtma #{order.id} tasdiqlandi!")
+    except ValueError as e:
+        messages.error(request, str(e))
+    except ProductOrder.DoesNotExist:
+        messages.error(request, "Buyurtma topilmadi!")
+    except Exception as e:
+        messages.error(request, f"Xatolik: {e}")
+
+    return redirect('admin_order_list')
+
+
+@staff_member_required
+def admin_order_reject(request, order_id):
+    order = get_object_or_404(ProductOrder, id=order_id)
+
+    if request.method == 'POST':
+        form = OrderRejectForm(request.POST)
+        if form.is_valid():
+            try:
+                reject_order(order_id, form.cleaned_data['reject_reason'])
+                messages.success(request, f"❌ Buyurtma #{order.id} rad etildi!")
+                return redirect('admin_order_list')
+            except ValueError as e:
+                messages.error(request, str(e))
+            except Exception as e:
+                messages.error(request, f"Xatolik: {e}")
+        else:
+            messages.error(request, "Rad etish sababini yozing!")
+        return redirect('admin_order_reject', order_id=order_id)
+
+    form = OrderRejectForm()
+    return render(request, 'main/admin_order_reject.html', {
+        'form': form,
+        'order': order,
+    })
+
+
+# ============================================================
+# BILDIRISHNOMALAR
+# ============================================================
+
+@login_required
+def notification_list(request):
+    notifications = Notification.objects.filter(user=request.user)
+    if request.GET.get('read') == '0':
+        notifications = notifications.filter(is_read=False)
+    return render(request, 'main/bildirishnomalar.html', {
+        'notifications': notifications,
+    })
+
+
+@login_required
+def notification_unread_count(request):
+    from django.http import JsonResponse
+    count = Notification.objects.filter(user=request.user, is_read=False).count()
+    return JsonResponse({'count': count})
+
+
+@login_required
+def notification_mark_read(request, pk):
+    notification = get_object_or_404(Notification, pk=pk, user=request.user)
+    notification.is_read = True
+    notification.save(update_fields=['is_read'])
+    if notification.url:
+        return redirect(notification.url)
+    return redirect('notification_list')
+
+
+@login_required
+def notification_mark_all_read(request):
+    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    messages.success(request, "Barcha bildirishnomalar o'qildi!")
+    return redirect('notification_list')
+
+
+# ============================================================
+# PUSH BILDIRISHNOMALAR (PWA)
+# ============================================================
+
+@login_required
+@csrf_exempt
+def push_subscribe(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST talab qilinadi'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        endpoint = data.get('endpoint', '')
+        keys = data.get('keys', {})
+        p256dh = keys.get('p256dh', '')
+        auth = keys.get('auth', '')
+
+        if not endpoint or not p256dh or not auth:
+            return JsonResponse({'error': 'endpoint, p256dh va auth talab qilinadi'}, status=400)
+
+        # Mavjud obunani yangilash yoki yangisini yaratish
+        sub, created = PushSubscription.objects.update_or_create(
+            user=request.user,
+            endpoint=endpoint,
+            defaults={
+                'p256dh_key': p256dh,
+                'auth_key': auth,
+                'user_agent': request.META.get('HTTP_USER_AGENT', ''),
+            }
+        )
+
+        return JsonResponse({'status': 'ok', 'created': created})
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Noto\'g\'ri JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+@login_required
+@csrf_exempt
+def push_unsubscribe(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST talab qilinadi'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        endpoint = data.get('endpoint', '')
+        PushSubscription.objects.filter(user=request.user, endpoint=endpoint).delete()
+        return JsonResponse({'status': 'ok'})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
+def vapid_public_key(request):
+    from django.conf import settings
+    # Return the raw 65-byte key as URL-safe base64 for JS
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from cryptography.hazmat.backends import default_backend
+
+    try:
+        pub_key = serialization.load_pem_public_key(
+            settings.VAPID_PUBLIC_KEY.encode(),
+            backend=default_backend()
+        )
+        raw_bytes = pub_key.public_bytes(
+            encoding=serialization.Encoding.X962,
+            format=serialization.PublicFormat.UncompressedPoint
+        )
+        import base64
+        b64_key = base64.urlsafe_b64encode(raw_bytes).rstrip(b'=').decode()
+        return JsonResponse({'public_key': b64_key})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

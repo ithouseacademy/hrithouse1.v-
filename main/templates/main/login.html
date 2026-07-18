@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="uz">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirish - IT House</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #f8f9fc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+        
+        .phone-frame {
+            max-width: 375px;
+            width: 100%;
+            background: white;
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .time {
+            font-weight: 600;
+        }
+        
+        .status-icons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin: 20px 0 30px;
+        }
+        
+        .logo-circle {
+            width: 70px;
+            height: 70px;
+            background: #0066ff;
+            border-radius: 20px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            overflow: hidden;
+        }
+        
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .logo-text {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .welcome-text {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .welcome-text h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #111;
+        }
+        
+        .welcome-text p {
+            color: #666;
+            font-size: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 16px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 14px;
+            font-size: 15px;
+            background: #fafafa;
+            outline: none;
+            transition: 0.2s;
+        }
+        
+        input:focus {
+            border-color: #0066ff;
+            background: white;
+        }
+        
+        .error-message {
+            background: #fee;
+            color: #c00;
+            padding: 12px 16px;
+            border-radius: 14px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            border-left: 4px solid #c00;
+        }
+        
+        .signin-btn {
+            width: 100%;
+            background: #0066ff;
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 16px;
+            margin: 25px 0 20px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .signin-btn:hover {
+            background: #0052cc;
+        }
+        
+        .demo-hint {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .demo-hint span {
+            color: #0066ff;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-frame">
+   
+        
+        <div class="logo">
+            <div class="logo-circle">
+                <img src="{% static 'img/logow.png' %}" alt="IT House Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2280%22 height=%2280%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%230066ff%22/><text x=%2220%22 y=%2265%22 font-size=%2245%22 fill=%22white%22>IT</text></svg>'">
+            </div>
+            <div class="logo-text">IT House</div>
+        </div>
+        
+        <div class="welcome-text">
+            <h1>Login to your Account</h1>
+            <p>Welcome back! Please enter your details</p>
+        </div>
+        
+        <!-- Xatolik xabari -->
+        {% if error %}
+        <div class="error-message">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        {% if form.errors %}
+        <div class="error-message">
+            Login yoki parol noto'g'ri. Iltimos qayta urinib ko'ring.
+        </div>
+        {% endif %}
+        
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>User Name</label>
+                <input type="text" name="username" placeholder="Enter your user name" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Enter your password" required>
+            </div>
+            
+            <button type="submit" class="signin-btn">Kirish</button>
+        </form>
+        
+  
+    </div>
+
+    <script>
+        // Vaqtni ko'rsatish
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('current-time').textContent = `${hours}:${minutes}`;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>

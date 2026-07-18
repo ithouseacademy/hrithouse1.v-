@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Buyurtmani rad etish{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto">
+  <h1 class="text-2xl font-bold text-gray-800 mb-2">❌ Buyurtmani rad etish</h1>
+  <p class="text-sm text-gray-500 mb-6">
+    Buyurtma #{{ order.id }} — {{ order.product.name }} ({{ order.points_spent }} ball)
+    <br>Xodim: {{ order.user.get_full_name|default:order.user.username }}
+  </p>
+
+  <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
+    <p class="text-sm text-red-700">
+      <i class="ri-information-line"></i>
+      Buyurtma rad etilganda, o'quvchiga {{ order.points_spent }} ball qaytariladi va mahsulot omborga qaytariladi.
+    </p>
+  </div>
+
+  <form method="POST" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    {% csrf_token %}
+    <div class="mb-4">
+      <label class="block text-sm font-semibold text-gray-700 mb-2">Rad etish sababi</label>
+      {{ form.reject_reason }}
+      {% if form.reject_reason.errors %}
+      <p class="text-red-500 text-xs mt-1">{{ form.reject_reason.errors.0 }}</p>
+      {% endif %}
+    </div>
+    <div class="flex gap-3">
+      <button type="submit" class="flex-1 py-2.5 bg-red-600 text-white rounded-xl font-semibold text-sm hover:bg-red-700 transition">
+        Rad etish
+      </button>
+      <a href="{% url 'admin_order_list' %}" class="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-semibold text-sm text-center hover:bg-gray-200 transition">
+        Bekor qilish
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

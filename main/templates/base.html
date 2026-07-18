@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="uz">
+  {% load static %}
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"
+    />
+    <title>IT House - {% block title %}{% endblock %}</title>
+
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <link rel="icon" href="{% static 'img/logo.png' %}" />
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <meta name="theme-color" content="#3b82f6">
+    
+    <!-- Home Screen Icon -->
+    <link
+      rel="apple-touch-icon"
+      sizes="512x512"
+      href="{% static 'img/logo.png' %}"
+    />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#3B82F6",
+              secondary: "#1E40AF",
+            },
+            borderRadius: {
+              none: "0px",
+              sm: "4px",
+              DEFAULT: "8px",
+              md: "12px",
+              lg: "16px",
+              xl: "20px",
+              "2xl": "24px",
+              "3xl": "32px",
+              full: "9999px",
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+    />
+  </head>
+
+  <body class="bg-gray-50 font-sans">
+
+    <!-- ================= TOP NAV ================= -->
+    <nav class="fixed top-0 w-full bg-white shadow-sm z-50 px-4 py-3">
+      <div class="flex items-center justify-between">
+
+        <div class="flex items-center space-x-2 relative">
+          <img
+            class="w-[70px] h-[70px] absolute top-[-23px]"
+            src="{% static 'img/logo.png' %}"
+            alt=""
+          />
+          <span class="relative left-[50px]">
+            <h1 class="text-xl font-bold text-primary">IT House</h1>
+            <span
+              class="text-sm font-medium text-gray-600 absolute top-[20px] right-0 text-primary"
+            >Academy</span>
+            <h1>mushtariy</h1>
+          </span>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          {% if user.is_authenticated %}
+
+          <!-- Notification bell -->
+          <a href="{% url 'notification_list' %}" class="relative">
+            <i class="ri-notification-3-line text-xl text-gray-600"></i>
+            <span id="notif-badge"
+               class="hidden absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">0</span>
+          </a>
+
+          <span class="text-sm font-medium text-gray-700">
+            {{ user.get_full_name|default:user.username }}
+          </span>
+
+          <a
+            href="{% url 'mening_profilim' %}"
+            class="w-8 h-8 flex items-center justify-center bg-primary rounded-full overflow-hidden"
+          >
+            {% if user.xodim.rasm and user.xodim.rasm.url %}
+            <img
+              src="{{ user.xodim.rasm.url }}"
+              class="w-full h-full object-cover"
+            />
+            {% else %}
+            <i class="ri-user-line text-white text-sm"></i>
+            {% endif %}
+          </a>
+
+          {% else %}
+          <a href="{% url 'login' %}" class="text-sm font-medium text-primary">
+            Kirish
+          </a>
+          {% endif %}
+        </div>
+
+      </div>
+    </nav>
+
+    <!-- ================= MAIN ================= -->
+    <main class="pt-20 pb-24 px-4">
+      {% if messages %}
+      <div class="mb-4">
+        {% for message in messages %}
+        <div
+          class="p-3 rounded-lg {% if message.tags == 'success' %}bg-green-50 text-green-700{% else %}bg-red-50 text-red-700{% endif %} text-sm mb-2"
+        >
+          {{ message }}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- ================= BOTTOM NAV ================= -->
+    <nav class="fixed bottom-0 w-full bg-white border-t border-gray-200 z-50">
+      <div class="flex justify-between h-16 pl-[20px] pr-[20px]">
+
+        <a href="{% url 'dashboard' %}"
+           class="flex flex-col items-center justify-center space-y-1 {% if request.resolver_match.url_name == 'dashboard' %} text-primary{% else %}text-gray-600 hover:text-primary{% endif %}">
+          <img src="{% static 'img/home.gif' %}" class="w-6 h-6" />
+          <span class="text-xs">Bosh sahifa</span>
+        </a>
+
+        <a href="{% url 'reytinglar' %}"
+           class="flex flex-col items-center justify-center space-y-1 {% if request.resolver_match.url_name == 'reytinglar' %} text-primary{% else %}text-gray-600 hover:text-primary{% endif %}">
+          <img src="{% static 'img/reyting.gif' %}" class="w-6 h-6" />
+          <span class="text-xs">Reyting</span>
+        </a>
+
+        <a href="{% url 'shop' %}"
+           class="flex flex-col items-center justify-center space-y-1 {% if request.resolver_match.url_name == 'shop' %} text-primary{% else %}text-gray-600 hover:text-primary{% endif %}">
+          <i class="ri-shopping-bag-3-line text-xl"></i>
+          <span class="text-xs">Shop</span>
+        </a>
+
+        <a href="https://ithousefaceid.pythonanywhere.com/"
+           class="flex flex-col items-center justify-center space-y-1 text-gray-600">
+          <img src="{% static 'img/faceid.gif' %}" class="w-6 h-6" />
+          <span class="text-xs">Face ID</span>
+        </a>
+
+        <a href="{% url 'mening_profilim' %}"
+           class="flex flex-col items-center justify-center space-y-1 {% if request.resolver_match.url_name == 'mening_profilim' %} text-primary{% else %}text-gray-600 hover:text-primary{% endif %}">
+          <img src="{% static 'img/user.gif' %}" class="w-6 h-6" />
+          <span class="text-xs">Profil</span>
+        </a>
+
+        {% if user.is_superuser %}
+        <a href="{% url 'admin_dashboard' %}"
+           class="flex flex-col items-center justify-center space-y-1 text-gray-600">
+          <i class="ri-settings-3-fill"></i>
+          <span class="text-xs">Admin</span>
+        </a>
+        {% endif %}
+
+      </div>
+    </nav>
+
+    <!-- ================= PWA INSTALL BANNER ================= -->
+    <div id="pwa-banner"
+         class="hidden fixed bottom-20 left-4 right-4 bg-blue-600 text-white p-3 rounded-lg shadow-lg z-50 flex justify-between items-center">
+      <span class="text-sm">📲 Ilovani yuklab oling</span>
+      <button id="install-btn" class="bg-white text-blue-600 px-3 py-1 rounded text-sm font-bold">
+        Yuklab olish
+      </button>
+    </div>
+
+    <!-- ================= NOTIFICATION POLLING ================= -->
+    <script>
+    {% if user.is_authenticated %}
+    (function() {
+      const badge = document.getElementById('notif-badge');
+      if (!badge) return;
+
+      function poll() {
+        fetch("{% url 'notification_unread_count' %}")
+          .then(r => r.json())
+          .then(data => {
+            const count = data.count || 0;
+            if (count > 0) {
+              badge.textContent = count > 99 ? '99+' : count;
+              badge.classList.remove('hidden');
+            } else {
+              badge.classList.add('hidden');
+            }
+          })
+          .catch(() => {});
+      }
+
+      poll();
+      setInterval(poll, 30000);
+
+      // Desktop Browser Notification
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+
+      // Poll with desktop notification when new notification appears
+      let prevCount = 0;
+      async function pollWithNotif() {
+        try {
+          const r = await fetch("{% url 'notification_unread_count' %}");
+          const data = await r.json();
+          const count = data.count || 0;
+          if (count > prevCount && Notification.permission === 'granted') {
+            new Notification('IT House', {
+              body: `Sizda ${count} ta yangi bildirishnoma bor`,
+              icon: "{% static 'img/logo.png' %}"
+            });
+          }
+          prevCount = count;
+        } catch(e) {}
+      }
+      setInterval(pollWithNotif, 60000);
+    })();
+
+    // ===== PWA PUSH SUBSCRIPTION =====
+    async function subscribeToPush() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+      try {
+        const registration = await navigator.serviceWorker.ready;
+
+        // Get VAPID public key
+        const keyResp = await fetch("{% url 'vapid_public_key' %}");
+        const keyData = await keyResp.json();
+        if (!keyData.public_key) return;
+
+        const applicationServerKey = urlBase64ToUint8Array(keyData.public_key);
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: applicationServerKey
+        });
+
+        // Send to server
+        await fetch("{% url 'push_subscribe' %}", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+          body: JSON.stringify(subscription)
+        });
+      } catch(e) {
+        console.log('Push subscription failed:', e);
+      }
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+      const rawData = atob(base64);
+      return new Uint8Array([...rawData].map(ch => ch.charCodeAt(0)));
+    }
+
+    // Subscribe after user interacts (to avoid autoplay policy issues)
+    document.addEventListener('click', () => {
+      if (!window._pushSubscribed) {
+        window._pushSubscribed = true;
+        subscribeToPush();
+      }
+    }, { once: true });
+    {% endif %}
+    </script>
+
+    <!-- ================= SERVICE WORKER & PWA ================= -->
+    <script>
+      // Service Worker registratsiyasi
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register("{% static 'service-worker.js' %}")
+            .then(function(registration) {
+              console.log('✅ Service Worker registered:', registration.scope);
+            })
+            .catch(function(error) {
+              console.log('❌ Service Worker failed:', error);
+            });
+        });
+      }
+
+      // PWA install prompt
+      let deferredPrompt;
+      const banner = document.getElementById('pwa-banner');
+      const installBtn = document.getElementById('install-btn');
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (banner) banner.classList.remove('hidden');
+      });
+
+      if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+          if (!deferredPrompt) return;
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          console.log(`User response: ${outcome}`);
+          deferredPrompt = null;
+          if (banner) banner.classList.add('hidden');
+        });
+      }
+
+      window.addEventListener('appinstalled', () => {
+        console.log('✅ App installed successfully');
+        if (banner) banner.classList.add('hidden');
+      });
+    </script>
+
+  </body>
+</html>

@@ -1,0 +1,605 @@
+{% extends 'base.html' %}
+
+{% block title %}Bonus Qo'shish{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">➕ Bonus Qo'shish</h2>
+    <p class="text-sm text-gray-600">Xodimlarga bonus ball va pul qo'shish</p>
+</div>
+<style>
+    .orqaga-tugma {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 12px 28px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .orqaga-tugma:hover {
+        transform: translateX(-5px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46a0 100%);
+    }
+
+    .orqaga-tugma:active {
+        transform: translateX(-2px);
+    }
+</style>
+
+<button id="orqagaQaytish" class="orqaga-tugma">
+    ← Orqaga qaytish
+</button>
+
+<script>
+    document.getElementById("orqagaQaytish").addEventListener("click", function() {
+        history.back();
+    });
+</script>
+
+<!-- Telegram holatini ko'rsatish -->
+<div id="telegramStatus" class="mb-4 hidden"></div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Bonus qo'shish formasi -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-5 border-b border-gray-100 bg-gradient-to-r from-[#2001FF] to-[#5A4AFF]">
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                <i class="ri-star-fill"></i>
+                Bonus qo'shish
+            </h3>
+        </div>
+
+        <div class="p-5">
+            <form method="POST" id="bonusForm" onsubmit="return handleFormSubmit(event)">
+                {% csrf_token %}
+
+                <!-- Xodim tanlash -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="ri-user-line text-[#2001FF] mr-1"></i>
+                        Xodim
+                    </label>
+                    <select name="xodim" id="xodimSelect" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2001FF] focus:border-transparent" required>
+                        <option value="" class="text-gray-400">Xodimni tanlang</option>
+                        {% for xodim in form.fields.xodim.queryset %}
+                        <option value="{{ xodim.id }}"
+                                data-ism="{{ xodim.ism }}"
+                                data-familya="{{ xodim.familya }}"
+                                data-reyting-ball="{{ xodim.reyting_ball }}"
+                                data-reyting-pul="{{ xodim.reyting_pul }}"
+                                class="py-2">
+                            {{ xodim.ism }} {{ xodim.familya }} ({{ xodim.telefon }}) - Reyting: {{ xodim.reyting_ball }} ball
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Rejim tanlash: Tayyor sabab yoki Qo'lda kiritish -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="ri-settings-line text-[#2001FF] mr-1"></i>
+                        Kiritish usuli
+                    </label>
+                    <div class="flex gap-3">
+                        <button type="button" id="readyModeBtn" class="flex-1 px-4 py-3 bg-[#2001FF] text-white rounded-xl font-medium transition-all">Tayyor sabab</button>
+                        <button type="button" id="manualModeBtn" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all">Qo'lda kiritish</button>
+                    </div>
+                </div>
+
+                <!-- Tayyor sabab bilan (default) -->
+                <div id="readyMode" class="block">
+                    <!-- Sabab tanlash -->
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-question-line text-[#2001FF] mr-1"></i>
+                            Bonus sababi
+                        </label>
+                        <select name="sabab" id="sababSelect" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2001FF] focus:border-transparent">
+                            <option value="" class="text-gray-400">Sababni tanlang</option>
+                            {% for sabab in sabablar %}
+                            <option value="{{ sabab.id }}"
+                                    data-pul="{{ sabab.pul_miqdori|floatformat:0 }}"
+                                    data-ball="{{ sabab.ball_miqdori }}"
+                                    data-nom="{{ sabab.nom }}"
+                                    class="py-2">
+                                {{ sabab.nom }} - {{ sabab.pul_miqdori|floatformat:0 }} so'm / {{ sabab.ball_miqdori }} ball
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Qo'lda kiritish (yashirin) -->
+                <div id="manualMode" class="hidden">
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="ri-money-dollar-circle-line text-green-600 mr-1"></i>
+                                Pul miqdori (so'm)
+                            </label>
+                            <input type="number" name="manual_pul" id="manualPul" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="50000" value="0" min="0" step="1">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="ri-star-line text-yellow-600 mr-1"></i>
+                                Ball miqdori
+                            </label>
+                            <input type="number" name="manual_ball" id="manualBall" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent" placeholder="25" value="0" min="0" step="1">
+                        </div>
+                    </div>
+
+                    <!-- Sabab nomi (qo'lda) -->
+                    <div class="mb-5">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-file-text-line text-[#2001FF] mr-1"></i>
+                            Sabab nomi
+                        </label>
+                        <input type="text" name="manual_sabab_nom" id="manualSabab" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2001FF] focus:border-transparent" placeholder="Masalan: Maxsus bonus">
+                    </div>
+                </div>
+
+                <!-- Preview kartochkasi -->
+                <div id="previewCard" class="mb-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200 hidden">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="ri-information-line text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Tanlangan bonus:</p>
+                            <div class="flex items-center gap-4 mt-1">
+                                <span class="text-green-600 font-semibold" id="previewBall">0 ball</span>
+                                <span class="text-gray-400">|</span>
+                                <span class="text-green-600 font-semibold" id="previewPul">0 so'm</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1" id="previewSabab"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Xodimning hozirgi reytingi -->
+                <div id="reytingPreview" class="mb-5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 hidden">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="ri-trophy-line text-blue-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Hozirgi umumiy reyting:</p>
+                            <div class="flex items-center gap-4 mt-1">
+                                <span class="text-blue-600 font-bold text-lg" id="currentReytingBall">0 ball</span>
+                                <span class="text-gray-400">|</span>
+                                <span class="text-blue-600 font-bold text-lg" id="currentReytingPul">0 so'm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telegram preview -->
+                <div id="telegramPreview" class="mb-5 bg-blue-50 rounded-xl p-4 border border-blue-200 hidden">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="ri-telegram-line text-blue-600 text-lg"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-blue-800 mb-1">Telegram xabar yuboriladi:</p>
+                            <p class="text-xs text-blue-600 whitespace-pre-line" id="telegramMessagePreview"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Izoh -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="ri-file-text-line text-[#2001FF] mr-1"></i>
+                        Qo'shimcha izoh
+                    </label>
+                    <textarea name="izoh" id="izoh" rows="3" class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2001FF] focus:border-transparent" placeholder="Qo'shimcha izoh..."></textarea>
+                </div>
+
+                <!-- Tugmalar -->
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] text-white rounded-xl hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2">
+                        <i class="ri-check-line"></i>
+                        Bonus Qo'shish
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center">
+                        <i class="ri-close-line text-xl"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Mavjud bonus sabablari -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-5 border-b border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <i class="ri-list-check text-[#2001FF]"></i>
+                Mavjud bonus sabablari
+            </h3>
+        </div>
+
+        <div class="p-5">
+            <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {% for sabab in sabablar %}
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-green-200 transition-colors cursor-pointer ready-sabab"
+                     data-id="{{ sabab.id }}"
+                     data-nom="{{ sabab.nom }}"
+                     data-pul="{{ sabab.pul_miqdori|floatformat:0 }}"
+                     data-ball="{{ sabab.ball_miqdori }}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h4 class="font-medium text-gray-900 mb-2">{{ sabab.nom }}</h4>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-1">
+                                    <i class="ri-money-dollar-circle-line text-green-600"></i>
+                                    <span class="text-sm text-gray-600">{{ sabab.pul_miqdori|floatformat:0 }} so'm</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <i class="ri-star-line text-yellow-600"></i>
+                                    <span class="text-sm text-gray-600">{{ sabab.ball_miqdori }} ball</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="ri-star-fill text-green-600"></i>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="ri-inbox-line text-3xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500">Hozircha bonus sabablari mavjud emas</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Telegram bot ma'lumotlari
+const BOT_TOKEN = '8793141493:pxeOSKameuEcUHHcnwMxvGo';
+const CHAT_ID = '-1001947689476';
+
+// Xabarni formatlash (BONUS uchun) - REYTING QO'SHILDI
+function formatMessage(xodimNomi, sababNomi, ball, pul, izoh, currentBall, currentPul, newBall, newPul) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day} ${hours}:${minutes}`;
+
+    const adminName = "{{ request.user.get_full_name|default:request.user.username }}";
+
+    // HTML teglarni tozalash
+    const cleanIzoh = izoh ? izoh.replace(/[<>]/g, '') : "Yo'q";
+
+    // Ball va pulni son qilib olish
+    let ballNum = parseInt(ball.toString().replace(/[^0-9-]/g, '')) || 0;
+    let pulNum = parseFloat(pul.toString().replace(/[^0-9.-]/g, '')) || 0;
+    let currentBallNum = parseInt(currentBall) || 0;
+    let currentPulNum = parseFloat(currentPul) || 0;
+    let newBallNum = currentBallNum + ballNum;
+    let newPulNum = currentPulNum + pulNum;
+
+    return `✅ BONUS ✅
+
+👤 Xodim: ${xodimNomi}
+📋 Sabab: ${sababNomi}
+📊 Ball: +${ballNum} ball
+💰 Pul: +${pulNum.toLocaleString()} so'm
+📝 Izoh: ${cleanIzoh}
+
+📊 Yangi reyting: ${newBallNum} ball (${newPulNum.toLocaleString()} so'm)
+   (Oldingi: ${currentBallNum} ball / ${currentPulNum.toLocaleString()} so'm)
+
+👨‍💼 Admin: ${adminName}
+⏱️ Vaqt: ${dateStr}`;
+}
+
+// Telegramga xabar yuborish
+async function sendToTelegram(message) {
+    try {
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: CHAT_ID,
+                text: message,
+                parse_mode: 'HTML'
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Telegram javobi:', data);
+            return data.ok;
+        } else {
+            const errorText = await response.text();
+            console.error('Telegram xatolik javobi:', errorText);
+            return false;
+        }
+    } catch (error) {
+        console.error('Telegram xatolik:', error);
+        return false;
+    }
+}
+
+// Form submit qilinganda
+async function handleFormSubmit(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="ri-loader-4-line animate-spin"></i> Yuklanmoqda...';
+    submitBtn.disabled = true;
+
+    const statusDiv = document.getElementById('telegramStatus');
+    statusDiv.classList.remove('hidden');
+
+    try {
+        // Xodim ma'lumotlarini olish
+        const xodimSelect = document.getElementById('xodimSelect');
+        const selectedOption = xodimSelect.options[xodimSelect.selectedIndex];
+
+        if (!selectedOption || !selectedOption.value) {
+            alert('Iltimos, xodimni tanlang!');
+            submitBtn.innerHTML = originalBtnText;
+            submitBtn.disabled = false;
+            return false;
+        }
+
+        const xodimNomi = `${selectedOption.dataset.ism} ${selectedOption.dataset.familya}`;
+        const currentReytingBall = selectedOption.dataset.reytingBall || '0';
+        const currentReytingPul = selectedOption.dataset.reytingPul || '0';
+
+        // Bonus ma'lumotlarini olish
+        let sababNomi, ball, pul, izoh;
+
+        if (!document.getElementById('readyMode').classList.contains('hidden')) {
+            // Tayyor sabab
+            const sababSelect = document.getElementById('sababSelect');
+            const selectedSabab = sababSelect.options[sababSelect.selectedIndex];
+
+            if (!selectedSabab || !selectedSabab.value) {
+                alert('Iltimos, bonus sababini tanlang!');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                return false;
+            }
+
+            sababNomi = selectedSabab.dataset.nom;
+            ball = selectedSabab.dataset.ball || '0';
+            pul = selectedSabab.dataset.pul || '0';
+        } else {
+            // Qo'lda kiritish
+            sababNomi = document.getElementById('manualSabab').value;
+            ball = document.getElementById('manualBall').value || '0';
+            pul = document.getElementById('manualPul').value || '0';
+
+            if (!sababNomi) {
+                alert('Iltimos, sabab nomini kiriting!');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                return false;
+            }
+
+            if (ball === '0' && pul === '0') {
+                alert('Iltimos, ball yoki pul miqdorini kiriting!');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+                return false;
+            }
+        }
+
+        izoh = document.getElementById('izoh').value;
+
+        // Yangi reytingni hisoblash
+        const newBall = parseInt(currentReytingBall) + parseInt(ball);
+        const newPul = parseFloat(currentReytingPul) + parseFloat(pul);
+
+        // Telegram xabar yuborish (reyting bilan)
+        const telegramMessage = formatMessage(xodimNomi, sababNomi, ball, pul, izoh, currentReytingBall, currentReytingPul, newBall, newPul);
+
+        console.log('Yuborilayotgan xabar:', telegramMessage);
+
+        statusDiv.innerHTML = '<div class="p-3 rounded-lg bg-yellow-100 text-yellow-800">📤 Telegram xabar yuborilmoqda...</div>';
+
+        const sent = await sendToTelegram(telegramMessage);
+
+        if (sent) {
+            statusDiv.innerHTML = '<div class="p-3 rounded-lg bg-green-100 text-green-800">✅ Telegram xabar muvaffaqiyatli yuborildi!</div>';
+        } else {
+            statusDiv.innerHTML = '<div class="p-3 rounded-lg bg-orange-100 text-orange-800">⚠️ Telegram xabar yuborilmadi! Lekin bonus saqlanadi.</div>';
+        }
+
+        // Formani serverga yuborish
+        setTimeout(() => {
+            form.submit();
+        }, 1000);
+
+    } catch (error) {
+        console.error('Xatolik:', error);
+        statusDiv.innerHTML = '<div class="p-3 rounded-lg bg-red-100 text-red-800">❌ Xatolik yuz berdi! Bonus saqlanadi.</div>';
+
+        setTimeout(() => {
+            form.submit();
+        }, 1000);
+    }
+
+    return false;
+}
+
+// Previewni yangilash (reyting bilan)
+function updatePreview() {
+    const previewCard = document.getElementById('previewCard');
+    const reytingPreview = document.getElementById('reytingPreview');
+    const telegramPreview = document.getElementById('telegramPreview');
+    const telegramMessagePreview = document.getElementById('telegramMessagePreview');
+
+    const xodimSelect = document.getElementById('xodimSelect');
+    const selectedOption = xodimSelect.options[xodimSelect.selectedIndex];
+
+    if (!selectedOption || !selectedOption.value) {
+        previewCard.classList.add('hidden');
+        reytingPreview.classList.add('hidden');
+        telegramPreview.classList.add('hidden');
+        return;
+    }
+
+    // Xodimning hozirgi reytingini ko'rsatish
+    const currentReytingBall = selectedOption.dataset.reytingBall || '0';
+    const currentReytingPul = selectedOption.dataset.reytingPul || '0';
+
+    document.getElementById('currentReytingBall').innerHTML = currentReytingBall + ' ball';
+    document.getElementById('currentReytingPul').innerHTML = parseInt(currentReytingPul).toLocaleString() + ' so\'m';
+    reytingPreview.classList.remove('hidden');
+
+    let sababNomi = '', ball = '0', pul = '0', izoh;
+
+    if (!document.getElementById('readyMode').classList.contains('hidden')) {
+        const sababSelect = document.getElementById('sababSelect');
+        const selectedSabab = sababSelect.options[sababSelect.selectedIndex];
+
+        if (selectedSabab && selectedSabab.value) {
+            sababNomi = selectedSabab.dataset.nom;
+            ball = selectedSabab.dataset.ball || '0';
+            pul = selectedSabab.dataset.pul || '0';
+        } else {
+            previewCard.classList.add('hidden');
+            telegramPreview.classList.add('hidden');
+            return;
+        }
+    } else {
+        sababNomi = document.getElementById('manualSabab').value;
+        ball = document.getElementById('manualBall').value || '0';
+        pul = document.getElementById('manualPul').value || '0';
+
+        if (!sababNomi && ball === '0' && pul === '0') {
+            previewCard.classList.add('hidden');
+            telegramPreview.classList.add('hidden');
+            return;
+        }
+    }
+
+    izoh = document.getElementById('izoh').value;
+
+    // Preview kartochkasini yangilash
+    document.getElementById('previewBall').textContent = ball + ' ball';
+    document.getElementById('previewPul').textContent = parseInt(pul).toLocaleString() + ' so\'m';
+    document.getElementById('previewSabab').textContent = sababNomi || 'Sabab kiritilmagan';
+    previewCard.classList.remove('hidden');
+
+    // Yangi reytingni hisoblash
+    const newBall = parseInt(currentReytingBall) + parseInt(ball);
+    const newPul = parseFloat(currentReytingPul) + parseFloat(pul);
+
+    // Telegram preview
+    const xodimNomi = `${selectedOption.dataset.ism} ${selectedOption.dataset.familya}`;
+    const message = formatMessage(xodimNomi, sababNomi || 'Noma\'lum', ball, pul, izoh, currentReytingBall, currentReytingPul, newBall, newPul);
+    telegramMessagePreview.textContent = message;
+    telegramPreview.classList.remove('hidden');
+}
+
+// Rejimlarni almashtirish
+document.getElementById('readyModeBtn').addEventListener('click', function() {
+    document.getElementById('readyMode').classList.remove('hidden');
+    document.getElementById('manualMode').classList.add('hidden');
+
+    this.classList.remove('bg-gray-100', 'text-gray-700');
+    this.classList.add('bg-[#2001FF]', 'text-white');
+
+    document.getElementById('manualModeBtn').classList.remove('bg-[#2001FF]', 'text-white');
+    document.getElementById('manualModeBtn').classList.add('bg-gray-100', 'text-gray-700');
+
+    document.getElementById('sababSelect').required = true;
+    document.getElementById('manualPul').required = false;
+    document.getElementById('manualBall').required = false;
+    document.getElementById('manualSabab').required = false;
+
+    updatePreview();
+});
+
+document.getElementById('manualModeBtn').addEventListener('click', function() {
+    document.getElementById('readyMode').classList.add('hidden');
+    document.getElementById('manualMode').classList.remove('hidden');
+
+    this.classList.remove('bg-gray-100', 'text-gray-700');
+    this.classList.add('bg-[#2001FF]', 'text-white');
+
+    document.getElementById('readyModeBtn').classList.remove('bg-[#2001FF]', 'text-white');
+    document.getElementById('readyModeBtn').classList.add('bg-gray-100', 'text-gray-700');
+
+    document.getElementById('sababSelect').required = false;
+    document.getElementById('manualPul').required = true;
+    document.getElementById('manualBall').required = true;
+    document.getElementById('manualSabab').required = true;
+
+    updatePreview();
+});
+
+// Event listenerlar
+document.getElementById('xodimSelect').addEventListener('change', updatePreview);
+document.getElementById('sababSelect').addEventListener('change', updatePreview);
+document.getElementById('manualPul').addEventListener('input', updatePreview);
+document.getElementById('manualBall').addEventListener('input', updatePreview);
+document.getElementById('manualSabab').addEventListener('input', updatePreview);
+document.getElementById('izoh').addEventListener('input', updatePreview);
+
+// Mavjud sabablardan birini bosganda uni tanlash
+document.querySelectorAll('.ready-sabab').forEach(item => {
+    item.addEventListener('click', function() {
+        document.getElementById('readyModeBtn').click();
+
+        const id = this.dataset.id;
+        const select = document.getElementById('sababSelect');
+
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value == id) {
+                select.selectedIndex = i;
+                break;
+            }
+        }
+
+        select.dispatchEvent(new Event('change'));
+    });
+});
+
+// Boshlang'ich preview
+setTimeout(updatePreview, 500);
+</script>
+
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+.hidden {
+    display: none;
+}
+.whitespace-pre-line {
+    white-space: pre-line;
+}
+</style>
+{% endblock %}

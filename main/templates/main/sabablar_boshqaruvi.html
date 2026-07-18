@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block title %}Sabablar Boshqaruvi{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-900 mb-2">⚙️ Sabablar Boshqaruvi</h2>
+    <p class="text-sm text-gray-600">Bonus va jarima sabablarini qo'shish, o'chirish</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Bonus Sabablari -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-5 border-b border-gray-100 bg-gradient-to-r from-green-500 to-green-600">
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                <i class="ri-star-fill"></i>
+                Bonus Sabablari
+            </h3>
+        </div>
+        
+        <div class="p-5">
+            <!-- Qo'shish formasi -->
+            <form method="POST" class="mb-6 bg-gray-50 rounded-xl p-4">
+                {% csrf_token %}
+                <input type="hidden" name="bonus_qoshish" value="1">
+                
+                <h4 class="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                    <i class="ri-add-circle-line text-green-500"></i>
+                    Yangi bonus sababi qo'shish
+                </h4>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-file-text-line text-green-500 mr-1"></i>
+                            Sabab nomi
+                        </label>
+                        <input type="text" name="bonus_nom" placeholder="Masalan: Loyihani muddat oldidan topshirish" 
+                               class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="ri-money-dollar-circle-line text-green-500 mr-1"></i>
+                                Pul (so'm)
+                            </label>
+                            <input type="number" name="bonus_pul" placeholder="50000" 
+                                   class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="ri-star-line text-green-500 mr-1"></i>
+                                Ball
+                            </label>
+                            <input type="number" name="bonus_ball" placeholder="25" 
+                                   class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2">
+                        <i class="ri-add-line"></i>
+                        Bonus Sababini Qo'shish
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Sabablar ro'yxati -->
+            <h4 class="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <i class="ri-list-check text-green-500"></i>
+                Mavjud bonus sabablari
+            </h4>
+            
+            <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {% for sabab in bonus_sabablar %}
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-green-200 transition-colors group">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h5 class="font-medium text-gray-900 mb-2">{{ sabab.nom }}</h5>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-1">
+                                    <i class="ri-money-dollar-circle-line text-green-600"></i>
+                                    <span class="text-sm text-gray-600">{{ sabab.pul_miqdori }} so'm</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <i class="ri-star-line text-yellow-600"></i>
+                                    <span class="text-sm text-gray-600">{{ sabab.ball_miqdori }} ball</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- O'chirish tugmasi -->
+                        <form method="POST" class="opacity-0 group-hover:opacity-100 transition-opacity">
+                            {% csrf_token %}
+                            <input type="hidden" name="tur" value="bonus">
+                            <input type="hidden" name="pk" value="{{ sabab.id }}">
+                            <input type="hidden" name="ochirish" value="1">
+                            <button type="submit" onclick="return confirm('Rostdan ham bu sababni o\'chirmoqchimisiz?')" 
+                                    class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors">
+                                <i class="ri-delete-bin-line text-red-600"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="ri-inbox-line text-3xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500">Bonus sabablari mavjud emas</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Jarima Sabablari -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-5 border-b border-gray-100 bg-gradient-to-r from-red-500 to-red-600">
+            <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+                <i class="ri-close-circle-fill"></i>
+                Jarima Sabablari
+            </h3>
+        </div>
+        
+        <div class="p-5">
+            <!-- Qo'shish formasi -->
+            <form method="POST" class="mb-6 bg-gray-50 rounded-xl p-4">
+                {% csrf_token %}
+                <input type="hidden" name="jarima_qoshish" value="1">
+                
+                <h4 class="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                    <i class="ri-add-circle-line text-red-500"></i>
+                    Yangi jarima sababi qo'shish
+                </h4>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="ri-file-text-line text-red-500 mr-1"></i>
+                            Sabab nomi
+                        </label>
+                        <input type="text" name="jarima_nom" placeholder="Masalan: Kech kelish" 
+                               class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="ri-money-dollar-circle-line text-red-500 mr-1"></i>
+                                Pul (so'm)
+                            </label>
+                            <input type="number" name="jarima_pul" placeholder="30000" 
+                                   class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="ri-close-circle-line text-red-500 mr-1"></i>
+                                Ball
+                            </label>
+                            <input type="number" name="jarima_ball" placeholder="15" 
+                                   class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2">
+                        <i class="ri-add-line"></i>
+                        Jarima Sababini Qo'shish
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Sabablar ro'yxati -->
+            <h4 class="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <i class="ri-list-check text-red-500"></i>
+                Mavjud jarima sabablari
+            </h4>
+            
+            <div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                {% for sabab in jarima_sabablar %}
+                <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-red-200 transition-colors group">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h5 class="font-medium text-gray-900 mb-2">{{ sabab.nom }}</h5>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-1">
+                                    <i class="ri-money-dollar-circle-line text-red-600"></i>
+                                    <span class="text-sm text-gray-600">{{ sabab.pul_miqdori }} so'm</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <i class="ri-close-circle-line text-red-600"></i>
+                                    <span class="text-sm text-gray-600">{{ sabab.ball_miqdori }} ball</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- O'chirish tugmasi -->
+                        <form method="POST" class="opacity-0 group-hover:opacity-100 transition-opacity">
+                            {% csrf_token %}
+                            <input type="hidden" name="tur" value="jarima">
+                            <input type="hidden" name="pk" value="{{ sabab.id }}">
+                            <input type="hidden" name="ochirish" value="1">
+                            <button type="submit" onclick="return confirm('Rostdan ham bu sababni o\'chirmoqchimisiz?')" 
+                                    class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors">
+                                <i class="ri-delete-bin-line text-red-600"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8">
+                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="ri-inbox-line text-3xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500">Jarima sabablari mavjud emas</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Qisqacha statistika -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
+    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600">Jami bonus sabablari</span>
+            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="ri-star-fill text-green-600"></i>
+            </div>
+        </div>
+        <div class="text-2xl font-bold text-gray-900">{{ bonus_sabablar|length }}</div>
+    </div>
+    
+    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600">Jami jarima sabablari</span>
+            <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <i class="ri-close-circle-fill text-red-600"></i>
+            </div>
+        </div>
+        <div class="text-2xl font-bold text-gray-900">{{ jarima_sabablar|length }}</div>
+    </div>
+    
+    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600">Eng katta bonus</span>
+            <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                <i class="ri-trophy-fill text-yellow-600"></i>
+            </div>
+        </div>
+        <div class="text-2xl font-bold text-gray-900">
+            {% with max_bonus=bonus_sabablar|dictsortreversed:"ball_miqdori"|first %}
+                {% if max_bonus %}{{ max_bonus.ball_miqdori }} ball{% else %}0{% endif %}
+            {% endwith %}
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600">Eng katta jarima</span>
+            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <i class="ri-alert-fill text-purple-600"></i>
+            </div>
+        </div>
+        <div class="text-2xl font-bold text-gray-900">
+            {% with max_jarima=jarima_sabablar|dictsortreversed:"ball_miqdori"|first %}
+                {% if max_jarima %}{{ max_jarima.ball_miqdori }} ball{% else %}0{% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
+
+<style>
+/* Scrollbar styling */
+.overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+</style>
+{% endblock %}

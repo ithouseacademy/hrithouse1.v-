@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Bosh sahifa{% endblock %}
+
+<!-- Home Screen Icon (MUHIM) -->
+<link rel="apple-touch-icon" sizes="512x512" href="{% static 'img/logo.png' %}"/>
+
+<!-- Manifest (MUHIM) -->
+<link rel="manifest" href="{% static 'manifest.json' %}"/>
+
+{% block content %}
+
+<!-- Joriy xodim ma'lumotlari (agar oddiy foydalanuvchi bo'lsa) -->
+{% if joriy_xodim %}
+<!-- Xush kelibsiz header -->
+<div class="mb-4 flex items-center justify-between">
+    <div>
+        <p class="text-gray-500 text-sm">Xush kelibsiz!</p>
+        <h2 class="text-xl font-bold text-gray-900">{{ joriy_xodim.ism }} {{ joriy_xodim.familya }}</h2>
+    </div>
+    <!-- Profilga o'tish tugmasi -->
+    <a href="{% url 'mening_profilim' %}" class="w-10 h-10 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+        {% if joriy_xodim.rasm and joriy_xodim.rasm.url %}
+            <img src="{{ joriy_xodim.rasm.url }}" alt="{{ joriy_xodim.ism }}" class="w-full h-full object-cover">
+        {% else %}
+            <span class="text-white font-bold">{{ joriy_xodim.ism|first }}{{ joriy_xodim.familya|first }}</span>
+        {% endif %}
+    </a>
+</div>
+{% endif %}
+
+<!-- Stats Grid - 4 ta kartochka (TO'G'IRILGAN - Sof reyting ma'lumotlari) -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+    <!-- Sof Ball -->
+    <div class="bg-white rounded-lg p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600">Sof ball</span>
+            <div class="w-6 h-6 flex items-center justify-center">
+                <i class="ri-star-fill text-yellow-500 text-lg"></i>
+            </div>
+        </div>
+        <div class="text-2xl font-bold {% if joriy_xodim and joriy_xodim.reyting_ball >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+            {% if joriy_xodim %}
+                {{ joriy_xodim.reyting_ball }}
+            {% else %}
+                0
+            {% endif %}
+        </div>
+        <div class="text-xs text-gray-500 mt-1">sof ball</div>
+    </div>
+    
+    <!-- Sof Summa -->
+    <div class="bg-white rounded-lg p-4 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600">Sof summa</span>
+            <div class="w-6 h-6 flex items-center justify-center">
+                <i class="ri-money-dollar-circle-fill text-green-500 text-lg"></i>
+            </div>
+        </div>
+        <div class="text-2xl font-bold {% if joriy_xodim and joriy_xodim.reyting_pul >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+            {% if joriy_xodim %}
+                {{ joriy_xodim.reyting_pul|floatformat:0 }}
+            {% else %}
+                0
+            {% endif %}
+        </div>
+        <div class="text-xs text-gray-500 mt-1">so'm</div>
+    </div>
+    
+ 
+    <!-- Jarima ball (Umumiy) -->
+   
+</div>
+
+<!-- Qo'shimcha ma'lumotlar: Yechilgan pullar (agar mavjud bo'lsa) -->
+
+
+<!-- Kunlik reyting header -->
+<div class="flex items-center justify-between mb-3">
+    <h3 class="font-semibold text-gray-900">📅 Bugungi faoliyat</h3>
+    <span class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">{{ bugun|date:"d.m.Y" }}</span>
+</div>
+
+<!-- Xodimlar ro'yxati (kunlik) -->
+<div class="bg-white rounded-lg shadow-sm mb-6">
+    <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+        <div>
+            <p class="text-sm text-gray-600">Bonus va jarima olgan xodimlar</p>
+        </div>
+        <span class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">{{ kunlik_harakatlar_soni }} ta</span>
+    </div>
+    
+    <div class="divide-y divide-gray-100">
+        {% if kunlik_harakatlar %}
+            {% for item in kunlik_harakatlar %}
+            <div class="p-4 {% if item.tur == 'jarima' %}hover:bg-red-50{% elif item.tur == 'xarid' %}hover:bg-blue-50{% else %}hover:bg-green-50{% endif %} transition-colors">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 {% if item.tur == 'jarima' %}bg-red-100{% elif item.tur == 'xarid' %}bg-blue-100{% else %}bg-green-100{% endif %} rounded-full flex items-center justify-center overflow-hidden">
+                            {% if item.xodim.rasm and item.xodim.rasm.url %}
+                                <img src="{{ item.xodim.rasm.url }}" alt="{{ item.xodim.ism }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <span class="text-sm font-medium {% if item.tur == 'jarima' %}text-red-600{% elif item.tur == 'xarid' %}text-blue-600{% else %}text-green-600{% endif %}">
+                                    {{ item.xodim.ism|first }}{{ item.xodim.familya|first }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <a href="{% url 'xodim_detail' item.xodim.id %}" class="font-medium text-gray-900 hover:text-primary">
+                                {{ item.xodim.ism }} {{ item.xodim.familya }}
+                            </a>
+                            <div class="text-xs text-gray-500">{{ item.vaqt }}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        {% if item.tur == 'xarid' %}
+                        <div class="text-lg font-semibold text-blue-600">-{{ item.ball }}</div>
+                        <div class="text-xs text-gray-500">🛍 xarid</div>
+                        {% else %}
+                        <div class="text-lg font-semibold {% if item.tur == 'jarima' %}text-red-600{% else %}text-green-600{% endif %}">
+                            {% if item.tur == 'jarima' %}-{% else %}+{% endif %}{{ item.ball }}
+                        </div>
+                        <div class="text-xs text-gray-500">{{ item.pul|floatformat:0 }} so'm</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mt-2 text-sm {% if item.tur == 'jarima' %}bg-red-50{% elif item.tur == 'xarid' %}bg-blue-50{% else %}bg-green-50{% endif %} rounded p-2">
+                    <span class="font-medium">{% if item.tur == 'xarid' %}Mahsulot:{% else %}Sabab:{% endif %}</span> 
+                    {{ item.sabab }}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="p-8 text-center text-gray-500">
+                <i class="ri-inbox-line text-4xl mb-2"></i>
+                <p>Bugun hech qanday faoliyat yo'q</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Barcha xodimlar (umumiy reyting) -->
+<div class="bg-white rounded-lg shadow-sm">
+    <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+        <div>
+            <h3 class="font-semibold text-gray-900">🏆 Barcha xodimlar</h3>
+            <p class="text-sm text-gray-600 mt-1">Umumiy sof reyting bo'yicha</p>
+        </div>
+        <span class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">{{ xodimlar_soni }} ta</span>
+    </div>
+    
+    <div class="divide-y divide-gray-100">
+        {% if xodimlar %}
+            {% for xodim in xodimlar %}
+            <div class="p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                            {% if xodim.rasm and xodim.rasm.url %}
+                                <img src="{{ xodim.rasm.url }}" alt="{{ xodim.ism }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <span class="text-sm font-medium text-gray-600">
+                                    {{ xodim.ism|first }}{{ xodim.familya|first }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <a href="{% url 'xodim_detail' xodim.id %}" class="font-medium text-gray-900 hover:text-primary">
+                                {{ xodim.ism }} {{ xodim.familya }}
+                            </a>
+                            <!-- Qo'shimcha ma'lumot: bonus va jarima -->
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[10px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full">
+                                    +{{ xodim.bonus_ball }}
+                                </span>
+                                <span class="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full">
+                                    -{{ xodim.jarima_ball }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-semibold {% if xodim.reyting_ball >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ xodim.reyting_ball }}
+                        </div>
+                        <div class="text-xs text-gray-500">{{ xodim.reyting_pul|floatformat:0 }} so'm</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="p-8 text-center text-gray-500">
+                <i class="ri-team-line text-4xl mb-2"></i>
+                <p>Hozircha xodimlar yo'q</p>
+            </div>
+        {% endif %} 
+    </div>
+</div>
+{% endblock %}
