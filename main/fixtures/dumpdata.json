@@ -1543,7 +1543,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 435,
-    "reyting_pul": "0.00",
+    "reyting_pul": "-30000.00",
     "xarid_ball": 0,
     "created_at": "2026-05-04T16:06:56.025Z",
     "updated_at": "2026-05-07T03:04:30.075Z"
@@ -1569,7 +1569,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 430,
-    "reyting_pul": "-200000.00",
+    "reyting_pul": "550000.00",
     "xarid_ball": 0,
     "created_at": "2026-04-20T19:06:00.547Z",
     "updated_at": "2026-05-09T16:20:18.817Z"
@@ -1595,7 +1595,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 415,
-    "reyting_pul": "0.00",
+    "reyting_pul": "840000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T05:18:39.857Z",
     "updated_at": "2026-05-02T10:53:13.387Z"
@@ -1621,7 +1621,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 410,
-    "reyting_pul": "0.00",
+    "reyting_pul": "50000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T05:08:38.582Z",
     "updated_at": "2026-05-01T13:36:29.145Z"
@@ -1647,7 +1647,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 395,
-    "reyting_pul": "50010.00",
+    "reyting_pul": "540010.00",
     "xarid_ball": 0,
     "created_at": "2026-04-20T19:00:12.524Z",
     "updated_at": "2026-05-01T09:35:24.773Z"
@@ -1673,7 +1673,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 290,
-    "reyting_pul": "0.00",
+    "reyting_pul": "-230000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T05:10:06.101Z",
     "updated_at": "2026-04-29T04:33:13.061Z"
@@ -1699,7 +1699,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 245,
-    "reyting_pul": "-100000.00",
+    "reyting_pul": "-130000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T07:32:57.507Z",
     "updated_at": "2026-05-02T02:44:24.876Z"
@@ -1725,7 +1725,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 225,
-    "reyting_pul": "0.00",
+    "reyting_pul": "20000.00",
     "xarid_ball": 0,
     "created_at": "2026-04-13T13:26:28.775Z",
     "updated_at": "2026-05-02T03:36:02.825Z"
@@ -1751,7 +1751,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 175,
-    "reyting_pul": "50000.00",
+    "reyting_pul": "-50000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T07:12:10.868Z",
     "updated_at": "2026-05-02T05:17:50.596Z"
@@ -1777,7 +1777,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 165,
-    "reyting_pul": "0.00",
+    "reyting_pul": "450000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T07:35:02.500Z",
     "updated_at": "2026-04-30T13:09:07.329Z"
@@ -1795,7 +1795,7 @@
     "active": true,
     "rasm": "",
     "bonus_ball": 140,
-    "bonus_pul": "250000.00",
+    "bonus_pul": "450000.00",
     "bonus_ball_yechilgan": 0,
     "bonus_pul_yechilgan": "0.00",
     "jarima_ball": 0,
@@ -1803,7 +1803,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 140,
-    "reyting_pul": "0.00",
+    "reyting_pul": "400000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T08:09:13.529Z",
     "updated_at": "2026-05-21T17:48:13.175Z"
@@ -1829,7 +1829,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 135,
-    "reyting_pul": "100000.00",
+    "reyting_pul": "280000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T05:10:47.632Z",
     "updated_at": "2026-05-01T12:47:46.736Z"
@@ -1855,7 +1855,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 130,
-    "reyting_pul": "0.00",
+    "reyting_pul": "170000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T05:20:34.210Z",
     "updated_at": "2026-07-11T12:04:01.038Z"
@@ -1881,7 +1881,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 130,
-    "reyting_pul": "0.00",
+    "reyting_pul": "100000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T07:26:05.317Z",
     "updated_at": "2026-05-01T06:31:27.310Z"
@@ -1907,7 +1907,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 45,
-    "reyting_pul": "0.00",
+    "reyting_pul": "-940000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T05:21:27.235Z",
     "updated_at": "2026-04-30T12:47:08.948Z"
@@ -1933,7 +1933,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 35,
-    "reyting_pul": "0.00",
+    "reyting_pul": "-320000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T09:27:18.334Z",
     "updated_at": "2026-04-30T13:15:01.286Z"
@@ -1959,7 +1959,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 22,
-    "reyting_pul": "-500000.00",
+    "reyting_pul": "-930000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T07:27:07.227Z",
     "updated_at": "2026-05-01T14:49:15.601Z"
@@ -2037,7 +2037,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": 0,
-    "reyting_pul": "0.00",
+    "reyting_pul": "-150000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-18T09:32:59.984Z",
     "updated_at": "2026-04-27T06:46:02.909Z"
@@ -2063,7 +2063,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": -10,
-    "reyting_pul": "-300000.00",
+    "reyting_pul": "-1780000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T07:23:43.537Z",
     "updated_at": "2026-05-02T10:56:26.782Z"
@@ -2089,7 +2089,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": -15,
-    "reyting_pul": "-100000.00",
+    "reyting_pul": "-1090000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T05:15:51.526Z",
     "updated_at": "2026-05-02T10:52:03.869Z"
@@ -2115,7 +2115,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": -25,
-    "reyting_pul": "-250000.00",
+    "reyting_pul": "-1615000.00",
     "xarid_ball": 0,
     "created_at": "2026-03-07T05:16:29.207Z",
     "updated_at": "2026-04-30T13:23:09.207Z"
@@ -2141,7 +2141,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": -30,
-    "reyting_pul": "0.00",
+    "reyting_pul": "-200000.00",
     "xarid_ball": 0,
     "created_at": "2026-06-24T11:48:54.398Z",
     "updated_at": "2026-06-24T11:48:54.398Z"
@@ -2193,7 +2193,7 @@
     "jarima_ball_yechilgan": 0,
     "jarima_pul_yechilgan": "0.00",
     "reyting_ball": -65,
-    "reyting_pul": "-490000.00",
+    "reyting_pul": "-1030000.00",
     "xarid_ball": 0,
     "created_at": "2026-06-19T11:41:37.795Z",
     "updated_at": "2026-06-19T11:41:37.795Z"
@@ -9422,7 +9422,7 @@
     "sabab": null,
     "pul_miqdori": "100000.00",
     "ball_miqdori": 0,
-    "sana": "2026-06-13T08:19:53.000Z",
+    "sana": "2026-06-13T08:19:53Z",
     "izoh": "Face id chiqish qilmagani sababli. 12.06.26 kuni face id dan chiqish qilmagani uchun",
     "created_by": 13
   }
