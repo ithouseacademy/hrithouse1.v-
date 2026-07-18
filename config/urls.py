@@ -20,6 +20,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]
 
-# Media fayllar (faqat DEBUG=True da)
+# Media fayllar — WhiteNoise orqali serve qilinadi (WHITENOISE_SERVE_MEDIA=True)
+# DEBUG rejimda ham qo'shimcha serve qilish
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
