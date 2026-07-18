@@ -109,8 +109,9 @@ SESSION_COOKIE_AGE = 315360000
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # ================= CORS =================
-CORS_ALLOWED_ORIGINS = []
-CSRF_TRUSTED_ORIGINS = []
+RAILWAY_DOMAIN = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
+CORS_ALLOWED_ORIGINS = [f"https://{RAILWAY_DOMAIN}"] if RAILWAY_DOMAIN else []
+CSRF_TRUSTED_ORIGINS = [f"https://{RAILWAY_DOMAIN}"] if RAILWAY_DOMAIN else []
 
 # ================= PUSH NOTIFICATIONS (VAPID) =================
 VAPID_PRIVATE_KEY = os.environ.get(
