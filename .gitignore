@@ -14,4 +14,4 @@ media/
 .env
 .DS_Store
 Thumbs.db
-db_dump.json
+# db_dump.json vaqtincha kerak - Railway uchun
