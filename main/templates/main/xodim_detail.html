@@ -38,9 +38,27 @@
                     <i class="ri-history-line"></i> Tarixlar
                 </a>
                 <div class="border-t my-1"></div>
+                {% if xodim.is_archived %}
+                <form method="POST" action="{% url 'xodim_qayta_tiklash' xodim.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 hover:bg-green-50 text-green-600 text-sm">
+                        <i class="ri-refresh-line"></i> Qayta tiklash
+                    </button>
+                </form>
                 <button onclick="ochirishModaliniOch()" class="w-full flex items-center gap-2 px-3 py-2 hover:bg-red-50 text-red-500 text-sm">
                     <i class="ri-delete-bin-line"></i> O'chirish
                 </button>
+                {% else %}
+                <form method="POST" action="{% url 'xodim_arxivlash' xodim.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 hover:bg-orange-50 text-orange-500 text-sm">
+                        <i class="ri-archive-line"></i> Arxivlash
+                    </button>
+                </form>
+                <button onclick="ochirishModaliniOch()" class="w-full flex items-center gap-2 px-3 py-2 hover:bg-red-50 text-red-500 text-sm">
+                    <i class="ri-delete-bin-line"></i> O'chirish
+                </button>
+                {% endif %}
             </div>
         </div>
         {% endif %}

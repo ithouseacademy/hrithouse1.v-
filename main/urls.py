@@ -20,6 +20,11 @@ urlpatterns = [
     path('xodim-qoshish/', views.xodim_qoshish, name='xodim_qoshish'),
     path('xodim/<int:pk>/tahrirlash/', views.xodim_tahrirlash, name='xodim_tahrirlash'),
     path('xodim/<int:pk>/ochirish/', views.xodim_ochirish, name='xodim_ochirish'),
+
+    # Arxivlash
+    path('arxivlangan-xodimlar/', views.arxivlangan_xodimlar, name='arxivlangan_xodimlar'),
+    path('xodim/<int:pk>/arxivlash/', views.xodim_arxivlash, name='xodim_arxivlash'),
+    path('xodim/<int:pk>/qayta-tiklash/', views.xodim_qayta_tiklash, name='xodim_qayta_tiklash'),
     
     # Bonus va Jarima
     path('bonus-qoshish/', views.bonus_qoshish, name='bonus_qoshish'),

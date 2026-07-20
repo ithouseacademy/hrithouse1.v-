@@ -81,7 +81,7 @@ def hisobot_data_yig(oy_boshi, oy_oxiri, filtrlar=None):
     if filtrlar is None:
         filtrlar = {}
 
-    xodimlar = Xodim.objects.filter(active=True).order_by('-reyting_ball')
+    xodimlar = Xodim.objects.filter(active=True, is_archived=False).order_by('-reyting_ball')
 
     bonus_map = {
         row['xodim']: row
@@ -260,7 +260,7 @@ def dashboard(request):
     )
     kunlik_harakatlar.sort(key=lambda x: x['sana'], reverse=True)
 
-    xodimlar = Xodim.objects.filter(active=True).order_by('-reyting_ball')
+    xodimlar = Xodim.objects.filter(active=True, is_archived=False).order_by('-reyting_ball')
 
     return render(request, 'main/dashboard.html', {
         'joriy_xodim': joriy_xodim,
@@ -293,7 +293,7 @@ def xodim_qoshish(request):
 
 @login_required
 def xodimlar(request):
-    qs = Xodim.objects.filter(active=True).order_by('-reyting_ball')
+    qs = Xodim.objects.filter(active=True, is_archived=False).order_by('-reyting_ball')
     qidiruv = request.GET.get('qidiruv', '')
     if qidiruv:
         qs = qs.filter(
@@ -320,8 +320,8 @@ def xodim_detail(request, pk):
     bonuslar = BonusRecord.objects.filter(xodim=xodim).order_by('-sana')[:30]
     jarimalar = JarimaRecord.objects.filter(xodim=xodim).order_by('-sana')[:30]
     tarixlar = OzgartirishTarixi.objects.filter(xodim=xodim).order_by('-sana')[:20]
-    joylashuv = Xodim.objects.filter(reyting_ball__gt=xodim.reyting_ball).count() + 1
-    jami_xodimlar = Xodim.objects.filter(active=True).count()
+    joylashuv = Xodim.objects.filter(reyting_ball__gt=xodim.reyting_ball, is_archived=False).count() + 1
+    jami_xodimlar = Xodim.objects.filter(active=True, is_archived=False).count()
     return render(request, 'main/xodim_detail.html', {
         'xodim': xodim,
         'bonuslar': bonuslar,
@@ -389,6 +389,53 @@ def xodim_ochirish(request, pk):
         messages.success(request, f"'{xodim_ismi}' o'chirildi!")
         return redirect('xodimlar')
     
+    return redirect('xodim_detail', pk=pk)
+
+
+# ============================================================
+# ARXIVLASH
+# ============================================================
+
+@staff_member_required
+def arxivlangan_xodimlar(request):
+    qs = Xodim.objects.filter(is_archived=True).order_by('-reyting_ball')
+    qidiruv = request.GET.get('qidiruv', '')
+    if qidiruv:
+        qs = qs.filter(
+            Q(ism__icontains=qidiruv) |
+            Q(familya__icontains=qidiruv) |
+            Q(telefon__icontains=qidiruv)
+        )
+
+    paginator = Paginator(qs, 10)
+    xodimlar_page = paginator.get_page(request.GET.get('page', 1))
+
+    return render(request, 'main/arxivlangan_xodimlar.html', {
+        'xodimlar': xodimlar_page,
+    })
+
+
+@staff_member_required
+def xodim_arxivlash(request, pk):
+    xodim = get_object_or_404(Xodim, pk=pk)
+    if request.method == 'POST':
+        xodim.is_archived = True
+        xodim.save(update_fields=['is_archived'])
+        messages.success(request, f"'{xodim.ism} {xodim.familya}' arxivlandi!")
+        return redirect('xodimlar')
+    return redirect('xodim_detail', pk=pk)
+
+
+@staff_member_required
+def xodim_qayta_tiklash(request, pk):
+    xodim = get_object_or_404(Xodim, pk=pk)
+    if request.method == 'POST':
+        xodim.is_archived = False
+        xodim.save(update_fields=['is_archived'])
+        messages.success(request, f"'{xodim.ism} {xodim.familya}' qayta tiklandi!")
+        if 'arxiv' in request.META.get('HTTP_REFERER', ''):
+            return redirect('arxivlangan_xodimlar')
+        return redirect('xodim_detail', pk=pk)
     return redirect('xodim_detail', pk=pk)
 
 
@@ -1294,17 +1341,17 @@ def barcha_malumotlar_excel(request):
         for col in range(1, cols + 1):
             ws.cell(row=row, column=col).border = thin_border
 
-    # ==================== 1. XODIMLAR ====================
+    # ==================== 1. XODIMLAR (faol + arxivlangan) ====================
     ws_xodim = wb.active
     ws_xodim.title = 'Xodimlar'
-    xodimlar = Xodim.objects.filter(active=True).order_by('-reyting_ball')
+    xodimlar = Xodim.objects.filter(active=True).order_by('-is_archived', '-reyting_ball')
 
-    ws_xodim.merge_cells('A1:J1')
+    ws_xodim.merge_cells('A1:K1')
     ws_xodim['A1'] = f"BARCHA XODIMLAR — {oy_nomi} {yil}"
     ws_xodim['A1'].font = title_font
     ws_xodim['A1'].alignment = center
 
-    xodim_headers = ['№', 'Ism', 'Familya', 'Telefon', 'Lavozim', 'Bonus Ball', 'Bonus Pul', 'Jarima Ball', 'Jarima Pul', 'Reyting Ball']
+    xodim_headers = ['№', 'Ism', 'Familya', 'Telefon', 'Lavozim', 'Bonus Ball', 'Bonus Pul', 'Jarima Ball', 'Jarima Pul', 'Reyting Ball', 'Holati']
     for col, h in enumerate(xodim_headers, 1):
         ws_xodim.cell(row=3, column=col, value=h)
     style_header(ws_xodim, 3, len(xodim_headers), blue_fill)
@@ -1321,6 +1368,7 @@ def barcha_malumotlar_excel(request):
         ws_xodim.cell(row=row, column=8, value=x.jarima_ball)
         ws_xodim.cell(row=row, column=9, value=float(x.jarima_pul))
         ws_xodim.cell(row=row, column=10, value=x.reyting_ball)
+        ws_xodim.cell(row=row, column=11, value='Arxivlangan' if x.is_archived else 'Faol')
         style_data_row(ws_xodim, row, len(xodim_headers))
 
     total_r = len(xodimlar) + 4
@@ -1334,7 +1382,7 @@ def barcha_malumotlar_excel(request):
         c.font = bold_font
         c.fill = grey_fill
 
-    for i, w in enumerate([5, 15, 15, 18, 18, 12, 14, 12, 14, 12], 1):
+    for i, w in enumerate([5, 15, 15, 18, 18, 12, 14, 12, 14, 12, 14], 1):
         ws_xodim.column_dimensions[get_column_letter(i)].width = w
 
     # ==================== 2. BONUSLAR ====================
@@ -1475,7 +1523,59 @@ def barcha_malumotlar_excel(request):
     for i, w in enumerate([5, 25, 25, 10, 15, 18, 18, 18], 1):
         ws_buy.column_dimensions[get_column_letter(i)].width = w
 
-    # ==================== 6. OYLIK HISOBOT ====================
+    # ==================== 6. BONUS SABABLAR ====================
+    ws_bs = wb.create_sheet('BonusSabablar')
+    bonus_sabablar = BonusSabab.objects.all().order_by('-ball_miqdori')
+
+    ws_bs.merge_cells('A1:E1')
+    ws_bs['A1'] = 'BONUS SABABLAR'
+    ws_bs['A1'].font = title_font
+    ws_bs['A1'].alignment = center
+
+    bs_headers = ['№', 'Nomi', "Pul (so'm)", 'Ball', 'Holati']
+    for col, h in enumerate(bs_headers, 1):
+        ws_bs.cell(row=3, column=col, value=h)
+    style_header(ws_bs, 3, len(bs_headers), green_fill)
+
+    for idx, s in enumerate(bonus_sabablar, 1):
+        row = idx + 3
+        ws_bs.cell(row=row, column=1, value=idx)
+        ws_bs.cell(row=row, column=2, value=s.nom)
+        ws_bs.cell(row=row, column=3, value=float(s.pul_miqdori))
+        ws_bs.cell(row=row, column=4, value=s.ball_miqdori)
+        ws_bs.cell(row=row, column=5, value='Faol' if s.active else 'Nofaol')
+        style_data_row(ws_bs, row, len(bs_headers))
+
+    for i, w in enumerate([5, 30, 14, 10, 10], 1):
+        ws_bs.column_dimensions[get_column_letter(i)].width = w
+
+    # ==================== 7. JARIMA SABABLAR ====================
+    ws_js = wb.create_sheet('JarimaSabablar')
+    jarima_sabablar = JarimaSabab.objects.all().order_by('-ball_miqdori')
+
+    ws_js.merge_cells('A1:E1')
+    ws_js['A1'] = 'JARIMA SABABLAR'
+    ws_js['A1'].font = title_font
+    ws_js['A1'].alignment = center
+
+    js_headers = ['№', 'Nomi', "Pul (so'm)", 'Ball', 'Holati']
+    for col, h in enumerate(js_headers, 1):
+        ws_js.cell(row=3, column=col, value=h)
+    style_header(ws_js, 3, len(js_headers), red_fill)
+
+    for idx, s in enumerate(jarima_sabablar, 1):
+        row = idx + 3
+        ws_js.cell(row=row, column=1, value=idx)
+        ws_js.cell(row=row, column=2, value=s.nom)
+        ws_js.cell(row=row, column=3, value=float(s.pul_miqdori))
+        ws_js.cell(row=row, column=4, value=s.ball_miqdori)
+        ws_js.cell(row=row, column=5, value='Faol' if s.active else 'Nofaol')
+        style_data_row(ws_js, row, len(js_headers))
+
+    for i, w in enumerate([5, 30, 14, 10, 10], 1):
+        ws_js.column_dimensions[get_column_letter(i)].width = w
+
+    # ==================== 8. OYLIK HISOBOT ====================
     ws_oylik = wb.create_sheet(f'{oy_nomi}_{yil}')
     hisobot_data, jami = hisobot_data_yig(oy_boshi, oy_oxiri)
 
@@ -2057,7 +2157,7 @@ def mahsulot_qoshish(request):
         if form.is_valid():
             product = form.save()
             # Notification for all users
-            xodimlar = Xodim.objects.filter(active=True)
+            xodimlar = Xodim.objects.filter(active=True, is_archived=False)
             for xodim in xodimlar:
                 send_notification(
                     xodim.user,

@@ -198,6 +198,11 @@ class Xodim(models.Model):
     jarima_pul_yechilgan = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Yechilgan jarima pul")
     
     # ============================================================
+    # ARXIV
+    # ============================================================
+    is_archived = models.BooleanField(default=False, help_text="Arxivlangan xodim")
+    
+    # ============================================================
     # REYTING MAYDONLARI
     # ============================================================
     reyting_ball = models.IntegerField(default=0, help_text="Sof reyting ball (bonus - jarima)")
