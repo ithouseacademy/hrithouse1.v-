@@ -7,12 +7,60 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"
     />
-    <title>IT House - {% block title %}{% endblock %}</title>
+    <title>{% block title %}IT House Academy - Xodimlar boshqaruv tizimi{% endblock %}</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}IT House Academy xodimlar boshqaruv tizimi - reyting, bonus, jarima, shop. O'quv markazi xodimlarini boshqarish, ularning reytingini kuzatish va rag'batlantirish.{% endblock %}" />
+    <meta name="keywords" content="{% block meta_keywords %}IT House, IT House Academy, hrithouse, xodimlar boshqaruv tizimi, reyting tizimi, bonus tizimi, o'quv markazi, xodim reytingi, IT House staff, employee management, rating system{% endblock %}" />
+    <meta name="author" content="IT House Academy" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#2001FF">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{% block og_title %}IT House Academy - Xodimlar boshqaruv tizimi{% endblock %}" />
+    <meta property="og:description" content="{% block og_description %}IT House Academy xodimlar boshqaruv tizimi - reyting, bonus, jarima va shop tizimi{% endblock %}" />
+    <meta property="og:image" content="{% static 'img/logo.png' %}" />
+    <meta property="og:url" content="https://hrithouse1.up.railway.app/" />
+    <meta property="og:site_name" content="IT House Academy" />
+    <meta property="og:locale" content="uz_UZ" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{% block twitter_title %}IT House Academy - Xodimlar boshqaruv tizimi{% endblock %}" />
+    <meta name="twitter:description" content="{% block twitter_description %}IT House Academy xodimlar boshqaruv tizimi - reyting, bonus, jarima va shop tizimi{% endblock %}" />
+    <meta name="twitter:image" content="{% static 'img/logo.png' %}" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://hrithouse1.up.railway.app/" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "IT House Academy",
+      "alternateName": ["hrithouse", "IT House", "IT House Staff"],
+      "url": "https://hrithouse1.up.railway.app/",
+      "description": "IT House Academy xodimlar boshqaruv tizimi - reyting, bonus, jarima va shop tizimi",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "UZS"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "IT House Academy",
+        "url": "https://hrithouse1.up.railway.app/"
+      }
+    }
+    </script>
 
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <link rel="icon" href="{% static 'img/logo.png' %}" />
     <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-    <meta name="theme-color" content="#3b82f6">
     
     <!-- Home Screen Icon -->
     <link

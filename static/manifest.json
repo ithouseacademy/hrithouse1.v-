@@ -1,13 +1,14 @@
 {
-  "name": "IT House staff",
+  "name": "IT House Academy - Xodimlar boshqaruv tizimi",
   "short_name": "IT House",
-  "description": "IT House app O'quv markazi xodimlari",
+  "description": "IT House Academy xodimlar boshqaruv tizimi - reyting, bonus, jarima va shop tizimi. O'quv markazi xodimlarini boshqarish va ularning reytingini kuzatish.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
-  "theme_color": "#3b82f6",
+  "theme_color": "#2001FF",
+  "categories": ["business", "education"],
   "icons": [
     {
       "src": "/static/img/logo.png",
