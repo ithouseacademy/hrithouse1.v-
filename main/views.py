@@ -276,7 +276,7 @@ def dashboard(request):
 @staff_member_required
 def xodim_qoshish(request):
     if request.method == 'POST':
-        form = XodimForm(request.POST)
+        form = XodimForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, "Xodim qo'shildi!")

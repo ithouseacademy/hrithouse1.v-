@@ -9,7 +9,6 @@ db.sqlite3
 db.sqlite3-shm
 db.sqlite3-wal
 staticfiles/
-media/
 *.log
 .env
 .DS_Store
