@@ -1,4 +1,5 @@
 import os
+import mimetypes
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.contrib.auth import views as auth_views
@@ -13,7 +14,8 @@ def serve_media(request, path):
     file_path = os.path.join(settings.MEDIA_ROOT, path)
     if not os.path.isfile(file_path):
         raise Http404
-    return FileResponse(open(file_path, 'rb'), content_type='application/octet-stream')
+    content_type, _ = mimetypes.guess_type(file_path)
+    return FileResponse(open(file_path, 'rb'), content_type=content_type)
 
 
 urlpatterns = [
