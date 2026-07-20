@@ -1099,7 +1099,7 @@ def reytinglar(request):
     yil_boshi = date(tanlangan_yil, 1, 1)
     yil_oxiri = date(tanlangan_yil, 12, 31)
 
-    xodimlar = Xodim.objects.filter(active=True)
+    xodimlar = Xodim.objects.filter(active=True, is_archived=False)
 
     def ballo_map(Model, filter_kwargs):
         return {
@@ -1665,10 +1665,10 @@ def mening_profilim(request):
     xaridlar = ProductOrder.objects.filter(user=request.user).select_related('product').order_by('-created_at')[:50]
     
     # Reytingdagi o'rni
-    joylashuv = Xodim.objects.filter(reyting_ball__gt=xodim.reyting_ball).count() + 1
+    joylashuv = Xodim.objects.filter(reyting_ball__gt=xodim.reyting_ball, is_archived=False).count() + 1
     
     # Jami xodimlar soni
-    jami_xodimlar = Xodim.objects.filter(active=True).count()
+    jami_xodimlar = Xodim.objects.filter(active=True, is_archived=False).count()
     
     # Yechilgan pullarni hisoblash (agar modelda bo'lmasa)
     bonus_ball_yechilgan = getattr(xodim, 'bonus_ball_yechilgan', 0)
@@ -1956,7 +1956,7 @@ def admin_dashboard(request):
         'umumiy_pul': Xodim.objects.aggregate(Sum('reyting_pul'))['reyting_pul__sum'] or 0,
         'bugun_bonus': bugun_bonus,
         'bugun_jarima': bugun_jarima,
-        'top_xodimlar': Xodim.objects.filter(active=True).order_by('-reyting_ball')[:10],
+        'top_xodimlar': Xodim.objects.filter(active=True, is_archived=False).order_by('-reyting_ball')[:10],
         'pending_orders': pending_orders,
         'oxirgi_bonuslar': oxirgi_bonuslar,
         'oxirgi_jarimalar': oxirgi_jarimalar,
