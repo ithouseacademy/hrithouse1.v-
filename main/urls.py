@@ -38,6 +38,7 @@ urlpatterns = [
     path('oylik-hisobot/excel/', views.oylik_hisobot_excel, name='oylik_hisobot_excel'),
     path('oylik-hisobot/csv/', views.oylik_hisobot_csv, name='oylik_hisobot_csv'),
     path('oylik-hisobot/pdf/', views.oylik_hisobot_pdf, name='oylik_hisobot_pdf'),
+    path('barcha-malumotlar-excel/', views.barcha_malumotlar_excel, name='barcha_malumotlar_excel'),
     
     # Profil
     path('mening-profilim/', views.mening_profilim, name='mening_profilim'),

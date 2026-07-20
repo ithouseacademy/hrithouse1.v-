@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta, date
 import csv
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 from decimal import Decimal
 
 from django.contrib import messages
@@ -1188,9 +1191,14 @@ def oylik_hisobot(request):
 def oylik_hisobot_excel(request):
     oy = int(request.GET.get('oy', timezone.now().month))
     yil = int(request.GET.get('yil', timezone.now().year))
+    bonus_filtri = request.GET.get('bonus_filtri', '')
+    jarima_filtri = request.GET.get('jarima_filtri', '')
 
     oy_boshi, oy_oxiri = oy_oraligi(yil, oy)
-    hisobot_data, jami = hisobot_data_yig(oy_boshi, oy_oxiri)
+    hisobot_data, jami = hisobot_data_yig(
+        oy_boshi, oy_oxiri,
+        filtrlar={'bonus': bonus_filtri, 'jarima': jarima_filtri}
+    )
     oy_nomi = OYLAR.get(oy, '')
 
     wb = openpyxl.Workbook()
@@ -1244,6 +1252,274 @@ def oylik_hisobot_excel(request):
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="oylik_hisobot_{oy_nomi}_{yil}.xlsx"'
+    wb.save(response)
+    return response
+
+
+@staff_member_required
+def barcha_malumotlar_excel(request):
+    oy = int(request.GET.get('oy', timezone.now().month))
+    yil = int(request.GET.get('yil', timezone.now().year))
+    oy_boshi, oy_oxiri = oy_oraligi(yil, oy)
+    oy_nomi = OYLAR.get(oy, '')
+
+    wb = openpyxl.Workbook()
+
+    blue_fill = PatternFill(start_color='2001FF', end_color='2001FF', fill_type='solid')
+    green_fill = PatternFill(start_color='28a745', end_color='28a745', fill_type='solid')
+    red_fill = PatternFill(start_color='dc3545', end_color='dc3545', fill_type='solid')
+    orange_fill = PatternFill(start_color='fd7e14', end_color='fd7e14', fill_type='solid')
+    purple_fill = PatternFill(start_color='6f42c1', end_color='6f42c1', fill_type='solid')
+    grey_fill = PatternFill(start_color='E8E8E8', end_color='E8E8E8', fill_type='solid')
+    center = Alignment(horizontal='center', vertical='center')
+    header_font = Font(bold=True, color='FFFFFF', size=11)
+    title_font = Font(bold=True, size=14)
+    bold_font = Font(bold=True)
+    thin_border = Border(
+        left=Side(style='thin', color='D0D0D0'),
+        right=Side(style='thin', color='D0D0D0'),
+        top=Side(style='thin', color='D0D0D0'),
+        bottom=Side(style='thin', color='D0D0D0'),
+    )
+
+    def style_header(ws, row, cols, fill):
+        for col in range(1, cols + 1):
+            cell = ws.cell(row=row, column=col)
+            cell.font = header_font
+            cell.fill = fill
+            cell.alignment = center
+            cell.border = thin_border
+
+    def style_data_row(ws, row, cols):
+        for col in range(1, cols + 1):
+            ws.cell(row=row, column=col).border = thin_border
+
+    # ==================== 1. XODIMLAR ====================
+    ws_xodim = wb.active
+    ws_xodim.title = 'Xodimlar'
+    xodimlar = Xodim.objects.filter(active=True).order_by('-reyting_ball')
+
+    ws_xodim.merge_cells('A1:J1')
+    ws_xodim['A1'] = f"BARCHA XODIMLAR — {oy_nomi} {yil}"
+    ws_xodim['A1'].font = title_font
+    ws_xodim['A1'].alignment = center
+
+    xodim_headers = ['№', 'Ism', 'Familya', 'Telefon', 'Lavozim', 'Bonus Ball', 'Bonus Pul', 'Jarima Ball', 'Jarima Pul', 'Reyting Ball']
+    for col, h in enumerate(xodim_headers, 1):
+        ws_xodim.cell(row=3, column=col, value=h)
+    style_header(ws_xodim, 3, len(xodim_headers), blue_fill)
+
+    for idx, x in enumerate(xodimlar, 1):
+        row = idx + 3
+        ws_xodim.cell(row=row, column=1, value=idx)
+        ws_xodim.cell(row=row, column=2, value=x.ism)
+        ws_xodim.cell(row=row, column=3, value=x.familya)
+        ws_xodim.cell(row=row, column=4, value=x.telefon)
+        ws_xodim.cell(row=row, column=5, value=x.lavozim)
+        ws_xodim.cell(row=row, column=6, value=x.bonus_ball)
+        ws_xodim.cell(row=row, column=7, value=float(x.bonus_pul))
+        ws_xodim.cell(row=row, column=8, value=x.jarima_ball)
+        ws_xodim.cell(row=row, column=9, value=float(x.jarima_pul))
+        ws_xodim.cell(row=row, column=10, value=x.reyting_ball)
+        style_data_row(ws_xodim, row, len(xodim_headers))
+
+    total_r = len(xodimlar) + 4
+    ws_xodim.cell(row=total_r, column=1, value='JAMI')
+    ws_xodim.cell(row=total_r, column=6, value=sum(x.bonus_ball for x in xodimlar))
+    ws_xodim.cell(row=total_r, column=7, value=float(sum(x.bonus_pul for x in xodimlar)))
+    ws_xodim.cell(row=total_r, column=8, value=sum(x.jarima_ball for x in xodimlar))
+    ws_xodim.cell(row=total_r, column=9, value=float(sum(x.jarima_pul for x in xodimlar)))
+    for col in range(1, len(xodim_headers) + 1):
+        c = ws_xodim.cell(row=total_r, column=col)
+        c.font = bold_font
+        c.fill = grey_fill
+
+    for i, w in enumerate([5, 15, 15, 18, 18, 12, 14, 12, 14, 12], 1):
+        ws_xodim.column_dimensions[get_column_letter(i)].width = w
+
+    # ==================== 2. BONUSLAR ====================
+    ws_bonus = wb.create_sheet('Bonuslar')
+    bonuslar = BonusRecord.objects.filter(
+        sana__date__gte=oy_boshi, sana__date__lte=oy_oxiri
+    ).select_related('xodim', 'sabab', 'created_by').order_by('-sana')
+
+    ws_bonus.merge_cells('A1:H1')
+    ws_bonus['A1'] = f"BONUSLAR — {oy_nomi} {yil}"
+    ws_bonus['A1'].font = title_font
+    ws_bonus['A1'].alignment = center
+
+    bonus_headers = ['№', 'Xodim', 'Sabab', 'Ball', "Pul (so'm)", 'Izoh', 'Berdi', 'Sana']
+    for col, h in enumerate(bonus_headers, 1):
+        ws_bonus.cell(row=3, column=col, value=h)
+    style_header(ws_bonus, 3, len(bonus_headers), green_fill)
+
+    for idx, b in enumerate(bonuslar, 1):
+        row = idx + 3
+        ws_bonus.cell(row=row, column=1, value=idx)
+        ws_bonus.cell(row=row, column=2, value=f"{b.xodim.ism} {b.xodim.familya}")
+        ws_bonus.cell(row=row, column=3, value=str(b.sabab) if b.sabab else 'Qo\'lda')
+        ws_bonus.cell(row=row, column=4, value=b.ball_miqdori)
+        ws_bonus.cell(row=row, column=5, value=float(b.pul_miqdori))
+        ws_bonus.cell(row=row, column=6, value=b.izoh)
+        ws_bonus.cell(row=row, column=7, value=b.created_by.get_full_name() if b.created_by else '')
+        ws_bonus.cell(row=row, column=8, value=b.sana.strftime('%d.%m.%Y %H:%M') if b.sana else '')
+        style_data_row(ws_bonus, row, len(bonus_headers))
+
+    total_b = len(bonuslar) + 4
+    ws_bonus.cell(row=total_b, column=1, value='JAMI')
+    ws_bonus.cell(row=total_b, column=4, value=sum(b.ball_miqdori for b in bonuslar))
+    ws_bonus.cell(row=total_b, column=5, value=float(sum(b.pul_miqdori for b in bonuslar)))
+    for col in range(1, len(bonus_headers) + 1):
+        c = ws_bonus.cell(row=total_b, column=col)
+        c.font = bold_font
+        c.fill = grey_fill
+
+    for i, w in enumerate([5, 20, 25, 10, 14, 30, 20, 18], 1):
+        ws_bonus.column_dimensions[get_column_letter(i)].width = w
+
+    # ==================== 3. JARIMALAR ====================
+    ws_jarima = wb.create_sheet('Jarimalar')
+    jarimalar = JarimaRecord.objects.filter(
+        sana__date__gte=oy_boshi, sana__date__lte=oy_oxiri
+    ).select_related('xodim', 'sabab', 'created_by').order_by('-sana')
+
+    ws_jarima.merge_cells('A1:H1')
+    ws_jarima['A1'] = f"JARIMALAR — {oy_nomi} {yil}"
+    ws_jarima['A1'].font = title_font
+    ws_jarima['A1'].alignment = center
+
+    jarima_headers = ['№', 'Xodim', 'Sabab', 'Ball', "Pul (so'm)", 'Izoh', 'Berdi', 'Sana']
+    for col, h in enumerate(jarima_headers, 1):
+        ws_jarima.cell(row=3, column=col, value=h)
+    style_header(ws_jarima, 3, len(jarima_headers), red_fill)
+
+    for idx, j in enumerate(jarimalar, 1):
+        row = idx + 3
+        ws_jarima.cell(row=row, column=1, value=idx)
+        ws_jarima.cell(row=row, column=2, value=f"{j.xodim.ism} {j.xodim.familya}")
+        ws_jarima.cell(row=row, column=3, value=str(j.sabab) if j.sabab else 'Qo\'lda')
+        ws_jarima.cell(row=row, column=4, value=j.ball_miqdori)
+        ws_jarima.cell(row=row, column=5, value=float(j.pul_miqdori))
+        ws_jarima.cell(row=row, column=6, value=j.izoh)
+        ws_jarima.cell(row=row, column=7, value=j.created_by.get_full_name() if j.created_by else '')
+        ws_jarima.cell(row=row, column=8, value=j.sana.strftime('%d.%m.%Y %H:%M') if j.sana else '')
+        style_data_row(ws_jarima, row, len(jarima_headers))
+
+    total_j = len(jarimalar) + 4
+    ws_jarima.cell(row=total_j, column=1, value='JAMI')
+    ws_jarima.cell(row=total_j, column=4, value=sum(j.ball_miqdori for j in jarimalar))
+    ws_jarima.cell(row=total_j, column=5, value=float(sum(j.pul_miqdori for j in jarimalar)))
+    for col in range(1, len(jarima_headers) + 1):
+        c = ws_jarima.cell(row=total_j, column=col)
+        c.font = bold_font
+        c.fill = grey_fill
+
+    for i, w in enumerate([5, 20, 25, 10, 14, 30, 20, 18], 1):
+        ws_jarima.column_dimensions[get_column_letter(i)].width = w
+
+    # ==================== 4. MAHSULOTLAR ====================
+    ws_mah = wb.create_sheet('Mahsulotlar')
+    mahsulotlar = Product.objects.select_related('category').order_by('-created_at')
+
+    ws_mah.merge_cells('A1:G1')
+    ws_mah['A1'] = f"MAHSULOTLAR — Barcha ma'lumotlar"
+    ws_mah['A1'].font = title_font
+    ws_mah['A1'].alignment = center
+
+    mah_headers = ['№', 'Nomi', 'Tavsifi', 'Kategoriya', "Ball", 'Omborda', 'Holati']
+    for col, h in enumerate(mah_headers, 1):
+        ws_mah.cell(row=3, column=col, value=h)
+    style_header(ws_mah, 3, len(mah_headers), orange_fill)
+
+    for idx, m in enumerate(mahsulotlar, 1):
+        row = idx + 3
+        ws_mah.cell(row=row, column=1, value=idx)
+        ws_mah.cell(row=row, column=2, value=m.name)
+        ws_mah.cell(row=row, column=3, value=m.description[:100] if m.description else '')
+        ws_mah.cell(row=row, column=4, value=m.category.name if m.category else '')
+        ws_mah.cell(row=row, column=5, value=m.price_points)
+        ws_mah.cell(row=row, column=6, value=m.stock)
+        ws_mah.cell(row=row, column=7, value='Faol' if m.is_active else 'Nofaol')
+        style_data_row(ws_mah, row, len(mah_headers))
+
+    for i, w in enumerate([5, 25, 30, 20, 10, 10, 10], 1):
+        ws_mah.column_dimensions[get_column_letter(i)].width = w
+
+    # ==================== 5. BUYURTMALAR ====================
+    ws_buy = wb.create_sheet('Buyurtmalar')
+    buyurtmalar = ProductOrder.objects.select_related('user', 'product').order_by('-created_at')
+
+    ws_buy.merge_cells('A1:H1')
+    ws_buy['A1'] = f"BUYURTMALAR — Barcha ma'lumotlar"
+    ws_buy['A1'].font = title_font
+    ws_buy['A1'].alignment = center
+
+    buy_headers = ['№', 'Foydalanuvchi', 'Mahsulot', 'Ball', 'Holati', 'Yaratilgan', 'Tasdiqlangan', 'Rad etilgan']
+    for col, h in enumerate(buy_headers, 1):
+        ws_buy.cell(row=3, column=col, value=h)
+    style_header(ws_buy, 3, len(buy_headers), purple_fill)
+
+    status_map = {'PENDING': 'Kutilmoqda', 'APPROVED': 'Tasdiqlangan', 'REJECTED': 'Rad etilgan'}
+    for idx, bo in enumerate(buyurtmalar, 1):
+        row = idx + 3
+        ws_buy.cell(row=row, column=1, value=idx)
+        ws_buy.cell(row=row, column=2, value=bo.user.get_full_name() or bo.user.username)
+        ws_buy.cell(row=row, column=3, value=bo.product.name)
+        ws_buy.cell(row=row, column=4, value=bo.points_spent)
+        ws_buy.cell(row=row, column=5, value=status_map.get(bo.status, bo.status))
+        ws_buy.cell(row=row, column=6, value=bo.created_at.strftime('%d.%m.%Y %H:%M') if bo.created_at else '')
+        ws_buy.cell(row=row, column=7, value=bo.approved_at.strftime('%d.%m.%Y %H:%M') if bo.approved_at else '')
+        ws_buy.cell(row=row, column=8, value=bo.rejected_at.strftime('%d.%m.%Y %H:%M') if bo.rejected_at else '')
+        style_data_row(ws_buy, row, len(buy_headers))
+
+    for i, w in enumerate([5, 25, 25, 10, 15, 18, 18, 18], 1):
+        ws_buy.column_dimensions[get_column_letter(i)].width = w
+
+    # ==================== 6. OYLIK HISOBOT ====================
+    ws_oylik = wb.create_sheet(f'{oy_nomi}_{yil}')
+    hisobot_data, jami = hisobot_data_yig(oy_boshi, oy_oxiri)
+
+    ws_oylik.merge_cells('A1:I1')
+    ws_oylik['A1'] = f"OYLIK HISOBOT — {oy_nomi} {yil}"
+    ws_oylik['A1'].font = title_font
+    ws_oylik['A1'].alignment = center
+
+    oylik_headers = ['№', 'Xodim', 'Bonus Ball', "Bonus Pul (so'm)", 'Jarima Ball', "Jarima Pul (so'm)", 'Jami Ball', "Jami Pul (so'm)", 'Reyting']
+    for col, h in enumerate(oylik_headers, 1):
+        ws_oylik.cell(row=3, column=col, value=h)
+    style_header(ws_oylik, 3, len(oylik_headers), blue_fill)
+
+    for idx, item in enumerate(hisobot_data, 1):
+        row = idx + 3
+        ws_oylik.cell(row=row, column=1, value=idx)
+        ws_oylik.cell(row=row, column=2, value=f"{item['xodim'].ism} {item['xodim'].familya}")
+        ws_oylik.cell(row=row, column=3, value=item['bonus_ball'])
+        ws_oylik.cell(row=row, column=4, value=item['bonus_pul'])
+        ws_oylik.cell(row=row, column=5, value=item['jarima_ball'])
+        ws_oylik.cell(row=row, column=6, value=item['jarima_pul'])
+        ws_oylik.cell(row=row, column=7, value=item['jami_ball'])
+        ws_oylik.cell(row=row, column=8, value=item['jami_pul'])
+        ws_oylik.cell(row=row, column=9, value=item['xodim'].reyting_ball)
+        style_data_row(ws_oylik, row, len(oylik_headers))
+
+    total_y = len(hisobot_data) + 4
+    ws_oylik.cell(row=total_y, column=1, value='JAMI')
+    ws_oylik.cell(row=total_y, column=3, value=jami['bonus_ball'])
+    ws_oylik.cell(row=total_y, column=4, value=jami['bonus_pul'])
+    ws_oylik.cell(row=total_y, column=5, value=jami['jarima_ball'])
+    ws_oylik.cell(row=total_y, column=6, value=jami['jarima_pul'])
+    ws_oylik.cell(row=total_y, column=7, value=jami['ball'])
+    ws_oylik.cell(row=total_y, column=8, value=jami['pul'])
+    for col in range(1, len(oylik_headers) + 1):
+        c = ws_oylik.cell(row=total_y, column=col)
+        c.font = bold_font
+        c.fill = grey_fill
+
+    for i, w in enumerate([5, 30, 12, 15, 12, 15, 12, 15, 12], 1):
+        ws_oylik.column_dimensions[get_column_letter(i)].width = w
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="barcha_malumotlar_{oy_nomi}_{yil}.xlsx"'
     wb.save(response)
     return response
 
