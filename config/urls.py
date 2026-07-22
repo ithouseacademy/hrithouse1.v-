@@ -18,10 +18,18 @@ def serve_media(request, path):
     return FileResponse(open(file_path, 'rb'), content_type=content_type)
 
 
+def serve_google_verification(request, filename):
+    file_path = os.path.join(settings.BASE_DIR, 'static', filename)
+    if not os.path.isfile(file_path):
+        raise Http404
+    return FileResponse(open(file_path, 'rb'), content_type='text/html')
+
+
 urlpatterns = [
     path('admin-site-panel-dashboard-panel-60d731db-admin/', admin.site.urls),
     path('', include('main.urls')),
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     re_path(r'^media/(?P<path>.+)$', serve_media, name='serve_media'),
+    re_path(r'^(?P<filename>google[a-z0-9]+\.html)$', serve_google_verification, name='google_verification'),
 ]
