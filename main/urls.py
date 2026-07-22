@@ -88,4 +88,7 @@ urlpatterns = [
     path('push/subscribe/', views.push_subscribe, name='push_subscribe'),
     path('push/unsubscribe/', views.push_unsubscribe, name='push_unsubscribe'),
     path('push/vapid-public-key/', views.vapid_public_key, name='vapid_public_key'),
+
+    # DB Export
+    path('export-sqlite/', views.export_sqlite_view, name='export_sqlite'),
 ]

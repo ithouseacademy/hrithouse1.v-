@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, date
 import csv
+import os
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
@@ -2501,3 +2502,50 @@ def vapid_public_key(request):
         return JsonResponse({'public_key': b64_key})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+# ============================================================
+# DB EXPORT - PostgreSQL dan SQLite yuklab olish
+# ============================================================
+
+@staff_member_required
+def export_sqlite_view(request):
+    import tempfile
+    import subprocess
+    import sys
+
+    try:
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'db_backup_{timestamp}.sqlite3'
+        temp_dir = tempfile.mkdtemp()
+        output_path = os.path.join(temp_dir, filename)
+
+        python_exe = sys.executable
+        manage_py = os.path.join(settings.BASE_DIR, 'manage.py')
+        result = subprocess.run(
+            [python_exe, manage_py, 'export_sqlite', '--output', output_path],
+            capture_output=True, text=True, cwd=str(settings.BASE_DIR), timeout=120
+        )
+
+        if result.returncode != 0:
+            return HttpResponse(f'Xatolik: {result.stderr}', status=500)
+
+        with open(output_path, 'rb') as f:
+            content = f.read()
+
+        response = HttpResponse(content, content_type='application/octet-stream')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Length'] = len(content)
+
+        try:
+            os.remove(output_path)
+            os.rmdir(temp_dir)
+        except:
+            pass
+
+        return response
+
+    except subprocess.TimeoutExpired:
+        return HttpResponse('Xatolik: Vaqt tugadi (120s)', status=500)
+    except Exception as e:
+        return HttpResponse(f'Xatolik: {str(e)}', status=500)
