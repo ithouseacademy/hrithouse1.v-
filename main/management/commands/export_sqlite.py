@@ -76,7 +76,7 @@ class Command(BaseCommand):
                 if rows:
                     col_names = [col[0] for col in columns_info]
                     placeholders = ', '.join(['?' for _ in col_names])
-                    insert_sql = f'INSERT INTO "{table_name}" ({", ".join([f"{c}" for c in col_names])}) VALUES ({placeholders})'
+                    insert_sql = f'INSERT INTO "{table_name}" ({", ".join([f"{chr(34)}{c}{chr(34)}" for c in col_names])}) VALUES ({placeholders})'
 
                     cleaned_rows = []
                     for row in rows:
