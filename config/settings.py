@@ -14,7 +14,11 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 
 # ================= ALLOWED_HOSTS =================
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "*").split(",")
+ALLOWED_HOSTS = [
+    h.strip()
+    for h in os.environ.get("ALLOWED_HOSTS", "ithouse.academy,www.ithouse.academy,localhost,127.0.0.1").split(",")
+    if h.strip()
+]
 
 # ================= INSTALLED APPS =================
 INSTALLED_APPS = [
@@ -112,7 +116,16 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 # ================= CORS =================
 RAILWAY_DOMAIN = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
 CORS_ALLOWED_ORIGINS = [f"https://{RAILWAY_DOMAIN}"] if RAILWAY_DOMAIN else []
-CSRF_TRUSTED_ORIGINS = [f"https://{RAILWAY_DOMAIN}"] if RAILWAY_DOMAIN else []
+CSRF_TRUSTED_ORIGINS = [
+    origin
+    for origin in [
+        f"https://{RAILWAY_DOMAIN}" if RAILWAY_DOMAIN else "",
+        "https://ithouse.academy",
+        "https://www.ithouse.academy",
+        "http://ithouse.academy",
+    ]
+    if origin
+]
 
 # ================= PUSH NOTIFICATIONS (VAPID) =================
 VAPID_PRIVATE_KEY = os.environ.get(
