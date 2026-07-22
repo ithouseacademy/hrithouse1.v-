@@ -25,6 +25,7 @@ from decimal import Decimal
 from datetime import datetime, timedelta, date
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect, Http404
+from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
 import json
