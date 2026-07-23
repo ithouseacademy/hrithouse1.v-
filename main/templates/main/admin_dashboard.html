@@ -60,14 +60,14 @@
         <span class="text-xs font-semibold">Umumiy reyting</span>
         <span class="text-[10px] text-blue-100">{{ xodimlar_soni }} xodim</span>
     </div>
-    <div class="grid grid-cols-2 gap-3">
-        <div>
-            <div class="text-xl font-bold">{{ umumiy_ball }}</div>
-            <div class="text-[10px] text-blue-100">ball</div>
+    <div class="flex items-baseline gap-4">
+        <div class="flex items-baseline gap-1">
+            <span class="text-xl font-bold">{{ umumiy_ball }}</span>
+            <span class="text-[10px] text-blue-100">ball</span>
         </div>
-        <div>
-            <div class="text-xl font-bold">{{ umumiy_pul|floatformat:0 }}</div>
-            <div class="text-[10px] text-blue-100">so'm</div>
+        <div class="flex items-baseline gap-1">
+            <span class="text-xl font-bold">{{ umumiy_pul|floatformat:0 }}</span>
+            <span class="text-[10px] text-blue-100">so'm</span>
         </div>
     </div>
 </div>
@@ -75,56 +75,56 @@
 <!-- Tugmalar - Karusel -->
 <div class="-mx-4 px-4 mb-2">
     <div class="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin snap-x snap-mandatory" style="scroll-snap-type: x mandatory;">
-        <a href="{% url 'xodim_qoshish' %}" class="flex-shrink-0 bg-blue-500 text-white rounded-lg p-2 text-center hover:bg-blue-600 transition snap-start" style="min-width: 64px;">
-            <i class="ri-user-add-line text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Xodim qo'shish</div>
+        <a href="{% url 'xodim_qoshish' %}" class="flex-shrink-0 bg-blue-500 text-white rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-blue-600 transition snap-start">
+            <i class="ri-user-add-line text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Xodim qo'shish</span>
         </a>
-        <a href="{% url 'xodimlar' %}" class="flex-shrink-0 bg-blue-500 text-white rounded-lg p-2 text-center hover:bg-blue-600 transition snap-start" style="min-width: 64px;">
-            <i class="ri-team-line text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Xodimlar</div>
+        <a href="{% url 'xodimlar' %}" class="flex-shrink-0 bg-blue-500 text-white rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-blue-600 transition snap-start">
+            <i class="ri-team-line text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Xodimlar</span>
         </a>
-        <a href="{% url 'bonus_qoshish' %}" class="flex-shrink-0 bg-green-500 text-white rounded-lg p-2 text-center hover:bg-green-600 transition snap-start" style="min-width: 64px;">
-            <i class="ri-star-fill text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Bonus</div>
+        <a href="{% url 'bonus_qoshish' %}" class="flex-shrink-0 bg-green-500 text-white rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-green-600 transition snap-start">
+            <i class="ri-star-fill text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Bonus</span>
         </a>
-        <a href="{% url 'jarima_qoshish' %}" class="flex-shrink-0 bg-red-500 text-white rounded-lg p-2 text-center hover:bg-red-600 transition snap-start" style="min-width: 64px;">
-            <i class="ri-close-circle-fill text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Jarima</div>
+        <a href="{% url 'jarima_qoshish' %}" class="flex-shrink-0 bg-red-500 text-white rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-red-600 transition snap-start">
+            <i class="ri-close-circle-fill text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Jarima</span>
         </a>
-        <a href="{% url 'sabablar_boshqaruvi' %}" class="flex-shrink-0 bg-purple-500 text-white rounded-lg p-2 text-center hover:bg-purple-600 transition snap-start" style="min-width: 64px;">
-            <i class="ri-settings-3-fill text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Sabablar</div>
+        <a href="{% url 'sabablar_boshqaruvi' %}" class="flex-shrink-0 bg-purple-500 text-white rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-purple-600 transition snap-start">
+            <i class="ri-settings-3-fill text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Sabablar</span>
         </a>
-        <a href="{% url 'tarixlar' %}" class="flex-shrink-0 bg-orange-500 text-white rounded-lg p-2 text-center hover:bg-orange-600 transition snap-start" style="min-width: 64px;">
-            <i class="ri-history-fill text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Tarixlar</div>
+        <a href="{% url 'tarixlar' %}" class="flex-shrink-0 bg-orange-500 text-white rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-orange-600 transition snap-start">
+            <i class="ri-history-fill text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Tarixlar</span>
         </a>
-        <a href="{% url 'oylik_hisobot' %}" class="flex-shrink-0 bg-blue-500 text-white rounded-lg p-2 text-center hover:bg-blue-600 transition snap-start" style="min-width: 64px;">
-            <i class="ri-calendar-check-fill text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Hisobot</div>
+        <a href="{% url 'oylik_hisobot' %}" class="flex-shrink-0 bg-blue-500 text-white rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-blue-600 transition snap-start">
+            <i class="ri-calendar-check-fill text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Hisobot</span>
         </a>
-        <a href="{% url 'admin_mahsulotlar' %}" class="flex-shrink-0 bg-yellow-500 text-white rounded-lg p-2 text-center hover:bg-yellow-600 transition snap-start" style="min-width: 64px;">
-            <i class="ri-shopping-bag-3-fill text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Mahsulotlar</div>
+        <a href="{% url 'admin_mahsulotlar' %}" class="flex-shrink-0 bg-yellow-500 text-white rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-yellow-600 transition snap-start">
+            <i class="ri-shopping-bag-3-fill text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Mahsulotlar</span>
         </a>
-        <a href="{% url 'admin_order_list' %}" class="flex-shrink-0 bg-orange-500 text-white rounded-lg p-2 text-center hover:bg-orange-600 transition snap-start relative" style="min-width: 64px;">
-            <i class="ri-truck-fill text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Buyurtmalar</div>
+        <a href="{% url 'admin_order_list' %}" class="flex-shrink-0 bg-orange-500 text-white rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-orange-600 transition snap-start relative">
+            <i class="ri-truck-fill text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Buyurtmalar</span>
             {% if pending_orders > 0 %}
             <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">{{ pending_orders }}</span>
             {% endif %}
         </a>
-        <a href="{% url 'barcha_malumotlar_excel' %}" class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-lg p-2 text-center hover:bg-blue-200 transition snap-start" style="min-width: 64px;">
-            <i class="ri-file-excel-2-fill text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Excel</div>
+        <a href="{% url 'barcha_malumotlar_excel' %}" class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-blue-200 transition snap-start">
+            <i class="ri-file-excel-2-fill text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Excel</span>
         </a>
-        <a href="{% url 'export_sqlite' %}" class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-lg p-2 text-center hover:bg-blue-200 transition snap-start" style="min-width: 64px;">
-            <i class="ri-database-2-fill text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">DB</div>
+        <a href="{% url 'export_sqlite' %}" class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-blue-200 transition snap-start">
+            <i class="ri-database-2-fill text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">DB</span>
         </a>
-        <a href="{% url 'qayta_yuborish' %}" class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-lg p-2 text-center hover:bg-blue-200 transition snap-start" style="min-width: 64px;">
-            <i class="ri-telegram-fill text-base"></i>
-            <div class="text-[9px] mt-0.5 whitespace-nowrap">Telegram</div>
+        <a href="{% url 'qayta_yuborish' %}" class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-lg px-2.5 py-1.5 flex items-center gap-1 hover:bg-blue-200 transition snap-start">
+            <i class="ri-telegram-fill text-sm"></i>
+            <span class="text-[10px] whitespace-nowrap">Telegram</span>
         </a>
     </div>
 </div>

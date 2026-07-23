@@ -11,7 +11,7 @@
     </div>
 
     {% if user.is_staff %}
-    <a href="{% url 'xodimlar' %}" class="px-4 py-3 bg-[#2001FF] text-white rounded-xl hover:bg-[#4D3DFF] transition-all flex items-center gap-2">
+    <a href="{% url 'xodimlar' %}" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all flex items-center gap-2">
         <i class="ri-arrow-left-line"></i>
         <span class="hidden sm:inline">Xodimlar</span>
     </a>
@@ -19,7 +19,7 @@
 </div>
 
 <!-- Search -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+<div class="bg-white rounded-lg shadow-sm border border-blue-100 p-3 mb-5">
     <form method="GET" class="flex flex-col sm:flex-row gap-3">
         <div class="flex-1 relative">
             <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
@@ -27,14 +27,14 @@
                    name="qidiruv" 
                    placeholder="Ism, familya yoki telefon bo'yicha qidirish..." 
                    value="{{ request.GET.qidiruv }}"
-                   class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#2001FF] focus:border-transparent">
+                   class="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
         </div>
-        <button type="submit" class="px-6 py-3 bg-[#2001FF] text-white rounded-xl hover:bg-[#4D3DFF] transition-colors flex items-center justify-center gap-2">
+        <button type="submit" class="px-5 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
             <i class="ri-search-line"></i>
             <span>Qidirish</span>
         </button>
         {% if request.GET.qidiruv %}
-        <a href="{% url 'arxivlangan_xodimlar' %}" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+        <a href="{% url 'arxivlangan_xodimlar' %}" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
             <i class="ri-close-line"></i>
             <span>Tozalash</span>
         </a>
@@ -43,10 +43,10 @@
 </div>
 
 <!-- Arxivlangan xodimlar -->
-<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+<div class="bg-white rounded-lg shadow-sm border border-blue-100 overflow-hidden">
     <div class="hidden md:block overflow-x-auto">
         <table class="w-full">
-            <thead class="bg-gray-50 border-b border-gray-100">
+            <thead class="bg-gray-50 border-b border-blue-100">
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Xodim</th>
@@ -65,11 +65,11 @@
                     <td class="px-4 py-3 text-sm text-gray-600">{{ forloop.counter }}</td>
                     <td class="px-4 py-3">
                         <a href="{% url 'xodim_detail' xodim.id %}" class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full bg-[#2001FF]/10 flex items-center justify-center overflow-hidden">
+                            <div class="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center overflow-hidden">
                                 {% if xodim.rasm and xodim.rasm.url %}
                                     <img src="{{ xodim.rasm.url }}" alt="{{ xodim.ism }}" class="w-full h-full object-cover">
                                 {% else %}
-                                    <span class="text-sm font-medium text-[#2001FF]">{{ xodim.ism|first }}{{ xodim.familya|first }}</span>
+                                    <span class="text-sm font-medium text-blue-600">{{ xodim.ism|first }}{{ xodim.familya|first }}</span>
                                 {% endif %}
                             </div>
                             <div>
@@ -93,7 +93,7 @@
                     <td class="px-4 py-3">
                         <form method="POST" action="{% url 'xodim_qayta_tiklash' xodim.pk %}" class="inline">
                             {% csrf_token %}
-                            <button type="submit" class="px-3 py-1.5 bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] text-white rounded-lg text-xs hover:shadow-lg transition-all flex items-center gap-1">
+                            <button type="submit" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs hover:shadow-lg transition-all flex items-center gap-1">
                                 <i class="ri-refresh-line"></i> Qayta tiklash
                             </button>
                         </form>
@@ -117,11 +117,11 @@
         {% for xodim in xodimlar %}
         <a href="{% url 'xodim_detail' xodim.id %}" class="block p-4 hover:bg-gray-50 transition-colors">
             <div class="flex items-center gap-3 mb-2">
-                <div class="w-12 h-12 rounded-full bg-[#2001FF]/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                     {% if xodim.rasm and xodim.rasm.url %}
                         <img src="{{ xodim.rasm.url }}" alt="{{ xodim.ism }}" class="w-full h-full object-cover">
                     {% else %}
-                        <span class="text-lg font-bold text-[#2001FF]">{{ xodim.ism|first }}{{ xodim.familya|first }}</span>
+                        <span class="text-lg font-bold text-blue-600">{{ xodim.ism|first }}{{ xodim.familya|first }}</span>
                     {% endif %}
                 </div>
                 <div class="flex-1">
@@ -144,7 +144,7 @@
                 {% if user.is_staff %}
                 <form method="POST" action="{% url 'xodim_qayta_tiklash' xodim.pk %}" class="ml-auto">
                     {% csrf_token %}
-                    <button type="submit" class="px-3 py-1.5 bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] text-white rounded-lg text-xs hover:shadow-lg transition-all">
+                    <button type="submit" class="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs hover:shadow-lg transition-all">
                         <i class="ri-refresh-line"></i> Tiklash
                     </button>
                 </form>
@@ -169,21 +169,21 @@
     <div class="flex gap-2">
         {% if xodimlar.has_previous %}
         <a href="?page={{ xodimlar.previous_page_number }}{% if request.GET.qidiruv %}&qidiruv={{ request.GET.qidiruv }}{% endif %}" 
-           class="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+           class="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <i class="ri-arrow-left-s-line text-gray-600"></i>
         </a>
         {% endif %}
         {% for i in xodimlar.paginator.page_range %}
             {% if xodimlar.number == i %}
-            <span class="w-10 h-10 flex items-center justify-center bg-[#2001FF] text-white rounded-xl font-medium">{{ i }}</span>
+            <span class="w-10 h-10 flex items-center justify-center bg-blue-500 text-white rounded-lg font-medium">{{ i }}</span>
             {% elif i > xodimlar.number|add:'-3' and i < xodimlar.number|add:'3' %}
             <a href="?page={{ i }}{% if request.GET.qidiruv %}&qidiruv={{ request.GET.qidiruv }}{% endif %}" 
-               class="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors text-gray-600">{{ i }}</a>
+               class="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-gray-600">{{ i }}</a>
             {% endif %}
         {% endfor %}
         {% if xodimlar.has_next %}
         <a href="?page={{ xodimlar.next_page_number }}{% if request.GET.qidiruv %}&qidiruv={{ request.GET.qidiruv }}{% endif %}" 
-           class="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+           class="w-10 h-10 flex items-center justify-center bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
             <i class="ri-arrow-right-s-line text-gray-600"></i>
         </a>
         {% endif %}
@@ -193,11 +193,11 @@
 
 <!-- Statistika -->
 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
-    <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+    <div class="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
         <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-gray-600">Jami arxivlangan</span>
-            <div class="w-8 h-8 bg-[#2001FF]/10 rounded-full flex items-center justify-center">
-                <i class="ri-archive-fill text-[#2001FF]"></i>
+            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <i class="ri-archive-fill text-blue-600"></i>
             </div>
         </div>
         <div class="text-2xl font-bold text-gray-900">{{ xodimlar.paginator.count }}</div>

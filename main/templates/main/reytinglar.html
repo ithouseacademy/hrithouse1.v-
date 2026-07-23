@@ -5,8 +5,8 @@
 
 {% block content %}
 <!-- Header -->
-<div class="bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] -mx-4 px-4 py-6 mb-6 text-white">
-    <div class="flex items-center gap-3">
+<div class="bg-blue-500 -mx-4 px-4 py-4 mb-3 text-white">
+    <div class="flex items-center gap-2">
         <div>
             <h1 class="text-2xl font-bold">Xodimlar reytingi</h1>
             <p class="text-white/80 text-sm">{{ jami_xodimlar }} ta xodim</p>
@@ -16,33 +16,33 @@
 
 <div class="px-4">
     <!-- DAVR TANLASH TUGMALARI -->
-    <div class="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide -mx-1 px-1">
-        <a href="?davr=kunlik" class="px-3 py-2 {% if davr == 'kunlik' %}bg-[#2001FF] text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-xl text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
+    <div class="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide -mx-1 px-1">
+        <a href="?davr=kunlik" class="px-3 py-2 {% if davr == 'kunlik' %}bg-blue-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-lg text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
             📅 Kunlik
         </a>
-        <a href="?davr=haftalik" class="px-3 py-2 {% if davr == 'haftalik' %}bg-[#2001FF] text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-xl text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
+        <a href="?davr=haftalik" class="px-3 py-2 {% if davr == 'haftalik' %}bg-blue-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-lg text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
             📊 Haftalik
         </a>
-        <a href="?davr=oylik" class="px-3 py-2 {% if davr == 'oylik' %}bg-[#2001FF] text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-xl text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
+        <a href="?davr=oylik" class="px-3 py-2 {% if davr == 'oylik' %}bg-blue-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-lg text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
             📈 Oylik
         </a>
-        <a href="?davr=yillik" class="px-3 py-2 {% if davr == 'yillik' %}bg-[#2001FF] text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-xl text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
+        <a href="?davr=yillik" class="px-3 py-2 {% if davr == 'yillik' %}bg-blue-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-lg text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
             📉 Yillik
         </a>
-        <a href="?davr=umumiy" class="px-3 py-2 {% if davr == 'umumiy' %}bg-[#2001FF] text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-xl text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
+        <a href="?davr=umumiy" class="px-3 py-2 {% if davr == 'umumiy' %}bg-blue-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-lg text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
             🏆 Umumiy
         </a>
     </div>
 
     <!-- HAFTA TANLASH -->
     {% if davr == 'haftalik' %}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-4">
-        <form method="GET" class="flex flex-col gap-3">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 p-2 mb-3">
+        <form method="GET" class="flex flex-col gap-2">
             <input type="hidden" name="davr" value="haftalik">
             
             <div>
                 <label class="block text-xs text-gray-500 mb-1">Hafta</label>
-                <select name="hafta" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2001FF] focus:border-transparent text-sm">
+                <select name="hafta" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                     <option value="0" {% if tanlangan_hafta == 0 %}selected{% endif %}>Joriy hafta</option>
                     <option value="1" {% if tanlangan_hafta == 1 %}selected{% endif %}>O'tgan hafta</option>
                     <option value="2" {% if tanlangan_hafta == 2 %}selected{% endif %}>2 hafta oldin</option>
@@ -51,14 +51,14 @@
                 </select>
             </div>
             
-            <button type="submit" class="w-full px-4 py-2 bg-[#2001FF] text-white rounded-lg hover:bg-[#4D3DFF] transition-colors text-sm flex items-center justify-center gap-1">
+            <button type="submit" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm flex items-center justify-center gap-1">
                 <i class="ri-refresh-line"></i>
                 <span>Ko'rsatish</span>
             </button>
         </form>
         
         <div class="mt-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg">
-            <i class="ri-calendar-week-line mr-1 text-[#2001FF]"></i>
+            <i class="ri-calendar-week-line mr-1 text-blue-600"></i>
             Ko'rsatilmoqda: <span class="font-medium">{{ hafta_boshi|date:"d.m.Y" }} - {{ hafta_oxiri|date:"d.m.Y" }}</span>
         </div>
     </div>
@@ -66,14 +66,14 @@
 
     <!-- OY TANLASH -->
     {% if davr == 'oylik' %}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-4">
-        <form method="GET" class="flex flex-col gap-3">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 p-2 mb-3">
+        <form method="GET" class="flex flex-col gap-2">
             <input type="hidden" name="davr" value="oylik">
             
             <div class="grid grid-cols-2 gap-2">
                 <div>
                     <label class="block text-xs text-gray-500 mb-1">Oy</label>
-                    <select name="oy" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2001FF] focus:border-transparent text-sm">
+                    <select name="oy" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                         {% for oy in oylar %}
                         <option value="{{ oy.value }}" {% if oy.value == tanlangan_oy %}selected{% endif %}>{{ oy.nom }}</option>
                         {% endfor %}
@@ -82,7 +82,7 @@
                 
                 <div>
                     <label class="block text-xs text-gray-500 mb-1">Yil</label>
-                    <select name="yil" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2001FF] focus:border-transparent text-sm">
+                    <select name="yil" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                         {% for yil in yillar %}
                         <option value="{{ yil }}" {% if yil == tanlangan_yil %}selected{% endif %}>{{ yil }}</option>
                         {% endfor %}
@@ -90,14 +90,14 @@
                 </div>
             </div>
             
-            <button type="submit" class="w-full px-4 py-2 bg-[#2001FF] text-white rounded-lg hover:bg-[#4D3DFF] transition-colors text-sm flex items-center justify-center gap-1">
+            <button type="submit" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm flex items-center justify-center gap-1">
                 <i class="ri-refresh-line"></i>
                 <span>Ko'rsatish</span>
             </button>
         </form>
         
         <div class="mt-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg">
-            <i class="ri-calendar-month-line mr-1 text-[#2001FF]"></i>
+            <i class="ri-calendar-month-line mr-1 text-blue-600"></i>
             Ko'rsatilmoqda: <span class="font-medium">{{ oy_nomi }} {{ tanlangan_yil }}</span>
         </div>
     </div>
@@ -105,45 +105,45 @@
 
     <!-- YIL TANLASH (TO'G'IRILGAN) -->
     {% if davr == 'yillik' %}
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-4">
-        <form method="GET" class="flex flex-col gap-3">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 p-2 mb-3">
+        <form method="GET" class="flex flex-col gap-2">
             <input type="hidden" name="davr" value="yillik">
             
             <div>
                 <label class="block text-xs text-gray-500 mb-1">Yil</label>
-                <select name="yil" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#2001FF] focus:border-transparent text-sm">
+                <select name="yil" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                     {% for yil in yillar %}
                     <option value="{{ yil }}" {% if yil == tanlangan_yil %}selected{% endif %}>{{ yil }}</option>
                     {% endfor %}
                 </select>
             </div>
             
-            <button type="submit" class="w-full px-4 py-2 bg-[#2001FF] text-white rounded-lg hover:bg-[#4D3DFF] transition-colors text-sm flex items-center justify-center gap-1">
+            <button type="submit" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm flex items-center justify-center gap-1">
                 <i class="ri-refresh-line"></i>
                 <span>Ko'rsatish</span>
             </button>
         </form>
         
         <div class="mt-3 text-xs text-gray-600 bg-gray-50 p-2 rounded-lg">
-            <i class="ri-calendar-2-line mr-1 text-[#2001FF]"></i>
+            <i class="ri-calendar-2-line mr-1 text-blue-600"></i>
             Ko'rsatilmoqda: <span class="font-medium">{{ tanlangan_yil }} yil</span>
         </div>
     </div>
     {% endif %}
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-2 gap-2 mb-4">
-        <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+    <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="bg-white rounded-lg p-2 shadow-sm border border-blue-100">
             <div class="flex items-center justify-between mb-1">
                 <span class="text-xs text-gray-500">Jami xodimlar</span>
-                <div class="w-6 h-6 bg-[#2001FF]/10 rounded-full flex items-center justify-center">
-                    <i class="ri-team-fill text-[#2001FF] text-xs"></i>
+                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="ri-team-fill text-blue-600 text-xs"></i>
                 </div>
             </div>
             <div class="text-lg font-bold text-gray-900">{{ jami_xodimlar|default:"0" }}</div>
         </div>
         
-        <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-lg p-2 shadow-sm border border-blue-100">
             <div class="flex items-center justify-between mb-1">
                 <span class="text-xs text-gray-500">Eng yuqori ball</span>
                 <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
@@ -154,7 +154,7 @@
             <div class="text-[10px] text-gray-500 truncate">{{ eng_yuqori_xodim|default:"-" }}</div>
         </div>
         
-        <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-lg p-2 shadow-sm border border-blue-100">
             <div class="flex items-center justify-between mb-1">
                 <span class="text-xs text-gray-500">O'rtacha ball</span>
                 <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
@@ -164,7 +164,7 @@
             <div class="text-lg font-bold text-gray-900">{{ ortacha_ball|default:"0" }}</div>
         </div>
         
-        <div class="bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-lg p-2 shadow-sm border border-blue-100">
             <div class="flex items-center justify-between mb-1">
                 <span class="text-xs text-gray-500">Faol xodimlar</span>
                 <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
@@ -176,7 +176,7 @@
     </div>
 
     <!-- Davr haqida ma'lumot -->
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3 mb-4 border border-blue-100">
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-2 mb-3 border border-blue-100">
         <div class="flex items-center justify-between">
             <div>
                 <span class="text-xs font-medium text-blue-800">
@@ -205,8 +205,8 @@
     </div>
 
     <!-- Podium -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
-        <div class="p-3 border-b border-gray-100">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 overflow-hidden mb-3">
+        <div class="p-2 border-b border-blue-100">
             <h3 class="font-semibold text-gray-900 text-sm">
                 🏆 Eng yaxshi xodimlar 
                 {% if davr == 'kunlik' %}({{ bugun|date:"d.m.Y" }})
@@ -216,7 +216,7 @@
                 {% endif %}
             </h3>
         </div>
-        <div class="p-3">
+        <div class="p-2">
             <div class="flex items-end justify-center gap-1 h-36">
                 <!-- 2-o'rin -->
                 <div class="flex flex-col items-center w-20">
@@ -297,8 +297,8 @@
     </div>
 
     <!-- Reyting jadvali -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
-        <div class="p-3 border-b border-gray-100 flex items-center justify-between">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 overflow-hidden mb-3">
+        <div class="p-2 border-b border-blue-100 flex items-center justify-between">
             <h3 class="font-semibold text-gray-900 text-sm">
                 {% if davr == 'kunlik' %}📅 Kunlik reyting ({{ bugun|date:"d.m.Y" }})
                 {% elif davr == 'haftalik' %}📊 Haftalik reyting ({{ hafta_boshi|date:"d.m" }} - {{ hafta_oxiri|date:"d.m" }})
@@ -333,7 +333,7 @@
                             {% endif %}
                         </div>
                         <div class="min-w-0">
-                            <a href="{% url 'xodim_detail' xodim.id %}" class="font-medium text-gray-900 hover:text-[#2001FF] text-xs block truncate max-w-[80px] sm:max-w-[120px]">
+                            <a href="{% url 'xodim_detail' xodim.id %}" class="font-medium text-gray-900 hover:text-blue-600 text-xs block truncate max-w-[80px] sm:max-w-[120px]">
                                 {{ xodim.ism }} {{ xodim.familya }}
                             </a>
                         </div>

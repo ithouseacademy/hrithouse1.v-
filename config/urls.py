@@ -5,6 +5,7 @@ from django.urls import path, include, re_path
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.http import Http404, FileResponse, HttpResponse
+from config.views import handler404, handler500, robots_txt, sitemap_xml
 
 handler404 = 'config.views.handler404'
 handler500 = 'config.views.handler500'
@@ -27,6 +28,8 @@ def google_verification(request):
 
 urlpatterns = [
     path('google503f1d0f4a7d9466.html', google_verification, name='google_verification'),
+    path('robots.txt', robots_txt, name='robots_txt'),
+    path('sitemap.xml', sitemap_xml, name='sitemap_xml'),
     path('admin-site-panel-dashboard-panel-60d731db-admin/', admin.site.urls),
     path('', include('main.urls')),
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),

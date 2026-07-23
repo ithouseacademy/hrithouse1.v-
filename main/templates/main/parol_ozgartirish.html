@@ -5,9 +5,9 @@
 
 {% block content %}
 <!-- Header qismi -->
-<div class="bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] -mx-4 px-4 py-8 mb-6 text-white">
+<div class="bg-blue-500 -mx-4 px-4 py-6 mb-3 text-white">
     <div class="flex items-center gap-3">
-        <a href="{% url 'profil_sozlamalari' %}" class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+        <a href="{% url 'profil_sozlamalari' %}" class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
             <i class="ri-arrow-left-line text-xl"></i>
         </a>
         <div>
@@ -20,7 +20,7 @@
 <!-- Asosiy qism -->
 <div class="px-4">
     <!-- Xavfsizlik darajasi -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-4">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 p-4 mb-3">
         <div class="flex items-center justify-between mb-3">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -37,18 +37,18 @@
     </div>
 
     <!-- Parol o'zgartirish formasi -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 overflow-hidden">
         <!-- Forma header -->
-        <div class="p-5 border-b border-gray-100">
+        <div class="p-4 border-b border-blue-100">
             <h3 class="font-semibold text-gray-900 flex items-center gap-2">
-                <i class="ri-lock-password-line text-[#2001FF]"></i>
+                <i class="ri-lock-password-line text-blue-600"></i>
                 Yangi parol kiriting
             </h3>
             <p class="text-xs text-gray-500 mt-1">Kuchli parol tanlashga harakat qiling</p>
         </div>
         
         <!-- Forma -->
-        <div class="p-5">
+        <div class="p-4">
             <form method="POST" id="passwordForm">
                 {% csrf_token %}
                 
@@ -125,7 +125,7 @@
                 </div>
                 
                 <!-- Yangi parol (takroran) -->
-                <div class="mb-6">
+                <div class="mb-3">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="ri-lock-line mr-1"></i>
                         Yangi parol (takroran) <span class="text-red-500">*</span>
@@ -153,11 +153,11 @@
                 
                 <!-- Tugmalar -->
                 <div class="flex gap-3">
-                    <button type="submit" class="flex-1 px-4 py-3 bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] text-white rounded-xl hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2">
+                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-500 text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2">
                         <i class="ri-save-line"></i>
                         Saqlash
                     </button>
-                    <a href="{% url 'profil_sozlamalari' %}" class="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors flex items-center justify-center">
+                    <a href="{% url 'profil_sozlamalari' %}" class="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center">
                         <i class="ri-close-line text-xl"></i>
                     </a>
                 </div>
@@ -166,7 +166,7 @@
     </div>
 
     <!-- Xavfsizlik maslahatlari -->
-    <div class="mt-4 bg-yellow-50 rounded-xl p-4">
+    <div class="mt-4 bg-yellow-50 rounded-lg p-4">
         <h4 class="text-sm font-medium text-yellow-800 mb-2 flex items-center gap-2">
             <i class="ri-shield-keyhole-line"></i>
             Xavfsizlik maslahatlari
@@ -293,9 +293,9 @@ input[type="password"] {
     transition: all 0.2s;
 }
 input[type="password"]:focus {
-    border-color: #2001FF;
+    border-color: #3b82f6;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(32, 1, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 </style>
 {% endblock %}

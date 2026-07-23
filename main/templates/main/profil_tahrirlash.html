@@ -5,12 +5,12 @@
 
 {% block content %}
 <div class="max-w-2xl mx-auto">
-    <div class="bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] rounded-2xl p-6 mb-6 text-white shadow-lg">
+    <div class="bg-blue-500 rounded-lg p-5 mb-4 text-white shadow-lg">
         <h2 class="text-2xl font-bold">Profilni Tahrirlash</h2>
         <p class="text-white/80">Ism, familiya va telefon raqamingizni o'zgartirishingiz mumkin</p>
     </div>
     
-    <div class="bg-white rounded-2xl shadow-lg p-6">
+    <div class="bg-white rounded-lg shadow-lg p-5">
         <form method="POST" class="space-y-4">
             {% csrf_token %}
             
@@ -27,11 +27,11 @@
             {% endfor %}
             
             <div class="flex gap-3 pt-4">
-                <button type="submit" class="flex-1 bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all">
+                <button type="submit" class="flex-1 bg-blue-500 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all">
                     <i class="ri-save-line mr-2"></i>
                     Saqlash
                 </button>
-                <a href="{% url 'mening_profilim' %}" class="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-xl text-center hover:bg-gray-200 transition-colors">
+                <a href="{% url 'mening_profilim' %}" class="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg text-center hover:bg-gray-200 transition-colors">
                     <i class="ri-close-line mr-2"></i>
                     Bekor qilish
                 </a>

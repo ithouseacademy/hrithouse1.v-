@@ -3,9 +3,9 @@
 {% block title %}Telegram ga qayta yuborish{% endblock %}
 
 {% block content %}
-<div class="bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] -mx-4 px-4 py-6 mb-6 text-white">
+<div class="bg-blue-500 -mx-4 px-3 py-4 mb-5 text-white">
     <div class="flex items-center gap-3">
-        <a href="{% url 'admin_dashboard' %}" class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center hover:bg-white/30 transition-all">
+        <a href="{% url 'admin_dashboard' %}" class="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center hover:bg-white/30 transition-all">
             <i class="ri-arrow-left-line text-xl"></i>
         </a>
         <div>
@@ -19,20 +19,20 @@
     {% csrf_token %}
 
     <!-- Barchasini tanlash -->
-    <div class="bg-white rounded-xl p-4 shadow-sm mb-4 flex items-center justify-between">
+    <div class="bg-white rounded-lg p-3 shadow-sm mb-3 flex items-center justify-between">
         <label class="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" id="selectAll" class="w-5 h-5 rounded text-blue-600" onchange="toggleAll(this)">
             <span class="font-semibold text-gray-900">Barchasini tanlash</span>
         </label>
-        <button type="submit" name="barcha" value="1" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+        <button type="submit" name="barcha" value="1" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
             Barchasini yuborish
         </button>
     </div>
 
     {% if bonuslar %}
     <!-- Bonuslar -->
-    <div class="bg-white rounded-xl shadow-sm mb-4 overflow-hidden">
-        <div class="p-3 bg-green-500 text-white font-semibold text-sm">
+    <div class="bg-white rounded-lg shadow-sm mb-3 overflow-hidden">
+        <div class="p-2.5 bg-green-500 text-white font-semibold text-sm">
             Bonuslar ({{ bonuslar|length }} ta)
         </div>
         <div class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
@@ -56,8 +56,8 @@
 
     {% if jarimalar %}
     <!-- Jarimalar -->
-    <div class="bg-white rounded-xl shadow-sm mb-4 overflow-hidden">
-        <div class="p-3 bg-red-500 text-white font-semibold text-sm">
+    <div class="bg-white rounded-lg shadow-sm mb-3 overflow-hidden">
+        <div class="p-2.5 bg-red-500 text-white font-semibold text-sm">
             Jarimalar ({{ jarimalar|length }} ta)
         </div>
         <div class="divide-y divide-gray-100 max-h-80 overflow-y-auto">
@@ -80,13 +80,13 @@
     {% endif %}
 
     {% if not bonuslar and not jarimalar %}
-    <div class="bg-white rounded-xl p-8 text-center text-gray-500">
+    <div class="bg-white rounded-lg p-6 text-center text-gray-500">
         <p>Bugun bonus yoki jarima yo'q</p>
     </div>
     {% endif %}
 
     <!-- Tanlanganlarni yuborish tugmasi -->
-    <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition-colors mb-4" onclick="this.name='tanlangan'; this.value='1'">
+    <button type="submit" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-semibold hover:bg-green-700 transition-colors mb-3" onclick="this.name='tanlangan'; this.value='1'">
         Tanlanganlarni yuborish
     </button>
 </form>

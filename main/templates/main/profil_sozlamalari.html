@@ -5,9 +5,9 @@
 
 {% block content %}
 <!-- Header qismi (mobil uchun maxsus) -->
-<div class="bg-gradient-to-r from-[#2001FF] to-[#5A4AFF] -mx-4 px-4 py-6 mb-6 text-white">
+<div class="bg-blue-500 -mx-4 px-4 py-4 mb-4 text-white">
     <div class="flex items-center gap-3">
-        <a href="{% url 'mening_profilim' %}" class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+        <a href="{% url 'mening_profilim' %}" class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
             <i class="ri-arrow-left-line text-xl"></i>
         </a>
         <div>
@@ -17,9 +17,9 @@
     </div>
     
     <!-- User info card -->
-    <div class="mt-4 bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-        <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center border-2 border-white/30 overflow-hidden">
+    <div class="mt-4 bg-white/10 backdrop-blur-sm rounded-lg p-3">
+        <div class="flex items-center gap-3">
+            <div class="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center border-2 border-white/30 overflow-hidden">
                 {% if user.xodim.rasm and user.xodim.rasm.url %}
                     <img src="{{ user.xodim.rasm.url }}" alt="Profil" class="w-full h-full object-cover">
                 {% else %}
@@ -43,7 +43,7 @@
 <div class="px-4 space-y-4">
     <!-- Statistika kartochkalari -->
     <div class="grid grid-cols-2 gap-3">
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
             <div class="flex items-center justify-between mb-2">
                 <span class="text-xs text-gray-500">Reyting</span>
                 <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
@@ -54,7 +54,7 @@
             <p class="text-xs text-gray-400">ball</p>
         </div>
         
-        <div class="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+        <div class="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
             <div class="flex items-center justify-between mb-2">
                 <span class="text-xs text-gray-500">Xodim ID</span>
                 <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -67,26 +67,26 @@
     </div>
 
     <!-- Sozlamalar menu -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 overflow-hidden">
         <!-- Sarlavha -->
-        <div class="p-4 border-b border-gray-100 bg-gray-50">
+        <div class="p-3 border-b border-blue-100 bg-gray-50">
             <h3 class="font-semibold text-gray-900 flex items-center gap-2">
-                <i class="ri-settings-4-line text-[#2001FF]"></i>
+                <i class="ri-settings-4-line text-blue-600"></i>
                 Sozlamalar
             </h3>
         </div>
         
         <!-- Login o'zgartirish -->
-        <a href="{% url 'login_ozgartirish' %}" class="block p-4 hover:bg-gray-50 transition-colors border-b border-gray-100">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-[#2001FF]/10 rounded-xl flex items-center justify-center">
-                    <i class="ri-user-settings-line text-2xl text-[#2001FF]"></i>
+        <a href="{% url 'login_ozgartirish' %}" class="block p-3 hover:bg-gray-50 transition-colors border-b border-blue-100">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="ri-user-settings-line text-2xl text-blue-600"></i>
                 </div>
                 <div class="flex-1">
                     <div class="flex items-center justify-between">
                         <div>
                             <h4 class="font-medium text-gray-900">Login o'zgartirish</h4>
-                            <p class="text-xs text-gray-500 mt-1">Joriy login: <span class="text-[#2001FF] font-medium">{{ user.username }}</span></p>
+                            <p class="text-xs text-gray-500 mt-1">Joriy login: <span class="text-blue-600 font-medium">{{ user.username }}</span></p>
                         </div>
                         <i class="ri-arrow-right-s-line text-2xl text-gray-400"></i>
                     </div>
@@ -95,10 +95,10 @@
         </a>
         
         <!-- Parol o'zgartirish -->
-        <a href="{% url 'parol_ozgartirish' %}" class="block p-4 hover:bg-gray-50 transition-colors border-b border-gray-100">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-[#2001FF]/10 rounded-xl flex items-center justify-center">
-                    <i class="ri-lock-password-line text-2xl text-[#2001FF]"></i>
+        <a href="{% url 'parol_ozgartirish' %}" class="block p-3 hover:bg-gray-50 transition-colors border-b border-blue-100">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="ri-lock-password-line text-2xl text-blue-600"></i>
                 </div>
                 <div class="flex-1">
                     <div class="flex items-center justify-between">
@@ -116,9 +116,9 @@
     </div>
 
     <!-- Xavfsizlik holati -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 p-3">
         <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <i class="ri-shield-line text-[#2001FF]"></i>
+            <i class="ri-shield-line text-blue-600"></i>
             Xavfsizlik holati
         </h3>
         
@@ -161,7 +161,7 @@
     <div class="pt-4 pb-6">
         <form method="POST" action="{% url 'logout' %}" onsubmit="return confirm('Chiqishni tasdiqlaysizmi?')">
             {% csrf_token %}
-            <button type="submit" class="w-full px-4 py-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2 font-medium">
+            <button type="submit" class="w-full px-4 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center gap-2 font-medium">
                 <i class="ri-logout-box-line"></i>
                 Profildan chiqish
             </button>
@@ -171,13 +171,13 @@
 
 <!-- Xavfsizlik maslahatlari (faqat katta ekranlarda) -->
 <div class="hidden md:block max-w-3xl mx-auto mt-6 px-4">
-    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6">
+    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6">
         <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <i class="ri-information-line text-[#2001FF]"></i>
+            <i class="ri-information-line text-blue-600"></i>
             Xavfsizlik maslahatlari
         </h3>
         
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-2 gap-3">
             <div class="flex items-start gap-2">
                 <i class="ri-checkbox-circle-fill text-green-500 mt-1"></i>
                 <span class="text-sm text-gray-600">Kuchli parol tanlang</span>
@@ -209,7 +209,7 @@
             <i class="ri-bar-chart-2-line text-xl"></i>
             <span class="text-xs">Reyting</span>
         </a>
-        <a href="{% url 'mening_profilim' %}" class="flex flex-col items-center p-2 text-[#2001FF]">
+        <a href="{% url 'mening_profilim' %}" class="flex flex-col items-center p-2 text-blue-600">
             <i class="ri-user-3-fill text-xl"></i>
             <span class="text-xs font-medium">Profil</span>
         </a>
