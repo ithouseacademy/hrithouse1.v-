@@ -370,6 +370,18 @@ def xodim_tahrirlash(request, pk):
             
             yangilangan_xodim.save()
             
+            # User login/parolni yangilash (commit=False tufayli form save saqlamaydi)
+            if yangilangan_xodim.user:
+                user = yangilangan_xodim.user
+                yangi_username = form.cleaned_data.get('username')
+                yangi_password = form.cleaned_data.get('password')
+                if yangi_username:
+                    user.username = yangi_username
+                if yangi_password:
+                    user.set_password(yangi_password)
+                if yangi_username or yangi_password:
+                    user.save()
+            
             messages.success(request, f"{yangilangan_xodim.ism} {yangilangan_xodim.familya} ma'lumotlari yangilandi!")
             return redirect('xodim_detail', pk=yangilangan_xodim.pk)
     else:
