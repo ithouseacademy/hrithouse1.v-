@@ -8,7 +8,7 @@ from .models import (
     BonusSabab, JarimaSabab, 
     OzgartirishTarixi, Reyting,
     Category, Product, ProductOrder, PointTransaction,
-    Notification, PushSubscription
+    Notification, PushSubscription, SiteSettings
 )
 
 
@@ -405,3 +405,25 @@ admin.site.site_header = "Xodimlar Reytingi Boshqaruvi"
 admin.site.site_title = "Reyting Admin"
 admin.site.index_title = "Boshqaruv Paneliga Xush Kelibsiz"
 admin.site.site_url = "/"
+
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    fieldsets = (
+        ('Telegram Bot', {
+            'fields': ('telegram_bot_token', 'telegram_chat_id'),
+            'description': 'Telegram bot orqali xabarlar yuborish uchun sozlamalar'
+        }),
+    )
+
+    def has_add_permission(self, request):
+        return not SiteSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        from django.conf import settings as django_settings
+        django_settings.TELEGRAM_BOT_TOKEN = obj.telegram_bot_token
+        django_settings.TELEGRAM_CHAT_ID = obj.telegram_chat_id

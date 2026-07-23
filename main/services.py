@@ -5,8 +5,38 @@ from django.contrib.auth.models import User
 from django.conf import settings
 import json
 import base64
+import logging
+import requests
+
+logger = logging.getLogger(__name__)
 
 from .models import Product, ProductOrder, PointTransaction, Xodim, Notification, PushSubscription
+
+
+def send_telegram_message(text):
+    token = getattr(settings, 'TELEGRAM_BOT_TOKEN', '')
+    chat_id = getattr(settings, 'TELEGRAM_CHAT_ID', '')
+    if not token or not chat_id:
+        try:
+            from .models import SiteSettings
+            site_cfg = SiteSettings.get_instance()
+            token = site_cfg.telegram_bot_token or token
+            chat_id = site_cfg.telegram_chat_id or chat_id
+        except Exception:
+            pass
+    if not token or not chat_id:
+        return False
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        resp = requests.post(url, json={
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML",
+        }, timeout=10)
+        return resp.status_code == 200
+    except Exception as e:
+        logger.error(f"Telegram xabar yuborishda xatolik: {e}")
+        return False
 
 
 def send_web_push(subscription, title, body, url='', icon='/static/img/logo.png'):

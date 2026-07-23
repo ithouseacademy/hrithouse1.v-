@@ -139,6 +139,13 @@ VAPID_PUBLIC_KEY = os.environ.get(
 )
 VAPID_CLAIM_EMAIL = os.environ.get("VAPID_CLAIM_EMAIL", "admin@ithouse.uz")
 
+# ================= TELEGRAM BOT =================
+TELEGRAM_BOT_TOKEN = os.environ.get(
+    "TELEGRAM_BOT_TOKEN",
+    "8793141493:AAFLYKfXcI4hpxeOSKameuEcUHHcnwMxvGo",
+)
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "")
+
 # ================= LOGGING =================
 LOGGING = {
     'version': 1,

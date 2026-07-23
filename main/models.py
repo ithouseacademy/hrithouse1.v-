@@ -480,3 +480,34 @@ def update_xodim_after_jarima_save(sender, instance, created, **kwargs):
 def update_xodim_after_jarima_delete(sender, instance, **kwargs):
     """Jarima o'chirilganda xodim ma'lumotlarini yangilaydi"""
     instance.xodim.update_from_records()
+
+
+class SiteSettings(models.Model):
+    telegram_bot_token = models.CharField(
+        max_length=255, blank=True, default='',
+        verbose_name="Telegram Bot Token",
+        help_text="BotFather dan olingan token"
+    )
+    telegram_chat_id = models.CharField(
+        max_length=100, blank=True, default='',
+        verbose_name="Telegram Chat ID",
+        help_text="Xabar yuboriladigan guruh/yakka chat ID"
+    )
+
+    class Meta:
+        verbose_name = "Sayt sozlamalari"
+        verbose_name_plural = "Sayt sozlamalari"
+
+    def __str__(self):
+        return "Sayt sozlamalari"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        from django.conf import settings
+        settings.TELEGRAM_BOT_TOKEN = self.telegram_bot_token
+        settings.TELEGRAM_CHAT_ID = self.telegram_chat_id
+
+    @classmethod
+    def get_instance(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

@@ -243,7 +243,12 @@ def dashboard(request):
 
     def harakat_dict(obj, tur):
         mahalliy = timezone.localtime(obj.sana if hasattr(obj, 'sana') else obj.created_at)
-        sabab_nomi = obj.sabab.nom if hasattr(obj, 'sabab') and obj.sabab else (tur.capitalize())
+        if hasattr(obj, 'sabab') and obj.sabab:
+            sabab_nomi = obj.sabab.nom
+        elif hasattr(obj, 'izoh') and obj.izoh:
+            sabab_nomi = obj.izoh
+        else:
+            sabab_nomi = tur.capitalize()
         return {
             'tur': tur,
             'xodim': obj.xodim if hasattr(obj, 'xodim') else obj.user.xodim,
@@ -454,6 +459,15 @@ def bonus_qoshish(request):
                 record = form.save(commit=False)
                 record.created_by = request.user
                 record.save()
+                from .services import send_telegram_message
+                xodim = record.xodim
+                send_telegram_message(
+                    f"🟢 <b>Bonus qo'shildi!</b>\n"
+                    f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                    f"💰 Pul: {record.pul_miqdori:,.0f} so'm\n"
+                    f"⭐ Ball: {record.ball_miqdori}\n"
+                    f"📝 Sabab: {record.izoh}"
+                )
                 messages.success(request, "Bonus qo'shildi!")
                 return redirect('dashboard')
             messages.error(request, 'Formada xatolik!')
@@ -476,6 +490,14 @@ def bonus_qoshish(request):
                     pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
                     izoh=toliq_izoh, created_by=request.user
                 )
+                from .services import send_telegram_message
+                send_telegram_message(
+                    f"🟢 <b>Bonus qo'shildi!</b>\n"
+                    f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                    f"💰 Pul: {pul:,.0f} so'm\n"
+                    f"⭐ Ball: {ball}\n"
+                    f"📝 Sabab: {toliq_izoh}"
+                )
                 messages.success(request, "Bonus qo'shildi!")
                 return redirect('dashboard')
             messages.error(request, "Xodim va miqdorlarni to'g'ri kiriting!")
@@ -496,6 +518,15 @@ def jarima_qoshish(request):
                 record = form.save(commit=False)
                 record.created_by = request.user
                 record.save()
+                from .services import send_telegram_message
+                xodim = record.xodim
+                send_telegram_message(
+                    f"🔴 <b>Jarima qo'shildi!</b>\n"
+                    f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                    f"💰 Pul: {record.pul_miqdori:,.0f} so'm\n"
+                    f"⭐ Ball: {record.ball_miqdori}\n"
+                    f"📝 Sabab: {record.izoh}"
+                )
                 messages.success(request, "Jarima qo'shildi!")
                 return redirect('dashboard')
             messages.error(request, 'Formada xatolik!')
@@ -517,6 +548,15 @@ def jarima_qoshish(request):
                     pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
                     izoh=f"{sabab_nom}. {izoh}".strip(' .'),
                     created_by=request.user
+                )
+                from .services import send_telegram_message
+                toliq_izoh = f"{sabab_nom}. {izoh}".strip(' .')
+                send_telegram_message(
+                    f"🔴 <b>Jarima qo'shildi!</b>\n"
+                    f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                    f"💰 Pul: {pul:,.0f} so'm\n"
+                    f"⭐ Ball: {ball}\n"
+                    f"📝 Sabab: {toliq_izoh}"
                 )
                 messages.success(request, "Jarima qo'shildi!")
                 return redirect('dashboard')
@@ -2158,6 +2198,14 @@ def mahsulot_qoshish(request):
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save()
+            # Telegram xabar
+            from .services import send_telegram_message
+            send_telegram_message(
+                f"🛍 <b>Yangi mahsulot qo'shildi!</b>\n"
+                f"📦 Nomi: {product.name}\n"
+                f"⭐ Ball: {product.price_points}\n"
+                f"📦 Ombor: {product.stock} ta"
+            )
             # Notification for all users
             xodimlar = Xodim.objects.filter(active=True, is_archived=False)
             for xodim in xodimlar:
