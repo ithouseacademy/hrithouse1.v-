@@ -489,6 +489,11 @@
       const ism = "{{ user_ism|escapejs }}";
       if (rank < 1) return;
 
+      var today = new Date().toISOString().slice(0,10);
+      var lastSeen = localStorage.getItem('celebration_seen');
+      if (lastSeen === today) return;
+      localStorage.setItem('celebration_seen', today);
+
       const titleEl = document.getElementById('celebration-title');
       const rankEl = document.getElementById('celebration-rank');
       const msgEl = document.getElementById('celebration-msg');

@@ -479,6 +479,8 @@ def bonus_qoshish(request):
                 record.save()
                 from .services import send_telegram_message
                 xodim = record.xodim
+                eski_ball = xodim.reyting_ball
+                eski_pul = xodim.reyting_pul
                 xodim.refresh_from_db()
                 admin_name = request.user.get_full_name() or request.user.username
                 now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
@@ -490,6 +492,7 @@ def bonus_qoshish(request):
                     f"💰 Pul: +{record.pul_miqdori:,.0f} so'm\n"
                     f"📝 Izoh: {record.izoh or 'Yo\'q'}\n\n"
                     f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                    f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
                     f"👨‍💼 Admin: {admin_name}\n"
                     f"⏱️ Vaqt: {now}",
                     thread_id=None
@@ -511,6 +514,9 @@ def bonus_qoshish(request):
                 izoh = request.POST.get('izoh', '')
                 toliq_izoh = sabab_nom + (f". {izoh}" if izoh else '')
 
+                eski_ball = xodim.reyting_ball
+                eski_pul = xodim.reyting_pul
+
                 BonusRecord.objects.create(
                     xodim=xodim, sabab=None,
                     pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
@@ -528,6 +534,7 @@ def bonus_qoshish(request):
                     f"💰 Pul: +{pul:,.0f} so'm\n"
                     f"📝 Izoh: {izoh or 'Yo\'q'}\n\n"
                     f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                    f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
                     f"👨‍💼 Admin: {admin_name}\n"
                     f"⏱️ Vaqt: {now}",
                     thread_id=None
