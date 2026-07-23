@@ -603,9 +603,6 @@ def jarima_qoshish(request):
 
 @staff_member_required
 def qayta_yuborish(request):
-    if request.method != 'POST':
-        return redirect('dashboard')
-
     from .services import send_telegram_message
 
     hozir = timezone.localtime(timezone.now())
@@ -615,57 +612,72 @@ def qayta_yuborish(request):
 
     bonuslar = BonusRecord.objects.filter(
         sana__gte=bugun_boshi, sana__lte=bugun_oxiri
-    ).select_related('xodim', 'sabab')
+    ).select_related('xodim', 'sabab').order_by('-sana')
 
     jarimalar = JarimaRecord.objects.filter(
         sana__gte=bugun_boshi, sana__lte=bugun_oxiri
-    ).select_related('xodim', 'sabab')
+    ).select_related('xodim', 'sabab').order_by('-sana')
 
-    admin_name = request.user.get_full_name() or request.user.username
-    count = 0
+    if request.method == 'POST':
+        admin_name = request.user.get_full_name() or request.user.username
+        count = 0
 
-    for b in bonuslar:
-        xodim = b.xodim
-        xodim.refresh_from_db()
-        now = timezone.localtime(b.sana).strftime('%Y-%m-%d %H:%M')
-        send_telegram_message(
-            f"<b>BONUS</b>\n\n"
-            f"Xodim: {xodim.ism} {xodim.familya}\n"
-            f"Sabab: {b.sabab.nom if b.sabab else b.izoh}\n"
-            f"Ball: +{b.ball_miqdori} ball\n"
-            f"Pul: +{b.pul_miqdori:,.0f} so'm\n"
-            f"Izoh: {b.izoh or 'Yo\'q'}\n\n"
-            f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-            f"Admin: {admin_name}\n"
-            f"Vaqt: {now}",
-            thread_id=2332
-        )
-        count += 1
+        barcha = request.POST.get('barcha')
+        if barcha:
+            selected_bonus = bonuslar
+            selected_jarima = jarimalar
+        else:
+            bonus_ids = request.POST.getlist('bonus_ids')
+            jarima_ids = request.POST.getlist('jarima_ids')
+            selected_bonus = bonuslar.filter(pk__in=bonus_ids) if bonus_ids else []
+            selected_jarima = jarimalar.filter(pk__in=jarima_ids) if jarima_ids else []
 
-    for j in jarimalar:
-        xodim = j.xodim
-        xodim.refresh_from_db()
-        now = timezone.localtime(j.sana).strftime('%Y-%m-%d %H:%M')
-        send_telegram_message(
-            f"<b>JARIMA</b>\n\n"
-            f"Xodim: {xodim.ism} {xodim.familya}\n"
-            f"Sabab: {j.sabab.nom if j.sabab else j.izoh}\n"
-            f"Ball: -{j.ball_miqdori} ball\n"
-            f"Pul: -{j.pul_miqdori:,.0f} so'm\n"
-            f"Izoh: {j.izoh or 'Yo\'q'}\n\n"
-            f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-            f"Admin: {admin_name}\n"
-            f"Vaqt: {now}",
-            thread_id=2332
-        )
-        count += 1
+        for b in selected_bonus:
+            xodim = b.xodim
+            xodim.refresh_from_db()
+            now = timezone.localtime(b.sana).strftime('%Y-%m-%d %H:%M')
+            send_telegram_message(
+                f"<b>BONUS</b>\n\n"
+                f"Xodim: {xodim.ism} {xodim.familya}\n"
+                f"Sabab: {b.sabab.nom if b.sabab else b.izoh}\n"
+                f"Ball: +{b.ball_miqdori} ball\n"
+                f"Pul: +{b.pul_miqdori:,.0f} so'm\n"
+                f"Izoh: {b.izoh or 'Yo\'q'}\n\n"
+                f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                f"Admin: {admin_name}\n"
+                f"Vaqt: {now}"
+            )
+            count += 1
 
-    if count > 0:
-        messages.success(request, f"Telegram ga {count} ta xabar qayta yuborildi!")
-    else:
-        messages.warning(request, "Bugun bonus yoki jarima yo'q!")
+        for j in selected_jarima:
+            xodim = j.xodim
+            xodim.refresh_from_db()
+            now = timezone.localtime(j.sana).strftime('%Y-%m-%d %H:%M')
+            send_telegram_message(
+                f"<b>JARIMA</b>\n\n"
+                f"Xodim: {xodim.ism} {xodim.familya}\n"
+                f"Sabab: {j.sabab.nom if j.sabab else j.izoh}\n"
+                f"Ball: -{j.ball_miqdori} ball\n"
+                f"Pul: -{j.pul_miqdori:,.0f} so'm\n"
+                f"Izoh: {j.izoh or 'Yo\'q'}\n\n"
+                f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                f"Admin: {admin_name}\n"
+                f"Vaqt: {now}"
+            )
+            count += 1
 
-    return redirect('dashboard')
+        if count > 0:
+            messages.success(request, f"Telegram ga {count} ta xabar qayta yuborildi!")
+        else:
+            messages.warning(request, "Hech qanday yozuv tanlanmadi!")
+
+        return redirect('admin_dashboard')
+
+    return render(request, 'main/qayta_yuborish.html', {
+        'bonuslar': bonuslar,
+        'jarimalar': jarimalar,
+        'bugun': bugun,
+    })
 
 
 # ============================================================

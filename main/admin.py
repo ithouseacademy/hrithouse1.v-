@@ -409,6 +409,7 @@ admin.site.site_url = "/"
 
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
+    list_display = ['__str__']
 
     def has_add_permission(self, request):
         return not SiteSettings.objects.exists()
@@ -416,19 +417,14 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
-    def has_view_permission(self, request, obj=None):
-        return request.user.is_staff
-
-    def has_change_permission(self, request, obj=None):
-        return request.user.is_staff
+    def changelist_view(self, request, extra_context=None):
+        obj, _ = SiteSettings.objects.get_or_create(pk=1)
+        from django.shortcuts import redirect
+        return redirect(f'/admin/main/sitesettings/{obj.pk}/change/')
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         from django.conf import settings as django_settings
         django_settings.TELEGRAM_BOT_TOKEN = obj.telegram_bot_token
         django_settings.TELEGRAM_CHAT_ID = obj.telegram_chat_id
-
-    def changelist_view(self, request, extra_context=None):
-        obj = SiteSettings.get_instance()
-        from django.shortcuts import redirect
-        return redirect(f'/admin/main/sitesettings/{obj.pk}/change/')
+        django_settings.TELEGRAM_THREAD_ID = obj.telegram_thread_id

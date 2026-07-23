@@ -270,14 +270,11 @@
             <div class="text-xs font-medium">DB yuklab olish</div>
             <div class="text-xs text-white/60 mt-1">SQLite backup</div>
         </a>
-        <form method="post" action="{% url 'qayta_yuborish' %}" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-4 hover:shadow-lg transition-all text-center">
-            {% csrf_token %}
-            <button type="submit" class="w-full h-full text-white">
-                <i class="ri-telegram-fill text-xl mb-1"></i>
-                <div class="text-xs font-medium">Telegram ga qayta yuborish</div>
-                <div class="text-xs text-white/60 mt-1">Bugungi xabarlar</div>
-            </button>
-        </form>
+        <a href="{% url 'qayta_yuborish' %}" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-4 hover:shadow-lg transition-all text-center">
+            <i class="ri-telegram-fill text-xl mb-1"></i>
+            <div class="text-xs font-medium">Telegram ga qayta yuborish</div>
+            <div class="text-xs text-white/60 mt-1">Bugungi xabarlar</div>
+        </a>
         <a href="/admin/main/sitesettings/" class="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl p-4 hover:shadow-lg transition-all text-center">
             <i class="ri-settings-3-fill text-xl mb-1"></i>
             <div class="text-xs font-medium">Sayt sozlamalari</div>
