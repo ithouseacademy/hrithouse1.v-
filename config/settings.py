@@ -120,8 +120,9 @@ CSRF_TRUSTED_ORIGINS = [
     origin
     for origin in [
         f"https://{RAILWAY_DOMAIN}" if RAILWAY_DOMAIN else "",
-        "https://ithouse.academy",
         "https://www.ithouse.academy",
+        "https://ithouse.academy",
+        "http://www.ithouse.academy",
         "http://ithouse.academy",
     ]
     if origin
