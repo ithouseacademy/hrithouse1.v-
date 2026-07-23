@@ -409,12 +409,6 @@ admin.site.site_url = "/"
 
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
-    fieldsets = (
-        ('Telegram Bot', {
-            'fields': ('telegram_bot_token', 'telegram_chat_id'),
-            'description': 'Telegram bot orqali xabarlar yuborish uchun sozlamalar'
-        }),
-    )
 
     def has_add_permission(self, request):
         return not SiteSettings.objects.exists()
@@ -422,8 +416,19 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         from django.conf import settings as django_settings
         django_settings.TELEGRAM_BOT_TOKEN = obj.telegram_bot_token
         django_settings.TELEGRAM_CHAT_ID = obj.telegram_chat_id
+
+    def changelist_view(self, request, extra_context=None):
+        obj = SiteSettings.get_instance()
+        from django.shortcuts import redirect
+        return redirect(f'/admin/main/sitesettings/{obj.pk}/change/')
