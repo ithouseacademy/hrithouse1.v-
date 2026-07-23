@@ -474,7 +474,7 @@ def bonus_qoshish(request):
                     f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
                     f"Admin: {admin_name}\n"
                     f"Vaqt: {now}",
-                    thread_id=2332
+                    thread_id=None
                 )
                 messages.success(request, "Bonus qo'shildi!")
                 return redirect('dashboard')
@@ -512,7 +512,7 @@ def bonus_qoshish(request):
                     f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
                     f"Admin: {admin_name}\n"
                     f"Vaqt: {now}",
-                    thread_id=2332
+                    thread_id=None
                 )
                 messages.success(request, "Bonus qo'shildi!")
                 return redirect('dashboard')
@@ -549,7 +549,7 @@ def jarima_qoshish(request):
                     f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
                     f"Admin: {admin_name}\n"
                     f"Vaqt: {now}",
-                    thread_id=2332
+                    thread_id=None
                 )
                 messages.success(request, "Jarima qo'shildi!")
                 return redirect('dashboard')
@@ -588,7 +588,7 @@ def jarima_qoshish(request):
                     f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
                     f"Admin: {admin_name}\n"
                     f"Vaqt: {now}",
-                    thread_id=2332
+                    thread_id=None
                 )
                 messages.success(request, "Jarima qo'shildi!")
                 return redirect('dashboard')
