@@ -9,160 +9,138 @@
   .carousel { scrollbar-width: none; -ms-overflow-style: none; cursor: grab; }
   .carousel:active { cursor: grabbing; }
   .carousel > * { flex-shrink: 0; }
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 8px rgba(139, 92, 246, 0.2); }
-    50% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.4); }
-  }
-  .coming-soon-glow { animation: pulse-glow 2s ease-in-out infinite; }
 </style>
 
-<div class="max-w-6xl mx-auto">
-  <!-- Header -->
-  <div class="flex items-center justify-between mb-6">
-    <div>
-      <h1 class="text-2xl font-bold text-gray-800">
-        <i class="ri-shopping-bag-3-fill text-blue-600 mr-1"></i> Shop
-      </h1>
-      <p class="text-xs text-gray-500">Ballarga mahsulot xarid qiling</p>
+<!-- Header -->
+<div class="bg-blue-500 -mx-4 px-4 py-3 mb-3 text-white">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <a href="{% url 'dashboard' %}" class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition">
+                <i class="ri-arrow-left-line text-sm"></i>
+            </a>
+            <div>
+                <h1 class="text-base font-bold">Shop</h1>
+                <p class="text-blue-100 text-[10px]">Ballarga mahsulot xarid qiling</p>
+            </div>
+        </div>
+        {% if xodim %}
+        <div class="bg-white/20 rounded-lg px-3 py-1.5 flex items-center gap-1.5">
+            <i class="ri-coins-line text-yellow-300 text-sm"></i>
+            <span class="text-sm font-bold">{{ available_ball }}</span>
+            <span class="text-[9px] text-blue-200">ball</span>
+        </div>
+        {% endif %}
     </div>
-    {% if xodim %}
-    <div class="relative">
-      <div class="bg-gradient-to-br from-blue-500 to-indigo-600 text-white pl-4 pr-3 py-2.5 rounded-2xl text-sm font-bold shadow-lg shadow-blue-200 flex items-center gap-2">
-        <i class="ri-coins-line text-yellow-300 text-lg"></i>
-        <span>{{ available_ball }}</span>
-        <span class="text-[10px] font-normal text-blue-200">ball</span>
-      </div>
-    </div>
-    {% endif %}
-  </div>
+</div>
 
-  {% if not products %}
-  <div class="text-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
-    <div class="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto shadow-inner">
-      <i class="ri-shopping-bag-line text-4xl text-gray-300"></i>
+{% if not products %}
+<div class="text-center py-16 bg-white rounded-lg border border-blue-100">
+    <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto">
+        <i class="ri-shopping-bag-line text-3xl text-blue-300"></i>
     </div>
-    <p class="text-gray-500 mt-4 font-medium">Hozircha mahsulotlar mavjud emas</p>
-  </div>
-  {% endif %}
+    <p class="text-gray-500 mt-3 text-sm">Hozircha mahsulotlar mavjud emas</p>
+</div>
+{% endif %}
 
-  {% for group in categorized %}
-  <div class="mb-8">
+{% for group in categorized %}
+<div class="mb-4">
     <!-- Category header -->
-    <div class="flex items-center justify-between mb-3 px-1">
-      <div class="flex items-center gap-2">
-        <div class="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
-        <h2 class="text-lg font-bold text-gray-800">
-          {% if group.category %}
-            {{ group.category.name }}
-          {% else %}
-            Boshqa
-          {% endif %}
-        </h2>
-        <span class="text-xs text-gray-400 font-medium bg-gray-100 px-2 py-0.5 rounded-full">{{ group.products|length }}</span>
-      </div>
-      {% if group.products|length > 4 %}
-      <div class="flex gap-1 text-gray-300">
-        <i class="ri-arrow-left-s-line text-lg"></i>
-        <i class="ri-arrow-right-s-line text-lg"></i>
-      </div>
-      {% endif %}
+    <div class="flex items-center justify-between mb-2 px-1">
+        <div class="flex items-center gap-2">
+            <div class="w-1 h-5 bg-blue-500 rounded-full"></div>
+            <h2 class="text-sm font-bold text-gray-800">
+                {% if group.category %}{{ group.category.name }}{% else %}Boshqa{% endif %}
+            </h2>
+            <span class="text-[10px] text-gray-400 bg-blue-50 px-1.5 py-0.5 rounded-full">{{ group.products|length }}</span>
+        </div>
     </div>
 
     <!-- Carousel -->
-    <div class="carousel flex gap-4 overflow-x-auto pb-2 px-1 -mx-1"
+    <div class="carousel flex gap-2.5 overflow-x-auto pb-2 px-1 -mx-1"
          onmousedown="startDrag(event)" onmousemove="drag(event)" onmouseup="endDrag()" onmouseleave="endDrag()"
          ontouchstart="startDrag(event)" ontouchmove="drag(event)" ontouchend="endDrag()">
-      {% for product in group.products %}
-      <div class="w-52 sm:w-56 bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col {% if product.is_coming_soon %}coming-soon-glow{% endif %}">
-        <!-- Image -->
-        <div class="aspect-square bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden relative">
-          {% if product.image %}
-          <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover hover:scale-110 transition-transform duration-500">
-          {% else %}
-          <div class="w-full h-full flex items-center justify-center">
-            <div class="w-16 h-16 bg-white/60 rounded-full flex items-center justify-center">
-              <i class="ri-shopping-bag-3-line text-4xl text-gray-300"></i>
-            </div>
-          </div>
-          {% endif %}
-          {% if product.is_coming_soon %}
-          <div class="absolute top-2 right-2 z-10 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
-            <i class="ri-time-line text-[10px]"></i> Tez orada
-          </div>
-          {% elif product.stock <= 3 and product.stock > 0 %}
-          <div class="absolute top-2 left-2 z-10 bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">
-            {{ product.stock }} dona
-          </div>
-          {% endif %}
-        </div>
-
-        <!-- Info -->
-        <div class="p-3.5 flex flex-col flex-1">
-          <h3 class="font-bold text-sm text-gray-800 leading-tight line-clamp-1">{{ product.name }}</h3>
-          {% if product.description %}
-          <p class="text-[11px] text-gray-400 mt-1 line-clamp-2 leading-relaxed">{{ product.description|truncatewords:10 }}</p>
-          {% endif %}
-
-          <div class="mt-auto pt-3">
-            <!-- Price -->
-            <div class="flex items-center gap-1.5 mb-2.5">
-              <i class="ri-coins-fill text-yellow-500 text-sm"></i>
-              <span class="text-base font-bold text-gray-900">{{ product.price_points }}</span>
-              <span class="text-[11px] text-gray-400 font-medium">ball</span>
-            </div>
-
-            <!-- Action -->
-            {% if product.is_coming_soon %}
-            <div class="w-full py-2 rounded-xl font-semibold text-xs text-center bg-purple-50 text-purple-600 border border-purple-100">
-              <i class="ri-time-line mr-1"></i> Tez orada
-            </div>
-            {% elif xodim %}
-            <form method="POST" action="{% url 'purchase_product' product.id %}"
-                  onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').innerHTML = 'Yuklanmoqda...'">
-              {% csrf_token %}
-              <button type="submit"
-                      class="w-full py-2 rounded-xl font-semibold text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5
-                      {% if available_ball >= product.price_points and product.stock > 0 %}
-                      bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-md hover:shadow-blue-200
-                      {% else %}
-                      bg-gray-100 text-gray-400 cursor-not-allowed
-                      {% endif %}"
-                      {% if available_ball < product.price_points or product.stock < 1 %}disabled{% endif %}>
-                {% if product.stock < 1 %}
-                  <i class="ri-close-circle-line"></i> Sotildi
-                {% elif available_ball < product.price_points %}
-                  <i class="ri-error-warning-line"></i> Ball yetmaydi
+        {% for product in group.products %}
+        <div class="w-44 bg-white rounded-lg border border-blue-100 overflow-hidden flex flex-col">
+            <!-- Image -->
+            <div class="aspect-square bg-blue-50 overflow-hidden relative">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
                 {% else %}
-                  <i class="ri-shopping-cart-line"></i> Sotib olish
+                <div class="w-full h-full flex items-center justify-center">
+                    <i class="ri-shopping-bag-3-line text-3xl text-blue-200"></i>
+                </div>
                 {% endif %}
-              </button>
-            </form>
-            {% else %}
-            <a href="{% url 'login' %}" class="block text-center py-2 rounded-xl font-semibold text-xs bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
-              <i class="ri-login-circle-line mr-1"></i> Kirish
-            </a>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endfor %}
+                {% if product.is_coming_soon %}
+                <div class="absolute top-1.5 right-1.5 z-10 bg-purple-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                    Tez orada
+                </div>
+                {% elif product.stock <= 3 and product.stock > 0 %}
+                <div class="absolute top-1.5 left-1.5 z-10 bg-orange-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
+                    {{ product.stock }} dona
+                </div>
+                {% endif %}
+            </div>
 
-  <!-- Bottom buttons -->
-  <div class="mt-6 flex justify-center gap-3 flex-wrap pb-4">
+            <!-- Info -->
+            <div class="p-2.5 flex flex-col flex-1">
+                <h3 class="font-semibold text-xs text-gray-800 line-clamp-1">{{ product.name }}</h3>
+                {% if product.description %}
+                <p class="text-[10px] text-gray-400 mt-0.5 line-clamp-1">{{ product.description|truncatewords:8 }}</p>
+                {% endif %}
+
+                <div class="mt-auto pt-2">
+                    <div class="flex items-center gap-1 mb-2">
+                        <i class="ri-coins-fill text-yellow-500 text-xs"></i>
+                        <span class="text-sm font-bold text-gray-900">{{ product.price_points }}</span>
+                        <span class="text-[9px] text-gray-400">ball</span>
+                    </div>
+
+                    {% if product.is_coming_soon %}
+                    <div class="w-full py-1.5 rounded-lg text-[10px] text-center bg-purple-50 text-purple-600 font-medium">
+                        Tez orada
+                    </div>
+                    {% elif xodim %}
+                    <form method="POST" action="{% url 'purchase_product' product.id %}"
+                          onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Yuklanmoqda...'">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="w-full py-1.5 rounded-lg text-[10px] font-medium transition-all
+                                {% if available_ball >= product.price_points and product.stock > 0 %}
+                                bg-blue-500 text-white hover:bg-blue-600
+                                {% else %}
+                                bg-gray-100 text-gray-400 cursor-not-allowed
+                                {% endif %}"
+                                {% if available_ball < product.price_points or product.stock < 1 %}disabled{% endif %}>
+                            {% if product.stock < 1 %}Sotildi
+                            {% elif available_ball < product.price_points %}Ball yetmaydi
+                            {% else %}Sotib olish{% endif %}
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="block text-center py-1.5 rounded-lg text-[10px] bg-gray-100 text-gray-600 font-medium">
+                        Kirish
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+<!-- Bottom buttons -->
+<div class="mt-4 flex gap-2 pb-4">
     {% if xodim %}
-    <a href="{% url 'my_orders' %}" class="inline-flex items-center gap-2 text-blue-600 font-medium bg-white border-2 border-blue-100 px-5 py-2.5 rounded-2xl hover:bg-blue-50 hover:border-blue-200 transition-all text-sm shadow-sm">
-      <i class="ri-file-list-3-line"></i> Mening buyurtmalarim
+    <a href="{% url 'my_orders' %}" class="flex-1 flex items-center justify-center gap-1.5 text-blue-600 font-medium bg-blue-50 border border-blue-100 px-4 py-2 rounded-lg text-xs hover:bg-blue-100 transition">
+        <i class="ri-file-list-3-line"></i> Buyurtmalarim
     </a>
     {% endif %}
     {% if request.user.is_staff %}
-    <a href="{% url 'admin_mahsulotlar' %}" class="inline-flex items-center gap-2 bg-blue-500 text-white px-5 py-2.5 rounded-2xl text-sm font-medium hover:shadow-lg hover:shadow-indigo-200 transition-all">
-      <i class="ri-settings-3-line"></i> Boshqarish
+    <a href="{% url 'admin_mahsulotlar' %}" class="flex-1 flex items-center justify-center gap-1.5 bg-blue-500 text-white px-4 py-2 rounded-lg text-xs font-medium hover:bg-blue-600 transition">
+        <i class="ri-settings-3-line"></i> Boshqarish
     </a>
     {% endif %}
-  </div>
 </div>
 
 <script>
@@ -170,30 +148,20 @@ let isDragging = false, startX, scrollLeft;
 const carousels = document.querySelectorAll('.carousel');
 carousels.forEach(carousel => {
   carousel.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    startX = e.pageX - carousel.offsetLeft;
-    scrollLeft = carousel.scrollLeft;
+    isDragging = true; startX = e.pageX - carousel.offsetLeft; scrollLeft = carousel.scrollLeft;
   });
   carousel.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.pageX - carousel.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    carousel.scrollLeft = scrollLeft - walk;
+    if (!isDragging) return; e.preventDefault();
+    carousel.scrollLeft = scrollLeft - ((e.pageX - carousel.offsetLeft) - startX) * 1.5;
   });
   carousel.addEventListener('mouseup', () => isDragging = false);
   carousel.addEventListener('mouseleave', () => isDragging = false);
-  // Touch
   carousel.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    startX = e.touches[0].pageX - carousel.offsetLeft;
-    scrollLeft = carousel.scrollLeft;
+    isDragging = true; startX = e.touches[0].pageX - carousel.offsetLeft; scrollLeft = carousel.scrollLeft;
   });
   carousel.addEventListener('touchmove', (e) => {
     if (!isDragging) return;
-    const x = e.touches[0].pageX - carousel.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    carousel.scrollLeft = scrollLeft - walk;
+    carousel.scrollLeft = scrollLeft - ((e.touches[0].pageX - carousel.offsetLeft) - startX) * 1.5;
   });
   carousel.addEventListener('touchend', () => isDragging = false);
 });

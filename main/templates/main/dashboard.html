@@ -19,7 +19,7 @@
         <h2 class="text-xl font-bold text-gray-900">{{ joriy_xodim.ism }} {{ joriy_xodim.familya }}</h2>
     </div>
     <!-- Profilga o'tish tugmasi -->
-    <a href="{% url 'mening_profilim' %}" class="w-10 h-10 bg-primary rounded-full flex items-center justify-center overflow-hidden">
+    <a href="{% url 'mening_profilim' %}" class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
         {% if joriy_xodim.rasm and joriy_xodim.rasm.url %}
             <img src="{{ joriy_xodim.rasm.url }}" alt="{{ joriy_xodim.ism }}" class="w-full h-full object-cover">
         {% else %}
@@ -29,10 +29,10 @@
 </div>
 {% endif %}
 
-<!-- Stats Grid - 4 ta kartochka (TO'G'IRILGAN - Sof reyting ma'lumotlari) -->
-<div class="grid grid-cols-2 gap-4 mb-6">
+<!-- Stats Grid -->
+<div class="grid grid-cols-2 gap-2 mb-4">
     <!-- Sof Ball -->
-    <div class="bg-white rounded-lg p-4 shadow-sm">
+    <div class="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
         <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-gray-600">Sof ball</span>
             <div class="w-6 h-6 flex items-center justify-center">
@@ -50,7 +50,7 @@
     </div>
     
     <!-- Sof Summa -->
-    <div class="bg-white rounded-lg p-4 shadow-sm">
+    <div class="bg-white rounded-lg p-3 shadow-sm border border-blue-100">
         <div class="flex items-center justify-between mb-2">
             <span class="text-sm text-gray-600">Sof summa</span>
             <div class="w-6 h-6 flex items-center justify-center">
@@ -92,7 +92,7 @@
 </div>
 
 <!-- Xodimlar ro'yxati (kunlik) -->
-<div class="bg-white rounded-lg shadow-sm mb-6">
+<div class="bg-white rounded-lg shadow-sm mb-4 border border-blue-100">
     <div class="p-4 border-b border-blue-100 flex items-center justify-between">
         <div>
             <p class="text-sm text-gray-600">Bonus va jarima olgan xodimlar</p>
@@ -150,7 +150,7 @@
 </div>
 
 <!-- Barcha xodimlar (umumiy reyting) -->
-<div class="bg-white rounded-lg shadow-sm">
+<div class="bg-white rounded-lg shadow-sm border border-blue-100">
     <div class="p-4 border-b border-blue-100 flex items-center justify-between">
         <div>
             <h3 class="font-semibold text-gray-900">🏆 Barcha xodimlar</h3>
