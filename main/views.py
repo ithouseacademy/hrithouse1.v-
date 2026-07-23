@@ -473,7 +473,8 @@ def bonus_qoshish(request):
                     f"Izoh: {record.izoh or 'Yo\'q'}\n\n"
                     f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
                     f"Admin: {admin_name}\n"
-                    f"Vaqt: {now}"
+                    f"Vaqt: {now}",
+                    thread_id=2332
                 )
                 messages.success(request, "Bonus qo'shildi!")
                 return redirect('dashboard')
@@ -510,7 +511,8 @@ def bonus_qoshish(request):
                     f"Izoh: {izoh or 'Yo\'q'}\n\n"
                     f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
                     f"Admin: {admin_name}\n"
-                    f"Vaqt: {now}"
+                    f"Vaqt: {now}",
+                    thread_id=2332
                 )
                 messages.success(request, "Bonus qo'shildi!")
                 return redirect('dashboard')
@@ -546,7 +548,8 @@ def jarima_qoshish(request):
                     f"Izoh: {record.izoh or 'Yo\'q'}\n\n"
                     f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
                     f"Admin: {admin_name}\n"
-                    f"Vaqt: {now}"
+                    f"Vaqt: {now}",
+                    thread_id=2332
                 )
                 messages.success(request, "Jarima qo'shildi!")
                 return redirect('dashboard')
@@ -584,7 +587,8 @@ def jarima_qoshish(request):
                     f"Izoh: {izoh or 'Yo\'q'}\n\n"
                     f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
                     f"Admin: {admin_name}\n"
-                    f"Vaqt: {now}"
+                    f"Vaqt: {now}",
+                    thread_id=2332
                 )
                 messages.success(request, "Jarima qo'shildi!")
                 return redirect('dashboard')
@@ -633,7 +637,8 @@ def qayta_yuborish(request):
             f"Izoh: {b.izoh or 'Yo\'q'}\n\n"
             f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
             f"Admin: {admin_name}\n"
-            f"Vaqt: {now}"
+            f"Vaqt: {now}",
+            thread_id=2332
         )
         count += 1
 
@@ -650,7 +655,8 @@ def qayta_yuborish(request):
             f"Izoh: {j.izoh or 'Yo\'q'}\n\n"
             f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
             f"Admin: {admin_name}\n"
-            f"Vaqt: {now}"
+            f"Vaqt: {now}",
+            thread_id=2332
         )
         count += 1
 
@@ -2297,7 +2303,8 @@ def mahsulot_qoshish(request):
                 f"<b>YANGI MAHSULOT</b>\n\n"
                 f"Nomi: {product.name}\n"
                 f"Ball: {product.price_points}\n"
-                f"Ombor: {product.stock} ta"
+                f"Ombor: {product.stock} ta",
+                thread_id=2332
             )
             # Notification for all users
             xodimlar = Xodim.objects.filter(active=True, is_archived=False)

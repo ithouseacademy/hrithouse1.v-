@@ -493,6 +493,11 @@ class SiteSettings(models.Model):
         verbose_name="Telegram Chat ID",
         help_text="Xabar yuboriladigan guruh/yakka chat ID"
     )
+    telegram_thread_id = models.CharField(
+        max_length=100, blank=True, default='',
+        verbose_name="Telegram Thread ID",
+        help_text="Forum guruh uchun topic ID (bo'sh qolsa umumiy chatga yuboriladi)"
+    )
 
     class Meta:
         verbose_name = "Sayt sozlamalari"
@@ -506,6 +511,7 @@ class SiteSettings(models.Model):
         from django.conf import settings
         settings.TELEGRAM_BOT_TOKEN = self.telegram_bot_token
         settings.TELEGRAM_CHAT_ID = self.telegram_chat_id
+        settings.TELEGRAM_THREAD_ID = self.telegram_thread_id
 
     @classmethod
     def get_instance(cls):

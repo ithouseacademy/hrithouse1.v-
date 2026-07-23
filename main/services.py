@@ -13,26 +13,36 @@ logger = logging.getLogger(__name__)
 from .models import Product, ProductOrder, PointTransaction, Xodim, Notification, PushSubscription
 
 
-def send_telegram_message(text):
+def send_telegram_message(text, thread_id=None):
     token = getattr(settings, 'TELEGRAM_BOT_TOKEN', '')
     chat_id = getattr(settings, 'TELEGRAM_CHAT_ID', '')
+    default_thread_id = getattr(settings, 'TELEGRAM_THREAD_ID', '')
     if not token or not chat_id:
         try:
             from .models import SiteSettings
             site_cfg = SiteSettings.get_instance()
             token = site_cfg.telegram_bot_token or token
             chat_id = site_cfg.telegram_chat_id or chat_id
+            if not default_thread_id:
+                default_thread_id = site_cfg.telegram_thread_id
         except Exception:
             pass
     if not token or not chat_id:
+        logger.warning("Telegram: token yoki chat_id bo'sh")
         return False
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "HTML",
+    }
+    tid = thread_id or default_thread_id
+    if tid:
+        payload["message_thread_id"] = int(tid)
     try:
         url = f"https://api.telegram.org/bot{token}/sendMessage"
-        resp = requests.post(url, json={
-            "chat_id": chat_id,
-            "text": text,
-            "parse_mode": "HTML",
-        }, timeout=10)
+        resp = requests.post(url, json=payload, timeout=10)
+        if resp.status_code != 200:
+            logger.error(f"Telegram xatolik: {resp.status_code} {resp.text}")
         return resp.status_code == 200
     except Exception as e:
         logger.error(f"Telegram xabar yuborishda xatolik: {e}")
