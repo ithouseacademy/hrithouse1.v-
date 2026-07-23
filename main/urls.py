@@ -31,6 +31,7 @@ urlpatterns = [
     path('jarima-qoshish/', views.jarima_qoshish, name='jarima_qoshish'),
     path('bonus/<int:pk>/ochirish/', views.bonus_ochirish, name='bonus_ochirish'),
     path('jarima/<int:pk>/ochirish/', views.jarima_ochirish, name='jarima_ochirish'),
+    path('qayta-yuborish/', views.qayta_yuborish, name='qayta_yuborish'),
     
     # Pul yechish
     path('xodim/<int:pk>/bonus-pul-yechish/', views.bonus_pul_yechish, name='bonus_pul_yechish'),

@@ -593,8 +593,73 @@ def jarima_qoshish(request):
     sabablar = JarimaSabab.objects.filter(active=True)
     return render(request, 'main/jarima_form.html', {
         'form': JarimaRecordForm(), 'sabablar': sabablar,
-        'title': "Jarima Qo'shish"
+        "title": "Jarima Qo'shish"
     })
+
+
+@staff_member_required
+def qayta_yuborish(request):
+    if request.method != 'POST':
+        return redirect('dashboard')
+
+    from .services import send_telegram_message
+
+    hozir = timezone.localtime(timezone.now())
+    bugun = hozir.date()
+    bugun_boshi = timezone.make_aware(datetime.combine(bugun, datetime.min.time()))
+    bugun_oxiri = timezone.make_aware(datetime.combine(bugun, datetime.max.time()))
+
+    bonuslar = BonusRecord.objects.filter(
+        sana__gte=bugun_boshi, sana__lte=bugun_oxiri
+    ).select_related('xodim', 'sabab')
+
+    jarimalar = JarimaRecord.objects.filter(
+        sana__gte=bugun_boshi, sana__lte=bugun_oxiri
+    ).select_related('xodim', 'sabab')
+
+    admin_name = request.user.get_full_name() or request.user.username
+    count = 0
+
+    for b in bonuslar:
+        xodim = b.xodim
+        xodim.refresh_from_db()
+        now = timezone.localtime(b.sana).strftime('%Y-%m-%d %H:%M')
+        send_telegram_message(
+            f"<b>BONUS</b>\n\n"
+            f"Xodim: {xodim.ism} {xodim.familya}\n"
+            f"Sabab: {b.sabab.nom if b.sabab else b.izoh}\n"
+            f"Ball: +{b.ball_miqdori} ball\n"
+            f"Pul: +{b.pul_miqdori:,.0f} so'm\n"
+            f"Izoh: {b.izoh or 'Yo\'q'}\n\n"
+            f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+            f"Admin: {admin_name}\n"
+            f"Vaqt: {now}"
+        )
+        count += 1
+
+    for j in jarimalar:
+        xodim = j.xodim
+        xodim.refresh_from_db()
+        now = timezone.localtime(j.sana).strftime('%Y-%m-%d %H:%M')
+        send_telegram_message(
+            f"<b>JARIMA</b>\n\n"
+            f"Xodim: {xodim.ism} {xodim.familya}\n"
+            f"Sabab: {j.sabab.nom if j.sabab else j.izoh}\n"
+            f"Ball: -{j.ball_miqdori} ball\n"
+            f"Pul: -{j.pul_miqdori:,.0f} so'm\n"
+            f"Izoh: {j.izoh or 'Yo\'q'}\n\n"
+            f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+            f"Admin: {admin_name}\n"
+            f"Vaqt: {now}"
+        )
+        count += 1
+
+    if count > 0:
+        messages.success(request, f"Telegram ga {count} ta xabar qayta yuborildi!")
+    else:
+        messages.warning(request, "Bugun bonus yoki jarima yo'q!")
+
+    return redirect('dashboard')
 
 
 # ============================================================
