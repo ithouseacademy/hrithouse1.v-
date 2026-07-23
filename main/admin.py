@@ -417,10 +417,10 @@ class SiteSettingsAdmin(admin.ModelAdmin):
         return False
 
     def has_view_permission(self, request, obj=None):
-        return request.user.is_superuser
+        return request.user.is_staff
 
     def has_change_permission(self, request, obj=None):
-        return request.user.is_superuser
+        return request.user.is_staff
 
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
