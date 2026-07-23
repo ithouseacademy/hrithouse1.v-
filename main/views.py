@@ -370,17 +370,23 @@ def xodim_tahrirlash(request, pk):
             
             yangilangan_xodim.save()
             
-            # User login/parolni yangilash (commit=False tufayli form save saqlamaydi)
+            # User login/parolni yangilash
             if yangilangan_xodim.user:
                 user = yangilangan_xodim.user
-                yangi_username = form.cleaned_data.get('username')
-                yangi_password = form.cleaned_data.get('password')
-                if yangi_username:
+                yangi_username = form.cleaned_data.get('username', '').strip()
+                yangi_password = form.cleaned_data.get('password', '').strip()
+                yangi_password_confirm = form.cleaned_data.get('password_confirm', '').strip()
+                
+                if yangi_username and yangi_username != user.username:
                     user.username = yangi_username
-                if yangi_password:
+                    user.save(update_fields=['username'])
+                
+                if yangi_password and yangi_password == yangi_password_confirm:
                     user.set_password(yangi_password)
-                if yangi_username or yangi_password:
                     user.save()
+                    # Parol o'zgargandan keyin session yangilash kerak
+                    from django.contrib.auth import update_session_auth_hash
+                    update_session_auth_hash(request, user)
             
             messages.success(request, f"{yangilangan_xodim.ism} {yangilangan_xodim.familya} ma'lumotlari yangilandi!")
             return redirect('xodim_detail', pk=yangilangan_xodim.pk)
