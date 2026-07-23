@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>500 - Server xatosi</title>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<style>
+body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+.neon-text {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.4);
+}
+.elegant-500 {
+  font-size: 10rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+}
+.simple-button {
+  background: linear-gradient(135deg, #000000 0%, #1f2937 100%);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+.simple-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+</style>
+</head>
+<body class="min-h-screen flex flex-col">
+<header class="py-12 text-center">
+  <h1 class="neon-text">IT House Academy</h1>
+  <p class="text-white/70 mt-4">Server xatolik yuz berdi</p>
+</header>
+<main class="flex-1 flex items-center justify-center px-4">
+  <div class="text-center max-w-2xl mx-auto">
+    <h1 class="elegant-500 leading-none mb-8">500</h1>
+    <h2 class="text-2xl font-semibold text-white mb-4">Server xatosi</h2>
+    <p class="text-white/70 mb-8">Server vaqtincha ishlamayapti. Iltimos, birozdan qayta urinib ko'ring.</p>
+    <div class="flex gap-4 justify-center">
+      <a href="/">
+        <button class="simple-button px-6 py-3 rounded-lg font-medium flex items-center gap-2">
+          <i class="ri-home-line"></i> Bosh sahifa
+        </button>
+      </a>
+      <button onclick="location.reload()" class="simple-button px-6 py-3 rounded-lg font-medium flex items-center gap-2">
+        <i class="ri-refresh-line"></i> Qayta yuklash
+      </button>
+    </div>
+  </div>
+</main>
+<footer class="py-6 text-center text-white/50 text-sm">
+  &copy; 2025 IT House Academy
+</footer>
+</body>
+</html>

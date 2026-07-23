@@ -11,7 +11,7 @@ SECRET_KEY = os.environ.get(
 )
 
 # ================= DEBUG =================
-DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
+DEBUG = True
 
 # ================= ALLOWED_HOSTS =================
 ALLOWED_HOSTS = [
@@ -138,3 +138,23 @@ VAPID_PUBLIC_KEY = os.environ.get(
     "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAERf80t7MHdKyjfEWDV5/stlyx8frh\n72EAsRmVl1u4IG++CnPdtYRfbp/BVPqBQ/KTPclm9uFE89BPKZ1bZDbKqA==\n-----END PUBLIC KEY-----",
 )
 VAPID_CLAIM_EMAIL = os.environ.get("VAPID_CLAIM_EMAIL", "admin@ithouse.uz")
+
+# ================= LOGGING =================
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'django_errors.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
+}
