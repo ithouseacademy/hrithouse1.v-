@@ -5,19 +5,16 @@
 
 {% block content %}
 <style>
-  body { background: #0B0B0B !important; }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-  /* Fix #1 rank text color with inline style */
-  .rank-1 span[data-rank-color] { color: inherit !important; }
 </style>
+
 <!-- Header -->
-<div class="-mx-4 px-4 py-4 mb-3 text-white relative" style="background: linear-gradient(135deg, #0F172A 0%, #020617 100%);">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-0.5 rounded-b-full opacity-40" style="background: linear-gradient(90deg, transparent, #3B82F6, transparent);"></div>
+<div class="bg-blue-500 -mx-4 px-4 py-4 mb-3 text-white">
     <div class="flex items-center gap-2">
         <div>
             <h1 class="text-xl font-bold">Xodimlar reytingi</h1>
-            <p class="text-white/50 text-sm">{{ jami_xodimlar }} ta xodim</p>
+            <p class="text-blue-100 text-sm">{{ jami_xodimlar }} ta xodim</p>
         </div>
     </div>
 </div>
@@ -25,32 +22,31 @@
 <div class="px-4">
     <!-- DAVR TANLASH TUGMALARI -->
     <div class="flex gap-2 overflow-x-auto pb-2 mb-3 scrollbar-hide -mx-1 px-1">
-        <a href="?davr=kunlik" class="px-3 py-2 {% if davr == 'kunlik' %}text-white{% else %}text-white/50{% endif %} rounded-xl text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0 transition-colors" style="background: {% if davr == 'kunlik' %}rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3);{% else %}rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);{% endif %}">
+        <a href="?davr=kunlik" class="px-3 py-2 {% if davr == 'kunlik' %}bg-blue-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-lg text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
             Kunlik
         </a>
-        <a href="?davr=haftalik" class="px-3 py-2 {% if davr == 'haftalik' %}text-white{% else %}text-white/50{% endif %} rounded-xl text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0 transition-colors" style="background: {% if davr == 'haftalik' %}rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3);{% else %}rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);{% endif %}">
+        <a href="?davr=haftalik" class="px-3 py-2 {% if davr == 'haftalik' %}bg-blue-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-lg text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
             Haftalik
         </a>
-        <a href="?davr=oylik" class="px-3 py-2 {% if davr == 'oylik' %}text-white{% else %}text-white/50{% endif %} rounded-xl text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0 transition-colors" style="background: {% if davr == 'oylik' %}rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3);{% else %}rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);{% endif %}">
+        <a href="?davr=oylik" class="px-3 py-2 {% if davr == 'oylik' %}bg-blue-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-lg text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
             Oylik
         </a>
-        <a href="?davr=yillik" class="px-3 py-2 {% if davr == 'yillik' %}text-white{% else %}text-white/50{% endif %} rounded-xl text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0 transition-colors" style="background: {% if davr == 'yillik' %}rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3);{% else %}rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);{% endif %}">
+        <a href="?davr=yillik" class="px-3 py-2 {% if davr == 'yillik' %}bg-blue-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-lg text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
             Yillik
         </a>
-        <a href="?davr=umumiy" class="px-3 py-2 {% if davr == 'umumiy' %}text-white{% else %}text-white/50{% endif %} rounded-xl text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0 transition-colors" style="background: {% if davr == 'umumiy' %}rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.3);{% else %}rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);{% endif %}">
+        <a href="?davr=umumiy" class="px-3 py-2 {% if davr == 'umumiy' %}bg-blue-500 text-white{% else %}bg-white border border-gray-200 text-gray-600{% endif %} rounded-lg text-xs sm:text-sm whitespace-nowrap font-medium flex-shrink-0">
             Umumiy
         </a>
     </div>
 
     <!-- HAFTA TANLASH -->
     {% if davr == 'haftalik' %}
-    <div class="rounded-xl p-3 mb-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 p-3 mb-3">
         <form method="GET" class="flex flex-col gap-2">
             <input type="hidden" name="davr" value="haftalik">
-            
             <div>
-                <label class="block text-xs text-white/40 mb-1">Hafta</label>
-                <select name="hafta" class="w-full p-2 rounded-xl text-sm text-white/80" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); outline: none;">
+                <label class="block text-xs text-gray-500 mb-1">Hafta</label>
+                <select name="hafta" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                     <option value="0" {% if tanlangan_hafta == 0 %}selected{% endif %}>Joriy hafta</option>
                     <option value="1" {% if tanlangan_hafta == 1 %}selected{% endif %}>O'tgan hafta</option>
                     <option value="2" {% if tanlangan_hafta == 2 %}selected{% endif %}>2 hafta oldin</option>
@@ -58,170 +54,129 @@
                     <option value="4" {% if tanlangan_hafta == 4 %}selected{% endif %}>4 hafta oldin</option>
                 </select>
             </div>
-            
-            <button type="submit" class="w-full px-4 py-2 rounded-xl text-sm text-white font-medium" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">
-                Ko'rsatish
-            </button>
+            <button type="submit" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">Ko'rsatish</button>
         </form>
-        
-        <div class="mt-2 text-xs text-white/40 p-2 rounded-lg" style="background: rgba(255,255,255,0.03);">
-            <i class="ri-calendar-week-line mr-1 text-blue-400"></i>
-            Ko'rsatilmoqda: <span class="text-white/60">{{ hafta_boshi|date:"d.m.Y" }} - {{ hafta_oxiri|date:"d.m.Y" }}</span>
+        <div class="mt-2 text-xs text-gray-600 bg-blue-50 p-2 rounded-lg">
+            <i class="ri-calendar-week-line mr-1 text-blue-600"></i>
+            Ko'rsatilmoqda: <span class="font-medium">{{ hafta_boshi|date:"d.m.Y" }} - {{ hafta_oxiri|date:"d.m.Y" }}</span>
         </div>
     </div>
     {% endif %}
 
     <!-- OY TANLASH -->
     {% if davr == 'oylik' %}
-    <div class="rounded-xl p-3 mb-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 p-3 mb-3">
         <form method="GET" class="flex flex-col gap-2">
             <input type="hidden" name="davr" value="oylik">
-            
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="block text-xs text-white/40 mb-1">Oy</label>
-                    <select name="oy" class="w-full p-2 rounded-xl text-sm text-white/80" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); outline: none;">
+                    <label class="block text-xs text-gray-500 mb-1">Oy</label>
+                    <select name="oy" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                         {% for oy in oylar %}
                         <option value="{{ oy.value }}" {% if oy.value == tanlangan_oy %}selected{% endif %}>{{ oy.nom }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                
                 <div>
-                    <label class="block text-xs text-white/40 mb-1">Yil</label>
-                    <select name="yil" class="w-full p-2 rounded-xl text-sm text-white/80" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); outline: none;">
+                    <label class="block text-xs text-gray-500 mb-1">Yil</label>
+                    <select name="yil" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                         {% for yil in yillar %}
                         <option value="{{ yil }}" {% if yil == tanlangan_yil %}selected{% endif %}>{{ yil }}</option>
                         {% endfor %}
                     </select>
                 </div>
             </div>
-            
-            <button type="submit" class="w-full px-4 py-2 rounded-xl text-sm text-white font-medium" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">
-                Ko'rsatish
-            </button>
+            <button type="submit" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">Ko'rsatish</button>
         </form>
-        
-        <div class="mt-2 text-xs text-white/40 p-2 rounded-lg" style="background: rgba(255,255,255,0.03);">
-            <i class="ri-calendar-month-line mr-1 text-blue-400"></i>
-            Ko'rsatilmoqda: <span class="text-white/60">{{ oy_nomi }} {{ tanlangan_yil }}</span>
+        <div class="mt-2 text-xs text-gray-600 bg-blue-50 p-2 rounded-lg">
+            <i class="ri-calendar-month-line mr-1 text-blue-600"></i>
+            Ko'rsatilmoqda: <span class="font-medium">{{ oy_nomi }} {{ tanlangan_yil }}</span>
         </div>
     </div>
     {% endif %}
 
     <!-- YIL TANLASH -->
     {% if davr == 'yillik' %}
-    <div class="rounded-xl p-3 mb-3" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 p-3 mb-3">
         <form method="GET" class="flex flex-col gap-2">
             <input type="hidden" name="davr" value="yillik">
-            
             <div>
-                <label class="block text-xs text-white/40 mb-1">Yil</label>
-                <select name="yil" class="w-full p-2 rounded-xl text-sm text-white/80" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); outline: none;">
+                <label class="block text-xs text-gray-500 mb-1">Yil</label>
+                <select name="yil" class="w-full p-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
                     {% for yil in yillar %}
                     <option value="{{ yil }}" {% if yil == tanlangan_yil %}selected{% endif %}>{{ yil }}</option>
                     {% endfor %}
                 </select>
             </div>
-            
-            <button type="submit" class="w-full px-4 py-2 rounded-xl text-sm text-white font-medium" style="background: linear-gradient(135deg, #3B82F6, #2563EB);">
-                Ko'rsatish
-            </button>
+            <button type="submit" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm">Ko'rsatish</button>
         </form>
-        
-        <div class="mt-2 text-xs text-white/40 p-2 rounded-lg" style="background: rgba(255,255,255,0.03);">
-            <i class="ri-calendar-2-line mr-1 text-blue-400"></i>
-            Ko'rsatilmoqda: <span class="text-white/60">{{ tanlangan_yil }} yil</span>
+        <div class="mt-2 text-xs text-gray-600 bg-blue-50 p-2 rounded-lg">
+            <i class="ri-calendar-2-line mr-1 text-blue-600"></i>
+            Ko'rsatilmoqda: <span class="font-medium">{{ tanlangan_yil }} yil</span>
         </div>
     </div>
     {% endif %}
 
     <!-- Stats Grid -->
     <div class="grid grid-cols-2 gap-2 mb-3">
-        <div class="rounded-xl p-2.5" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+        <div class="bg-white rounded-lg p-2.5 shadow-sm border border-blue-100">
             <div class="flex items-center justify-between mb-1">
-                <span class="text-xs text-white/40">Jami xodimlar</span>
-                <div class="w-6 h-6 rounded-full flex items-center justify-center" style="background: rgba(59,130,246,0.15);">
-                    <i class="ri-team-fill text-blue-400 text-xs"></i>
-                </div>
+                <span class="text-xs text-gray-500">Jami xodimlar</span>
+                <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center"><i class="ri-team-fill text-blue-600 text-xs"></i></div>
             </div>
-            <div class="text-lg font-bold text-white">{{ jami_xodimlar|default:"0" }}</div>
+            <div class="text-lg font-bold text-gray-900">{{ jami_xodimlar|default:"0" }}</div>
         </div>
-        
-        <div class="rounded-xl p-2.5" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+        <div class="bg-white rounded-lg p-2.5 shadow-sm border border-blue-100">
             <div class="flex items-center justify-between mb-1">
-                <span class="text-xs text-white/40">Eng yuqori ball</span>
-                <div class="w-6 h-6 rounded-full flex items-center justify-center" style="background: rgba(234,179,8,0.15);">
-                    <i class="ri-trophy-fill text-yellow-400 text-xs"></i>
-                </div>
+                <span class="text-xs text-gray-500">Eng yuqori ball</span>
+                <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center"><i class="ri-trophy-fill text-yellow-600 text-xs"></i></div>
             </div>
-            <div class="text-lg font-bold text-white">{{ eng_yuqori_ball|default:"0" }}</div>
-            <div class="text-[10px] text-white/30 truncate">{{ eng_yuqori_xodim|default:"-" }}</div>
+            <div class="text-lg font-bold text-gray-900">{{ eng_yuqori_ball|default:"0" }}</div>
+            <div class="text-[10px] text-gray-500 truncate">{{ eng_yuqori_xodim|default:"-" }}</div>
         </div>
-        
-        <div class="rounded-xl p-2.5" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+        <div class="bg-white rounded-lg p-2.5 shadow-sm border border-blue-100">
             <div class="flex items-center justify-between mb-1">
-                <span class="text-xs text-white/40">O'rtacha ball</span>
-                <div class="w-6 h-6 rounded-full flex items-center justify-center" style="background: rgba(34,197,94,0.15);">
-                    <i class="ri-bar-chart-fill text-green-400 text-xs"></i>
-                </div>
+                <span class="text-xs text-gray-500">O'rtacha ball</span>
+                <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center"><i class="ri-bar-chart-fill text-green-600 text-xs"></i></div>
             </div>
-            <div class="text-lg font-bold text-white">{{ ortacha_ball|default:"0" }}</div>
+            <div class="text-lg font-bold text-gray-900">{{ ortacha_ball|default:"0" }}</div>
         </div>
-        
-        <div class="rounded-xl p-2.5" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
+        <div class="bg-white rounded-lg p-2.5 shadow-sm border border-blue-100">
             <div class="flex items-center justify-between mb-1">
-                <span class="text-xs text-white/40">Faol xodimlar</span>
-                <div class="w-6 h-6 rounded-full flex items-center justify-center" style="background: rgba(168,85,247,0.15);">
-                    <i class="ri-user-star-fill text-purple-400 text-xs"></i>
-                </div>
+                <span class="text-xs text-gray-500">Faol xodimlar</span>
+                <div class="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center"><i class="ri-user-star-fill text-purple-600 text-xs"></i></div>
             </div>
-            <div class="text-lg font-bold text-white">{{ faol_xodimlar|default:"0" }}</div>
+            <div class="text-lg font-bold text-gray-900">{{ faol_xodimlar|default:"0" }}</div>
         </div>
     </div>
 
     <!-- Davr haqida ma'lumot -->
-    <div class="rounded-xl p-2.5 mb-3" style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.12);">
+    <div class="bg-blue-50 rounded-lg p-2.5 mb-3 border border-blue-100">
         <div class="flex items-center justify-between">
-            <div>
-                <span class="text-xs font-medium text-blue-300">
-                    {% if davr == 'kunlik' %}
-                        {{ bugun|date:"d-m-Y" }}
-                    {% elif davr == 'haftalik' %}
-                        {{ hafta_boshi|date:"d.m" }} - {{ hafta_oxiri|date:"d.m.Y" }}
-                    {% elif davr == 'oylik' %}
-                        {{ oy_nomi }} {{ tanlangan_yil }}
-                    {% elif davr == 'yillik' %}
-                        {{ tanlangan_yil }} yil
-                    {% else %}
-                        Barcha vaqtlar
-                    {% endif %}
-                </span>
-            </div>
+            <span class="text-xs font-medium text-blue-800">
+                {% if davr == 'kunlik' %}{{ bugun|date:"d-m-Y" }}
+                {% elif davr == 'haftalik' %}{{ hafta_boshi|date:"d.m" }} - {{ hafta_oxiri|date:"d.m.Y" }}
+                {% elif davr == 'oylik' %}{{ oy_nomi }} {{ tanlangan_yil }}
+                {% elif davr == 'yillik' %}{{ tanlangan_yil }} yil
+                {% else %}Barcha vaqtlar{% endif %}
+            </span>
             <div class="flex items-center gap-1.5">
-                <span class="text-[10px] px-2 py-0.5 rounded-full" style="background: rgba(59,130,246,0.1); color: #60A5FA;">
-                    {{ jami_ball_davr|default:"0" }} b
-                </span>
-                <span class="text-[10px] px-2 py-0.5 rounded-full" style="background: rgba(168,85,247,0.1); color: #C084FC;">
-                    {{ jami_pul_davr|default:"0"|floatformat:0 }} s
-                </span>
+                <span class="text-[10px] bg-white px-2 py-0.5 rounded-full text-blue-600">{{ jami_ball_davr|default:"0" }} b</span>
+                <span class="text-[10px] bg-white px-2 py-0.5 rounded-full text-purple-600">{{ jami_pul_davr|default:"0"|floatformat:0 }} s</span>
             </div>
         </div>
     </div>
 
-    <!-- Podium -->
-    <div class="rounded-[24px] overflow-hidden mb-3 relative" style="background: linear-gradient(145deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.98) 100%); border: 1px solid rgba(59,130,246,0.12);">
-        <!-- Spotlight beams -->
-        <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-            <div class="absolute -top-10 left-[20%] w-20 h-[120%] opacity-10" style="background: linear-gradient(180deg, #3B82F6 0%, transparent 60%); transform: rotate(-15deg); filter: blur(15px);"></div>
-            <div class="absolute -top-10 right-[20%] w-20 h-[120%] opacity-10" style="background: linear-gradient(180deg, #3B82F6 0%, transparent 60%); transform: rotate(15deg); filter: blur(15px);"></div>
-            <!-- Top glow line -->
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-0.5 rounded-b-full opacity-40" style="background: linear-gradient(90deg, transparent, #3B82F6, transparent);"></div>
-        </div>
-        <div class="p-3 border-b border-white/5 relative">
-            <h3 class="font-semibold text-white/80 text-sm flex items-center gap-2">
-                <i class="ri-trophy-fill text-blue-400 text-sm"></i> Eng yaxshi xodimlar
-                <span class="text-[10px] text-white/30 font-normal">
+    <!-- ============ PODIUM (PREMIUM LIGHT + SPOTLIGHT) ============ -->
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 overflow-hidden mb-3 relative">
+        <!-- Spotlight beam from top-right corner hitting #1 -->
+        <div class="absolute -top-4 -right-4 w-40 h-56 pointer-events-none" style="background: linear-gradient(235deg, rgba(234,179,8,0.15) 0%, rgba(234,179,8,0.06) 30%, transparent 60%); filter: blur(2px); z-index: 0;"></div>
+        <div class="absolute -top-2 -right-2 w-24 h-48 pointer-events-none" style="background: linear-gradient(240deg, rgba(234,179,8,0.2) 0%, transparent 50%); filter: blur(6px); z-index: 0;"></div>
+
+        <div class="p-3 border-b border-blue-100 relative z-10">
+            <h3 class="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                <i class="ri-trophy-fill text-yellow-500 text-sm"></i> Eng yaxshi xodimlar
+                <span class="text-[10px] text-gray-400 font-normal">
                 {% if davr == 'kunlik' %}{{ bugun|date:"d.m.Y" }}
                 {% elif davr == 'haftalik' %}{{ hafta_boshi|date:"d.m" }} - {{ hafta_oxiri|date:"d.m" }}
                 {% elif davr == 'oylik' %}{{ oy_nomi }} {{ tanlangan_yil }}
@@ -230,74 +185,70 @@
                 </span>
             </h3>
         </div>
-        <div class="p-4 relative">
-            <div class="flex items-end justify-center gap-2 h-44">
+        <div class="p-4 relative z-10">
+            <div class="flex items-end justify-center gap-3 h-44">
                 <!-- 2-o'rin (Silver) -->
                 <div class="flex flex-col items-center w-[76px]">
                     <div class="relative">
-                        <!-- Silver spotlight -->
-                        <div class="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full opacity-20" style="background: radial-gradient(circle, #94A3B8 0%, transparent 70%); filter: blur(8px);"></div>
-                        <div class="w-11 h-11 rounded-full flex items-center justify-center mb-1.5 border-2 overflow-hidden relative z-10" style="border-color: #94A3B8; background: rgba(148,163,184,0.1); box-shadow: 0 0 15px rgba(148,163,184,0.2);">
+                        <div class="w-11 h-11 rounded-full flex items-center justify-center mb-1.5 border-2 overflow-hidden" style="border-color: #94A3B8; box-shadow: 0 0 12px rgba(148,163,184,0.25);">
                             {% if podium.2 %}
                                 {% if podium.2.rasm %}
                                     <img src="{{ podium.2.rasm }}" class="w-full h-full object-cover">
                                 {% else %}
-                                    <span class="text-xs font-bold" style="color: #94A3B8;">{{ podium.2.initials|default:"?" }}</span>
+                                    <span class="text-xs font-bold text-gray-500">{{ podium.2.initials|default:"?" }}</span>
                                 {% endif %}
                             {% else %}
-                                <span class="text-xs font-bold" style="color: #64748B;">?</span>
+                                <span class="text-xs font-bold text-gray-400">?</span>
                             {% endif %}
                         </div>
                     </div>
                     <div class="text-center mb-1.5">
-                        <div class="font-medium text-[10px] text-white/70 truncate w-full">{{ podium.2.name|default:"2-o'rin" }}</div>
+                        <div class="font-medium text-[10px] text-gray-700 truncate w-full">{{ podium.2.name|default:"2-o'rin" }}</div>
                         {% if podium.2 %}
-                        <div class="text-[8px] text-white/30">{{ podium.2.pul|floatformat:0 }} s</div>
+                        <div class="text-[8px] text-gray-400">{{ podium.2.pul|floatformat:0 }} s</div>
                         {% endif %}
                     </div>
-                    <!-- Silver podium -->
-                    <div class="w-full h-14 rounded-t-xl flex items-end justify-center pb-1.5 relative overflow-hidden" style="background: linear-gradient(180deg, #64748B 0%, #475569 100%);">
-                        <div class="absolute inset-0 opacity-20" style="background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);"></div>
+                    <div class="w-full h-14 rounded-t-lg flex items-end justify-center pb-1.5 relative overflow-hidden" style="background: linear-gradient(180deg, #94A3B8 0%, #64748B 100%);">
+                        <div class="absolute inset-0 opacity-20" style="background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%);"></div>
                         <span class="text-white font-bold text-xs relative z-10">{{ podium.2.score|default:"0" }}</span>
                     </div>
                 </div>
 
-                <!-- 1-o'rin (Gold) -->
+                <!-- 1-o'rin (Gold + Spotlight) -->
                 <div class="flex flex-col items-center w-[88px]">
                     <div class="relative">
                         <!-- Crown -->
                         <div class="absolute -top-7 left-1/2 -translate-x-1/2 z-20">
                             <i class="ri-vip-crown-fill text-lg" style="color: #EAB308; filter: drop-shadow(0 0 6px rgba(234,179,8,0.5));"></i>
                         </div>
-                        <!-- Golden spotlight glow -->
-                        <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full opacity-25" style="background: radial-gradient(circle, #EAB308 0%, transparent 70%); filter: blur(10px);"></div>
-                        <!-- Left spotlight beam -->
-                        <div class="absolute -left-5 top-1/2 -translate-y-1/2 w-3 h-10 rounded-full opacity-80 animate-pulse" style="background: #EAB308; filter: blur(4px);"></div>
-                        <!-- Right spotlight beam -->
-                        <div class="absolute -right-5 top-1/2 -translate-y-1/2 w-3 h-10 rounded-full opacity-80 animate-pulse" style="background: #EAB308; filter: blur(4px); animation-delay: 0.5s;"></div>
+                        <!-- Spotlight glow around profile -->
+                        <div class="absolute -inset-4 rounded-full opacity-30" style="background: radial-gradient(circle, #EAB308 0%, transparent 70%); filter: blur(8px); z-index: 0;"></div>
+                        <!-- Left beam -->
+                        <div class="absolute -left-4 top-1/2 -translate-y-1/2 w-2.5 h-9 rounded-full opacity-60 animate-pulse" style="background: #EAB308; filter: blur(3px);"></div>
+                        <!-- Right beam -->
+                        <div class="absolute -right-4 top-1/2 -translate-y-1/2 w-2.5 h-9 rounded-full opacity-60 animate-pulse" style="background: #EAB308; filter: blur(3px); animation-delay: 0.5s;"></div>
                         <!-- Downward light -->
-                        <div class="absolute left-1/2 -translate-x-1/2 top-full w-6 h-3 rounded-full opacity-30" style="background: #EAB308; filter: blur(4px);"></div>
+                        <div class="absolute left-1/2 -translate-x-1/2 top-full w-5 h-2.5 rounded-full opacity-25" style="background: #EAB308; filter: blur(3px);"></div>
                         <!-- Profile -->
-                        <div class="relative w-14 h-14 rounded-full flex items-center justify-center mb-1.5 border-[3px] overflow-hidden z-10" style="border-color: #EAB308; background: rgba(234,179,8,0.1); box-shadow: 0 0 25px rgba(234,179,8,0.35), 0 0 50px rgba(234,179,8,0.15);">
+                        <div class="relative w-14 h-14 rounded-full flex items-center justify-center mb-1.5 border-[3px] overflow-hidden z-10" style="border-color: #EAB308; box-shadow: 0 0 20px rgba(234,179,8,0.3), 0 0 40px rgba(234,179,8,0.12);">
                             {% if podium.1 %}
                                 {% if podium.1.rasm %}
                                     <img src="{{ podium.1.rasm }}" class="w-full h-full object-cover">
                                 {% else %}
-                                    <span class="text-sm font-bold" style="color: #EAB308;">{{ podium.1.initials|default:"?" }}</span>
+                                    <span class="text-sm font-bold text-yellow-600">{{ podium.1.initials|default:"?" }}</span>
                                 {% endif %}
                             {% else %}
-                                <span class="text-sm font-bold" style="color: #CA8A04;">?</span>
+                                <span class="text-sm font-bold text-yellow-500">?</span>
                             {% endif %}
                         </div>
                     </div>
                     <div class="text-center mb-1.5">
-                        <div class="font-bold text-[11px] text-white truncate w-full">{{ podium.1.name|default:"1-o'rin" }}</div>
+                        <div class="font-bold text-[11px] text-gray-900 truncate w-full">{{ podium.1.name|default:"1-o'rin" }}</div>
                         {% if podium.1 %}
-                        <div class="text-[8px] text-white/30">{{ podium.1.pul|floatformat:0 }} s</div>
+                        <div class="text-[8px] text-gray-500">{{ podium.1.pul|floatformat:0 }} s</div>
                         {% endif %}
                     </div>
-                    <!-- Gold podium -->
-                    <div class="w-full h-[72px] rounded-t-xl flex items-end justify-center pb-1.5 relative overflow-hidden" style="background: linear-gradient(180deg, #EAB308 0%, #CA8A04 100%);">
+                    <div class="w-full h-[72px] rounded-t-lg flex items-end justify-center pb-1.5 relative overflow-hidden" style="background: linear-gradient(180deg, #EAB308 0%, #CA8A04 100%);">
                         <div class="absolute inset-0 opacity-20" style="background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%);"></div>
                         <span class="text-white font-bold text-sm relative z-10">{{ podium.1.score|default:"0" }}</span>
                     </div>
@@ -306,29 +257,26 @@
                 <!-- 3-o'rin (Bronze) -->
                 <div class="flex flex-col items-center w-[76px]">
                     <div class="relative">
-                        <!-- Bronze spotlight -->
-                        <div class="absolute -top-8 left-1/2 -translate-x-1/2 w-16 h-16 rounded-full opacity-20" style="background: radial-gradient(circle, #F97316 0%, transparent 70%); filter: blur(8px);"></div>
-                        <div class="w-11 h-11 rounded-full flex items-center justify-center mb-1.5 border-2 overflow-hidden relative z-10" style="border-color: #F97316; background: rgba(249,115,22,0.1); box-shadow: 0 0 15px rgba(249,115,22,0.2);">
+                        <div class="w-11 h-11 rounded-full flex items-center justify-center mb-1.5 border-2 overflow-hidden" style="border-color: #F97316; box-shadow: 0 0 12px rgba(249,115,22,0.25);">
                             {% if podium.3 %}
                                 {% if podium.3.rasm %}
                                     <img src="{{ podium.3.rasm }}" class="w-full h-full object-cover">
                                 {% else %}
-                                    <span class="text-xs font-bold" style="color: #F97316;">{{ podium.3.initials|default:"?" }}</span>
+                                    <span class="text-xs font-bold text-orange-500">{{ podium.3.initials|default:"?" }}</span>
                                 {% endif %}
                             {% else %}
-                                <span class="text-xs font-bold" style="color: #EA580C;">?</span>
+                                <span class="text-xs font-bold text-orange-400">?</span>
                             {% endif %}
                         </div>
                     </div>
                     <div class="text-center mb-1.5">
-                        <div class="font-medium text-[10px] text-white/70 truncate w-full">{{ podium.3.name|default:"3-o'rin" }}</div>
+                        <div class="font-medium text-[10px] text-gray-700 truncate w-full">{{ podium.3.name|default:"3-o'rin" }}</div>
                         {% if podium.3 %}
-                        <div class="text-[8px] text-white/30">{{ podium.3.pul|floatformat:0 }} s</div>
+                        <div class="text-[8px] text-gray-400">{{ podium.3.pul|floatformat:0 }} s</div>
                         {% endif %}
                     </div>
-                    <!-- Bronze podium -->
-                    <div class="w-full h-12 rounded-t-xl flex items-end justify-center pb-1.5 relative overflow-hidden" style="background: linear-gradient(180deg, #F97316 0%, #EA580C 100%);">
-                        <div class="absolute inset-0 opacity-20" style="background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%);"></div>
+                    <div class="w-full h-12 rounded-t-lg flex items-end justify-center pb-1.5 relative overflow-hidden" style="background: linear-gradient(180deg, #F97316 0%, #EA580C 100%);">
+                        <div class="absolute inset-0 opacity-20" style="background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 50%);"></div>
                         <span class="text-white font-bold text-xs relative z-10">{{ podium.3.score|default:"0" }}</span>
                     </div>
                 </div>
@@ -336,11 +284,11 @@
         </div>
     </div>
 
-    <!-- Reyting jadvali -->
-    <div class="rounded-[24px] overflow-hidden mb-3 relative" style="background: linear-gradient(145deg, rgba(15,23,42,0.95) 0%, rgba(2,6,23,0.98) 100%); border: 1px solid rgba(59,130,246,0.12);">
-        <div class="p-3 border-b border-white/5 flex items-center justify-between">
-            <h3 class="font-semibold text-white/80 text-sm flex items-center gap-2">
-                <i class="ri-bar-chart-2-fill text-blue-400 text-sm"></i>
+    <!-- ============ REYTING JADVALI (LIGHT) ============ -->
+    <div class="bg-white rounded-lg shadow-sm border border-blue-100 overflow-hidden mb-3">
+        <div class="p-3 border-b border-blue-100 flex items-center justify-between">
+            <h3 class="font-semibold text-gray-900 text-sm flex items-center gap-2">
+                <i class="ri-bar-chart-2-fill text-blue-500 text-sm"></i>
                 {% if davr == 'kunlik' %}Kunlik reyting
                 {% elif davr == 'haftalik' %}Haftalik reyting
                 {% elif davr == 'oylik' %}Oylik reyting
@@ -348,141 +296,124 @@
                 {% else %}Umumiy reyting{% endif %}
             </h3>
             <div class="flex items-center gap-1.5">
-                <span class="text-[10px] text-blue-400 px-2 py-0.5 rounded-full" style="background: rgba(59,130,246,0.1);">{{ xodimlar|length }} ta</span>
-                <span class="text-[10px] text-green-400 px-2 py-0.5 rounded-full" style="background: rgba(34,197,94,0.1);">{{ jami_ball_davr|default:"0" }} b</span>
+                <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">{{ xodimlar|length }} ta</span>
+                <span class="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full">{{ jami_ball_davr|default:"0" }} b</span>
             </div>
         </div>
-        
-        <div class="divide-y divide-white/5 max-h-[500px] overflow-y-auto">
+
+        <div class="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
             {% for xodim_data in xodimlar %}
             {% with xodim=xodim_data.xodim %}
-            <div class="px-3 py-2.5 transition-colors {% if forloop.counter == 1 %}relative{% endif %}">
-                <!-- 1-o'rin dark bg -->
-                {% if forloop.counter == 1 %}
-                <div class="absolute inset-0 opacity-30" style="background: linear-gradient(90deg, rgba(234,179,8,0.05) 0%, transparent 50%, rgba(234,179,8,0.05) 100%);"></div>
-                {% endif %}
-                <div class="flex items-center justify-between relative">
+            <div class="px-3 py-2.5 hover:bg-gray-50 transition-colors">
+                <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
-                        <span class="w-5 text-[11px] font-bold" style="color: {% if forloop.counter == 1 %}#EAB308{% elif forloop.counter == 2 %}#94A3B8{% elif forloop.counter == 3 %}#F97316{% else %}rgba(255,255,255,0.25){% endif %};">
+                        <span class="w-5 text-[11px] font-bold
+                            {% if forloop.counter == 1 %}text-yellow-600
+                            {% elif forloop.counter == 2 %}text-gray-500
+                            {% elif forloop.counter == 3 %}text-orange-500
+                            {% else %}text-gray-400{% endif %}">
                             #{{ forloop.counter }}
                         </span>
                         <div class="relative flex-shrink-0">
                             {% if forloop.counter == 1 %}
                             <!-- 1-o'rin: qora fon + 2 ta chiroq -->
                             <div class="relative w-9 h-9 flex items-center justify-center">
-                                <div class="absolute inset-0 rounded-full z-0" style="background: #0F172A;"></div>
+                                <div class="absolute inset-0 rounded-full bg-gray-900 z-0"></div>
                                 <div class="absolute -left-1.5 top-1/2 -translate-y-1/2 w-2 h-7 rounded-full opacity-80 animate-pulse z-10" style="background: #EAB308; filter: blur(3px);"></div>
                                 <div class="absolute -right-1.5 top-1/2 -translate-y-1/2 w-2 h-7 rounded-full opacity-80 animate-pulse z-10" style="background: #EAB308; filter: blur(3px); animation-delay: 0.5s;"></div>
-                                <div class="absolute left-1/2 -translate-x-1/2 top-full w-4 h-2 rounded-full opacity-20" style="background: #EAB308; filter: blur(3px);"></div>
-                                <div class="relative w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border-2 z-20" style="border-color: #EAB308; box-shadow: 0 0 12px rgba(234,179,8,0.3);">
+                                <div class="absolute left-1/2 -translate-x-1/2 top-full w-4 h-2 rounded-full opacity-20 z-0" style="background: #EAB308; filter: blur(3px);"></div>
+                                <div class="relative w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border-2 z-20" style="border-color: #EAB308; box-shadow: 0 0 10px rgba(234,179,8,0.3);">
                             {% elif forloop.counter == 2 %}
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border-2" style="border-color: #94A3B8; background: rgba(148,163,184,0.08);">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border-2" style="border-color: #94A3B8;">
                             {% elif forloop.counter == 3 %}
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border-2" style="border-color: #F97316; background: rgba(249,115,22,0.08);">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden border-2" style="border-color: #F97316;">
                             {% else %}
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden" style="background: rgba(255,255,255,0.05);">
+                            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                             {% endif %}
                                 {% if xodim.rasm and xodim.rasm.url %}
                                     <img src="{{ xodim.rasm.url }}" class="w-full h-full object-cover">
                                 {% else %}
-                                    <span class="text-xs font-bold" style="color: {% if forloop.counter == 1 %}#EAB308{% elif forloop.counter == 2 %}#94A3B8{% elif forloop.counter == 3 %}#F97316{% else %}rgba(255,255,255,0.4){% endif %};">{{ xodim.ism|first }}{{ xodim.familya|first }}</span>
+                                    <span class="text-xs font-bold text-gray-600">{{ xodim.ism|first }}{{ xodim.familya|first }}</span>
                                 {% endif %}
                             </div>
                         </div>
                         <div class="min-w-0">
-                            <a href="{% url 'xodim_detail' xodim.id %}" class="font-medium text-white/80 hover:text-blue-400 text-xs block truncate max-w-[80px] sm:max-w-[120px]">
+                            <a href="{% url 'xodim_detail' xodim.id %}" class="font-medium text-gray-900 hover:text-blue-600 text-xs block truncate max-w-[80px] sm:max-w-[120px]">
                                 {{ xodim.ism }} {{ xodim.familya }}
                             </a>
                         </div>
                     </div>
-                    
+
                     <div class="text-right">
-                        <!-- BALL -->
-                        <div class="text-sm font-semibold 
+                        <div class="text-sm font-semibold
                             {% if davr == 'kunlik' %}
-                                {% if xodim_data.kunlik_reyting_ball > 0 %}text-green-400{% elif xodim_data.kunlik_reyting_ball < 0 %}text-red-400{% else %}text-white/60{% endif %}
+                                {% if xodim_data.kunlik_reyting_ball > 0 %}text-green-600{% elif xodim_data.kunlik_reyting_ball < 0 %}text-red-600{% else %}text-gray-600{% endif %}
                             {% elif davr == 'haftalik' %}
-                                {% if xodim_data.haftalik_reyting_ball > 0 %}text-green-400{% elif xodim_data.haftalik_reyting_ball < 0 %}text-red-400{% else %}text-white/60{% endif %}
+                                {% if xodim_data.haftalik_reyting_ball > 0 %}text-green-600{% elif xodim_data.haftalik_reyting_ball < 0 %}text-red-600{% else %}text-gray-600{% endif %}
                             {% elif davr == 'oylik' %}
-                                {% if xodim_data.oylik_reyting_ball > 0 %}text-green-400{% elif xodim_data.oylik_reyting_ball < 0 %}text-red-400{% else %}text-white/60{% endif %}
+                                {% if xodim_data.oylik_reyting_ball > 0 %}text-green-600{% elif xodim_data.oylik_reyting_ball < 0 %}text-red-600{% else %}text-gray-600{% endif %}
                             {% elif davr == 'yillik' %}
-                                {% if xodim_data.yillik_reyting_ball > 0 %}text-green-400{% elif xodim_data.yillik_reyting_ball < 0 %}text-red-400{% else %}text-white/60{% endif %}
+                                {% if xodim_data.yillik_reyting_ball > 0 %}text-green-600{% elif xodim_data.yillik_reyting_ball < 0 %}text-red-600{% else %}text-gray-600{% endif %}
                             {% else %}
-                                {% if xodim_data.umumiy_reyting_ball > 0 %}text-green-400{% elif xodim_data.umumiy_reyting_ball < 0 %}text-red-400{% else %}text-white/60{% endif %}
+                                {% if xodim_data.umumiy_reyting_ball > 0 %}text-green-600{% elif xodim_data.umumiy_reyting_ball < 0 %}text-red-600{% else %}text-gray-600{% endif %}
                             {% endif %}">
-                            {% if davr == 'kunlik' %}
-                                {{ xodim_data.kunlik_reyting_ball|default:"0" }}
-                            {% elif davr == 'haftalik' %}
-                                {{ xodim_data.haftalik_reyting_ball|default:"0" }}
-                            {% elif davr == 'oylik' %}
-                                {{ xodim_data.oylik_reyting_ball|default:"0" }}
-                            {% elif davr == 'yillik' %}
-                                {{ xodim_data.yillik_reyting_ball|default:"0" }}
-                            {% else %}
-                                {{ xodim_data.umumiy_reyting_ball|default:"0" }}
-                            {% endif %}
+                            {% if davr == 'kunlik' %}{{ xodim_data.kunlik_reyting_ball|default:"0" }}
+                            {% elif davr == 'haftalik' %}{{ xodim_data.haftalik_reyting_ball|default:"0" }}
+                            {% elif davr == 'oylik' %}{{ xodim_data.oylik_reyting_ball|default:"0" }}
+                            {% elif davr == 'yillik' %}{{ xodim_data.yillik_reyting_ball|default:"0" }}
+                            {% else %}{{ xodim_data.umumiy_reyting_ball|default:"0" }}{% endif %}
                         </div>
-                        
-                        <!-- PUL -->
-                        <div class="text-[10px] font-medium 
+                        <div class="text-[10px] font-medium
                             {% if davr == 'kunlik' %}
-                                {% if xodim_data.kunlik_reyting_pul > 0 %}text-green-400/70{% elif xodim_data.kunlik_reyting_pul < 0 %}text-red-400/70{% else %}text-white/30{% endif %}
+                                {% if xodim_data.kunlik_reyting_pul > 0 %}text-green-600{% elif xodim_data.kunlik_reyting_pul < 0 %}text-red-600{% else %}text-gray-500{% endif %}
                             {% elif davr == 'haftalik' %}
-                                {% if xodim_data.haftalik_reyting_pul > 0 %}text-green-400/70{% elif xodim_data.haftalik_reyting_pul < 0 %}text-red-400/70{% else %}text-white/30{% endif %}
+                                {% if xodim_data.haftalik_reyting_pul > 0 %}text-green-600{% elif xodim_data.haftalik_reyting_pul < 0 %}text-red-600{% else %}text-gray-500{% endif %}
                             {% elif davr == 'oylik' %}
-                                {% if xodim_data.oylik_reyting_pul > 0 %}text-green-400/70{% elif xodim_data.oylik_reyting_pul < 0 %}text-red-400/70{% else %}text-white/30{% endif %}
+                                {% if xodim_data.oylik_reyting_pul > 0 %}text-green-600{% elif xodim_data.oylik_reyting_pul < 0 %}text-red-600{% else %}text-gray-500{% endif %}
                             {% elif davr == 'yillik' %}
-                                {% if xodim_data.yillik_reyting_pul > 0 %}text-green-400/70{% elif xodim_data.yillik_reyting_pul < 0 %}text-red-400/70{% else %}text-white/30{% endif %}
+                                {% if xodim_data.yillik_reyting_pul > 0 %}text-green-600{% elif xodim_data.yillik_reyting_pul < 0 %}text-red-600{% else %}text-gray-500{% endif %}
                             {% else %}
-                                {% if xodim_data.umumiy_reyting_pul > 0 %}text-green-400/70{% elif xodim_data.umumiy_reyting_pul < 0 %}text-red-400/70{% else %}text-white/30{% endif %}
+                                {% if xodim_data.umumiy_reyting_pul > 0 %}text-green-600{% elif xodim_data.umumiy_reyting_pul < 0 %}text-red-600{% else %}text-gray-500{% endif %}
                             {% endif %}">
-                            {% if davr == 'kunlik' %}
-                                {{ xodim_data.kunlik_reyting_pul|floatformat:0 }}
-                            {% elif davr == 'haftalik' %}
-                                {{ xodim_data.haftalik_reyting_pul|floatformat:0 }}
-                            {% elif davr == 'oylik' %}
-                                {{ xodim_data.oylik_reyting_pul|floatformat:0 }}
-                            {% elif davr == 'yillik' %}
-                                {{ xodim_data.yillik_reyting_pul|floatformat:0 }}
-                            {% else %}
-                                {{ xodim_data.umumiy_reyting_pul|floatformat:0 }}
-                            {% endif %} so'm
+                            {% if davr == 'kunlik' %}{{ xodim_data.kunlik_reyting_pul|floatformat:0 }}
+                            {% elif davr == 'haftalik' %}{{ xodim_data.haftalik_reyting_pul|floatformat:0 }}
+                            {% elif davr == 'oylik' %}{{ xodim_data.oylik_reyting_pul|floatformat:0 }}
+                            {% elif davr == 'yillik' %}{{ xodim_data.yillik_reyting_pul|floatformat:0 }}
+                            {% else %}{{ xodim_data.umumiy_reyting_pul|floatformat:0 }}{% endif %} so'm
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Bonus va Jarima -->
-                <div class="flex items-center gap-2 mt-1.5 ml-8 relative">
-                    <span class="text-[8px] px-1.5 py-0.5 rounded-full" style="background: rgba(34,197,94,0.1); color: #4ADE80;">
+                <div class="flex items-center gap-2 mt-1.5 ml-8">
+                    <span class="text-[8px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full">
                         +{% if davr == 'kunlik' %}{{ xodim_data.kunlik_bonus_ball|default:"0" }}
                         {% elif davr == 'haftalik' %}{{ xodim_data.haftalik_bonus_ball|default:"0" }}
                         {% elif davr == 'oylik' %}{{ xodim_data.oylik_bonus_ball|default:"0" }}
                         {% elif davr == 'yillik' %}{{ xodim_data.yillik_bonus_ball|default:"0" }}
                         {% else %}{{ xodim_data.umumiy_bonus_ball|default:"0" }}{% endif %}
                     </span>
-                    <span class="text-[8px] px-1.5 py-0.5 rounded-full" style="background: rgba(239,68,68,0.1); color: #F87171;">
+                    <span class="text-[8px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full">
                         -{% if davr == 'kunlik' %}{{ xodim_data.kunlik_jarima_ball|default:"0" }}
                         {% elif davr == 'haftalik' %}{{ xodim_data.haftalik_jarima_ball|default:"0" }}
                         {% elif davr == 'oylik' %}{{ xodim_data.oylik_jarima_ball|default:"0" }}
                         {% elif davr == 'yillik' %}{{ xodim_data.yillik_jarima_ball|default:"0" }}
                         {% else %}{{ xodim_data.umumiy_jarima_ball|default:"0" }}{% endif %}
                     </span>
-                    
-                    <!-- TOP belgisi -->
                     {% if forloop.counter == 1 %}
-                    <span class="text-[8px] px-1.5 py-0.5 rounded-full" style="background: rgba(234,179,8,0.1); color: #EAB308;">1-o'rin</span>
+                    <span class="text-[8px] bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded-full">1-o'rin</span>
                     {% elif forloop.counter == 2 %}
-                    <span class="text-[8px] px-1.5 py-0.5 rounded-full" style="background: rgba(148,163,184,0.1); color: #94A3B8;">2-o'rin</span>
+                    <span class="text-[8px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full">2-o'rin</span>
                     {% elif forloop.counter == 3 %}
-                    <span class="text-[8px] px-1.5 py-0.5 rounded-full" style="background: rgba(249,115,22,0.1); color: #F97316;">3-o'rin</span>
+                    <span class="text-[8px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded-full">3-o'rin</span>
                     {% endif %}
                 </div>
             </div>
             {% endwith %}
             {% empty %}
-            <div class="p-5 text-center">
-                <i class="ri-inbox-line text-2xl mb-1 text-white/20"></i>
-                <p class="text-xs text-white/30">Bu davrda ma'lumot yo'q</p>
+            <div class="p-5 text-center text-gray-500">
+                <i class="ri-inbox-line text-2xl mb-1"></i>
+                <p class="text-xs">Bu davrda ma'lumot yo'q</p>
             </div>
             {% endfor %}
         </div>
