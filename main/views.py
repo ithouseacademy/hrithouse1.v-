@@ -1341,6 +1341,7 @@ def reytinglar(request):
             'initials': f"{xodim.ism[0]}{xodim.familya[0]}" if xodim.ism and xodim.familya else '?',
             'score': xd.get(sort_key, 0),
             'pul': xd.get(f'{davr}_reyting_pul', 0),
+            'rasm': xodim.rasm.url if xodim.rasm else None,
         }
 
     return render(request, 'main/reytinglar.html', {
