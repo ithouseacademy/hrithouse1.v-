@@ -145,7 +145,7 @@ TELEGRAM_BOT_TOKEN = os.environ.get(
     "8793141493:AAFLYKfXcI4hpxeOSKameuEcUHHcnwMxvGo",
 )
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "-1001947689476")
-TELEGRAM_THREAD_ID = os.environ.get("TELEGRAM_THREAD_ID", "1")
+TELEGRAM_THREAD_ID = os.environ.get("TELEGRAM_THREAD_ID", "2332")
 
 # ================= LOGGING =================
 LOGGING = {
