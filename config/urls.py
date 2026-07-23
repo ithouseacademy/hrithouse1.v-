@@ -19,7 +19,12 @@ def serve_media(request, path):
 
 
 def google_verification(request):
-    return HttpResponse('google-site-verification: google503f1d0f4a7d9466.html', content_type='text/html')
+    return HttpResponse(
+        '<!DOCTYPE html><html><head><title>Google Verification</title></head><body>'
+        'google-site-verification: google503f1d0f4a7d9466.html'
+        '</body></html>',
+        content_type='text/html'
+    )
 
 
 urlpatterns = [
