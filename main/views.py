@@ -465,15 +465,15 @@ def bonus_qoshish(request):
                 admin_name = request.user.get_full_name() or request.user.username
                 now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
                 send_telegram_message(
-                    f"<b>BONUS</b>\n\n"
-                    f"Xodim: {xodim.ism} {xodim.familya}\n"
-                    f"Sabab: {record.sabab.nom if record.sabab else record.izoh}\n"
-                    f"Ball: +{record.ball_miqdori} ball\n"
-                    f"Pul: +{record.pul_miqdori:,.0f} so'm\n"
-                    f"Izoh: {record.izoh or 'Yo\'q'}\n\n"
-                    f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                    f"Admin: {admin_name}\n"
-                    f"Vaqt: {now}",
+                    f"✅ <b>BONUS ✅</b>\n\n"
+                    f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                    f"📋 Sabab: {record.sabab.nom if record.sabab else record.izoh}\n"
+                    f"📊 Ball: +{record.ball_miqdori} ball\n"
+                    f"💰 Pul: +{record.pul_miqdori:,.0f} so'm\n"
+                    f"📝 Izoh: {record.izoh or 'Yo\'q'}\n\n"
+                    f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                    f"👨‍💼 Admin: {admin_name}\n"
+                    f"⏱️ Vaqt: {now}",
                     thread_id=None
                 )
                 messages.success(request, "Bonus qo'shildi!")
@@ -503,15 +503,15 @@ def bonus_qoshish(request):
                 admin_name = request.user.get_full_name() or request.user.username
                 now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
                 send_telegram_message(
-                    f"<b>BONUS</b>\n\n"
-                    f"Xodim: {xodim.ism} {xodim.familya}\n"
-                    f"Sabab: {sabab_nom}\n"
-                    f"Ball: +{ball} ball\n"
-                    f"Pul: +{pul:,.0f} so'm\n"
-                    f"Izoh: {izoh or 'Yo\'q'}\n\n"
-                    f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                    f"Admin: {admin_name}\n"
-                    f"Vaqt: {now}",
+                    f"✅ <b>BONUS ✅</b>\n\n"
+                    f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                    f"📋 Sabab: {sabab_nom}\n"
+                    f"📊 Ball: +{ball} ball\n"
+                    f"💰 Pul: +{pul:,.0f} so'm\n"
+                    f"📝 Izoh: {izoh or 'Yo\'q'}\n\n"
+                    f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                    f"👨‍💼 Admin: {admin_name}\n"
+                    f"⏱️ Vaqt: {now}",
                     thread_id=None
                 )
                 messages.success(request, "Bonus qo'shildi!")
@@ -540,15 +540,15 @@ def jarima_qoshish(request):
                 admin_name = request.user.get_full_name() or request.user.username
                 now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
                 send_telegram_message(
-                    f"<b>JARIMA</b>\n\n"
-                    f"Xodim: {xodim.ism} {xodim.familya}\n"
-                    f"Sabab: {record.sabab.nom if record.sabab else record.izoh}\n"
-                    f"Ball: -{record.ball_miqdori} ball\n"
-                    f"Pul: -{record.pul_miqdori:,.0f} so'm\n"
-                    f"Izoh: {record.izoh or 'Yo\'q'}\n\n"
-                    f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                    f"Admin: {admin_name}\n"
-                    f"Vaqt: {now}",
+                    f"🔴 <b>JARIMA ❗️</b>\n\n"
+                    f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                    f"📋 Sabab: {record.sabab.nom if record.sabab else record.izoh}\n"
+                    f"📊 Ball: -{record.ball_miqdori} ball\n"
+                    f"💰 Pul: -{record.pul_miqdori:,.0f} so'm\n"
+                    f"📝 Izoh: {record.izoh or 'Yo\'q'}\n\n"
+                    f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                    f"👨‍💼 Admin: {admin_name}\n"
+                    f"⏱️ Vaqt: {now}",
                     thread_id=None
                 )
                 messages.success(request, "Jarima qo'shildi!")
@@ -579,15 +579,15 @@ def jarima_qoshish(request):
                 admin_name = request.user.get_full_name() or request.user.username
                 now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
                 send_telegram_message(
-                    f"<b>JARIMA</b>\n\n"
-                    f"Xodim: {xodim.ism} {xodim.familya}\n"
-                    f"Sabab: {sabab_nom}\n"
-                    f"Ball: -{ball} ball\n"
-                    f"Pul: -{pul:,.0f} so'm\n"
-                    f"Izoh: {izoh or 'Yo\'q'}\n\n"
-                    f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                    f"Admin: {admin_name}\n"
-                    f"Vaqt: {now}",
+                    f"🔴 <b>JARIMA ❗️</b>\n\n"
+                    f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                    f"📋 Sabab: {sabab_nom}\n"
+                    f"📊 Ball: -{ball} ball\n"
+                    f"💰 Pul: -{pul:,.0f} so'm\n"
+                    f"📝 Izoh: {izoh or 'Yo\'q'}\n\n"
+                    f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                    f"👨‍💼 Admin: {admin_name}\n"
+                    f"⏱️ Vaqt: {now}",
                     thread_id=None
                 )
                 messages.success(request, "Jarima qo'shildi!")
@@ -637,15 +637,15 @@ def qayta_yuborish(request):
             xodim.refresh_from_db()
             now = timezone.localtime(b.sana).strftime('%Y-%m-%d %H:%M')
             send_telegram_message(
-                f"<b>BONUS</b>\n\n"
-                f"Xodim: {xodim.ism} {xodim.familya}\n"
-                f"Sabab: {b.sabab.nom if b.sabab else b.izoh}\n"
-                f"Ball: +{b.ball_miqdori} ball\n"
-                f"Pul: +{b.pul_miqdori:,.0f} so'm\n"
-                f"Izoh: {b.izoh or 'Yo\'q'}\n\n"
-                f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                f"Admin: {admin_name}\n"
-                f"Vaqt: {now}"
+                f"✅ <b>BONUS ✅</b>\n\n"
+                f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                f"📋 Sabab: {b.sabab.nom if b.sabab else b.izoh}\n"
+                f"📊 Ball: +{b.ball_miqdori} ball\n"
+                f"💰 Pul: +{b.pul_miqdori:,.0f} so'm\n"
+                f"📝 Izoh: {b.izoh or 'Yo\'q'}\n\n"
+                f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                f"👨‍💼 Admin: {admin_name}\n"
+                f"⏱️ Vaqt: {now}"
             )
             count += 1
 
@@ -654,15 +654,15 @@ def qayta_yuborish(request):
             xodim.refresh_from_db()
             now = timezone.localtime(j.sana).strftime('%Y-%m-%d %H:%M')
             send_telegram_message(
-                f"<b>JARIMA</b>\n\n"
-                f"Xodim: {xodim.ism} {xodim.familya}\n"
-                f"Sabab: {j.sabab.nom if j.sabab else j.izoh}\n"
-                f"Ball: -{j.ball_miqdori} ball\n"
-                f"Pul: -{j.pul_miqdori:,.0f} so'm\n"
-                f"Izoh: {j.izoh or 'Yo\'q'}\n\n"
-                f"Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                f"Admin: {admin_name}\n"
-                f"Vaqt: {now}"
+                f"🔴 <b>JARIMA ❗️</b>\n\n"
+                f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                f"📋 Sabab: {j.sabab.nom if j.sabab else j.izoh}\n"
+                f"📊 Ball: -{j.ball_miqdori} ball\n"
+                f"💰 Pul: -{j.pul_miqdori:,.0f} so'm\n"
+                f"📝 Izoh: {j.izoh or 'Yo\'q'}\n\n"
+                f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                f"👨‍💼 Admin: {admin_name}\n"
+                f"⏱️ Vaqt: {now}"
             )
             count += 1
 
@@ -2312,11 +2312,11 @@ def mahsulot_qoshish(request):
             # Telegram xabar
             from .services import send_telegram_message
             send_telegram_message(
-                f"<b>YANGI MAHSULOT</b>\n\n"
-                f"Nomi: {product.name}\n"
-                f"Ball: {product.price_points}\n"
-                f"Ombor: {product.stock} ta",
-                thread_id=2332
+                f"🛍 <b>YANGI MAHSULOT</b>\n\n"
+                f"📦 Nomi: {product.name}\n"
+                f"⭐ Ball: {product.price_points}\n"
+                f"📦 Ombor: {product.stock} ta",
+                thread_id=None
             )
             # Notification for all users
             xodimlar = Xodim.objects.filter(active=True, is_archived=False)
