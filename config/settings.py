@@ -11,7 +11,7 @@ SECRET_KEY = os.environ.get(
 )
 
 # ================= DEBUG =================
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 
 # ================= ALLOWED_HOSTS =================
 ALLOWED_HOSTS = [
