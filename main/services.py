@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 from django.conf import settings
 import json
 import base64
-import logging 
+import logging
+import requests
 
 logger = logging.getLogger(__name__)
 
