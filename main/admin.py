@@ -74,14 +74,14 @@ class XodimAdmin(admin.ModelAdmin):
         """Mavjud bonus pul"""
         value = obj.jami_bonus_pul
         color = 'green' if value >= 0 else 'red'
-        return format_html('<span style="color: {};">{:,.0f} so\'m</span>', color, value)
+        return format_html('<span style="color: {};">{} so\'m</span>', color, f'{int(value):,}')
     jami_bonus_pul_display.short_description = "Mavjud bonus"
     
     def jami_jarima_pul_display(self, obj):
         """Mavjud jarima pul"""
         value = obj.jami_jarima_pul
         color = 'red' if value > 0 else 'green'
-        return format_html('<span style="color: {};">{:,.0f} so\'m</span>', color, value)
+        return format_html('<span style="color: {};">{} so\'m</span>', color, f'{int(value):,}')
     jami_jarima_pul_display.short_description = "Mavjud jarima"
     
     def get_readonly_fields(self, request, obj=None):
@@ -98,7 +98,6 @@ class BonusRecordAdmin(admin.ModelAdmin):
     ]
     list_filter = ['sana', 'sabab', 'created_by']
     search_fields = ['xodim__ism', 'xodim__familya', 'xodim__telefon', 'izoh']
-    date_hierarchy = 'sana'
     readonly_fields = ['sana', 'created_by']
     list_per_page = 20
     autocomplete_fields = ['xodim', 'sabab']
@@ -145,7 +144,6 @@ class JarimaRecordAdmin(admin.ModelAdmin):
     ]
     list_filter = ['sana', 'sabab', 'created_by']
     search_fields = ['xodim__ism', 'xodim__familya', 'xodim__telefon', 'izoh']
-    date_hierarchy = 'sana'
     readonly_fields = ['sana', 'created_by']
     list_per_page = 20
     autocomplete_fields = ['xodim', 'sabab']
@@ -191,7 +189,6 @@ class ReytingAdmin(admin.ModelAdmin):
     ]
     list_filter = ['davr', 'sana']
     search_fields = ['xodim__ism', 'xodim__familya']
-    date_hierarchy = 'sana'
     list_per_page = 20
     autocomplete_fields = ['xodim']
     
