@@ -168,18 +168,26 @@ class XodimForm(forms.ModelForm):
         fields = ['ism', 'familya', 'telefon', 'rasm']
     
     def save(self, commit=True):
-        # User yaratish yoki mavjudini olish
         username = self.cleaned_data['username']
         password = self.cleaned_data.get('password')
         is_admin = self.cleaned_data.get('is_admin_huquqi', False)
         
-        user, created = User.objects.get_or_create(username=username)
-        if password:
-            user.set_password(password)
-        user.is_staff = is_admin
-        user.save()
+        user = User.objects.filter(username=username).first()
+        if user:
+            if password:
+                user.set_password(password)
+            user.is_staff = is_admin
+            user.save()
+        else:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT setval('auth_user_id_seq', (SELECT COALESCE(MAX(id), 0) FROM auth_user))")
+            user = User.objects.create_user(
+                username=username,
+                password=password if password else User.objects.make_random_password(),
+                is_staff=is_admin
+            )
         
-        # Xodim yaratish
         xodim = super().save(commit=False)
         xodim.user = user
         
