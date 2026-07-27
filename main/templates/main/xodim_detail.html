@@ -38,6 +38,19 @@
                     <i class="ri-history-line"></i> Tarixlar
                 </a>
                 <div class="border-t my-1"></div>
+                <form method="POST" action="{% url 'xodim_admin_toggle' xodim.pk %}">
+                    {% csrf_token %}
+                    {% if xodim.user.is_staff %}
+                    <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 hover:bg-purple-50 text-purple-600 text-sm">
+                        <i class="ri-shield-user-fill"></i> Admin huquqini olish
+                    </button>
+                    {% else %}
+                    <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 hover:bg-purple-50 text-purple-600 text-sm">
+                        <i class="ri-shield-user-line"></i> Admin qilish
+                    </button>
+                    {% endif %}
+                </form>
+                <div class="border-t my-1"></div>
                 {% if xodim.is_archived %}
                 <form method="POST" action="{% url 'xodim_qayta_tiklash' xodim.pk %}">
                     {% csrf_token %}
@@ -77,7 +90,7 @@
             </div>
             
             <div class="flex-1 min-w-0">
-                <h2 class="text-lg font-bold truncate">{{ xodim.ism }} {{ xodim.familya }}</h2>
+                <h2 class="text-lg font-bold truncate">{{ xodim.ism }} {{ xodim.familya }}{% if xodim.user.is_staff %} <span class="inline-flex items-center ml-1 px-2 py-0.5 bg-white/20 backdrop-blur-sm text-white rounded text-[10px] font-bold border border-white/30"><i class="ri-shield-user-line mr-0.5"></i>Admin</span>{% endif %}</h2>
                 <div class="flex items-center gap-1 mt-0.5 text-white/80">
                     <i class="ri-phone-line text-xs"></i>
                     <span class="text-xs truncate">{{ xodim.telefon }}</span>

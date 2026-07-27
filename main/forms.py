@@ -70,6 +70,14 @@ class XodimTahrirlashForm(forms.ModelForm):
     jarima_ball = forms.IntegerField(label="Jarima ball", required=False, initial=0)
     jarima_pul = forms.DecimalField(label="Jarima pul (so'm)", max_digits=12, decimal_places=2, required=False, initial=0)
     
+    # Admin huquqi
+    is_admin_huquqi = forms.BooleanField(
+        label='Admin huquqi',
+        required=False,
+        initial=False,
+        help_text="Belgilansa, bu xodim admin huquqlariga ega bo'ladi"
+    )
+    
     # O'zgartirish sababi
     ozgartirish_sababi = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), 
                                          label="O'zgartirish sababi", required=True,
@@ -84,9 +92,9 @@ class XodimTahrirlashForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         
         if self.xodim and self.xodim.user:
-            # User ma'lumotlarini formaga qo'shish
             self.fields['username'].initial = self.xodim.user.username
             self.fields['username'].required = False
+            self.fields['is_admin_huquqi'].initial = self.xodim.user.is_staff
     
     def clean(self):
         cleaned_data = super().clean()
@@ -119,6 +127,8 @@ class XodimTahrirlashForm(forms.ModelForm):
             if password:
                 user.set_password(password)
             
+            user.is_staff = self.cleaned_data.get('is_admin_huquqi', False)
+            
             if commit:
                 user.save()
         
@@ -146,6 +156,12 @@ class XodimTahrirlashForm(forms.ModelForm):
 class XodimForm(forms.ModelForm):
     username = forms.CharField(max_length=150, label='Login')
     password = forms.CharField(widget=forms.PasswordInput, label='Parol', required=False)
+    is_admin_huquqi = forms.BooleanField(
+        label='Admin huquqi',
+        required=False,
+        initial=False,
+        help_text="Belgilansa, bu xodim admin huquqlariga ega bo'ladi"
+    )
     
     class Meta:
         model = Xodim
@@ -155,11 +171,13 @@ class XodimForm(forms.ModelForm):
         # User yaratish yoki mavjudini olish
         username = self.cleaned_data['username']
         password = self.cleaned_data.get('password')
+        is_admin = self.cleaned_data.get('is_admin_huquqi', False)
         
         user, created = User.objects.get_or_create(username=username)
         if password:
             user.set_password(password)
-            user.save()
+        user.is_staff = is_admin
+        user.save()
         
         # Xodim yaratish
         xodim = super().save(commit=False)

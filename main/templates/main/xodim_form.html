@@ -3,6 +3,17 @@
 {% block title %}Xodim Qo'shish{% endblock %}
 
 {% block content %}
+<style>
+    input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+        accent-color: #7c3aed;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+</style>
+
+{% block content %}
 <div class="mb-6">
     <h2 class="text-2xl font-bold text-gray-900 mb-2">👥 Xodim Qo'shish</h2>
     <p class="text-sm text-gray-600">Yangi xodim qo'shish</p>
@@ -74,6 +85,19 @@
                     </label>
                     <input type="file" name="rasm" accept="image/*" class="w-full p-2 border border-gray-200 rounded-lg">
                     <p class="text-xs text-gray-400 mt-1">PNG, JPG, GIF (5MB gacha)</p>
+                </div>
+                
+                <!-- Admin huquqi -->
+                <div class="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" name="is_admin_huquqi" value="on" class="w-5 h-5 text-purple-600 bg-white border-gray-300 rounded focus:ring-purple-500">
+                        <div>
+                            <span class="text-sm font-semibold text-purple-800">
+                                <i class="ri-shield-user-line mr-1"></i> Admin huquqi
+                            </span>
+                            <p class="text-xs text-purple-600 mt-0.5">Belgilansa, bu xodim boshqa xodimlarni boshqarish huquqiga ega bo'ladi</p>
+                        </div>
+                    </label>
                 </div>
                 
                 <!-- Tugmalar -->

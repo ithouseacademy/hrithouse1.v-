@@ -403,6 +403,19 @@ def xodim_tahrirlash(request, pk):
 
 
 @staff_member_required
+def xodim_admin_toggle(request, pk):
+    xodim = get_object_or_404(Xodim, pk=pk)
+    if request.method == 'POST' and xodim.user:
+        xodim.user.is_staff = not xodim.user.is_staff
+        xodim.user.save(update_fields=['is_staff'])
+        if xodim.user.is_staff:
+            messages.success(request, f"{xodim.ism} {xodim.familya} ga admin huquqi berildi!")
+        else:
+            messages.success(request, f"{xodim.ism} {xodim.familya} dan admin huquqi olindi!")
+    return redirect('xodimlar')
+
+
+@staff_member_required
 def xodim_ochirish(request, pk):
     xodim = get_object_or_404(Xodim, pk=pk)
     

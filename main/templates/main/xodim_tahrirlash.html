@@ -922,6 +922,26 @@
                             </div>
                         </div>
                         
+                        <!-- Admin huquqi -->
+                        <div class="form-section">
+                            <div class="section-label">
+                                <i class="fas fa-shield-alt" style="color: #8b5cf6;"></i>
+                                Huquqlar
+                            </div>
+                            
+                            <div style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius: 18px; padding: 18px; border: 1.5px solid #ddd6fe;">
+                                <label style="display: flex; align-items: center; gap: 14px; cursor: pointer;">
+                                    {{ form.is_admin_huquqi }}
+                                    <div>
+                                        <div style="font-weight: 600; color: #5b21b6; font-size: 0.95rem;">
+                                            <i class="fas fa-user-shield" style="margin-right: 6px;"></i>Admin huquqi
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: #7c3aed; margin-top: 2px;">Belgilansa, bu xodim boshqa xodimlarni boshqarish huquqiga ega bo'ladi</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
                         <!-- Shaxsiy ma'lumotlar -->
                         <div class="form-section">
                             <div class="section-label">
@@ -1275,6 +1295,14 @@ document.addEventListener('DOMContentLoaded', function() {
     textarea {
         min-height: 100px;
         resize: vertical;
+    }
+    
+    input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+        accent-color: #7c3aed;
+        cursor: pointer;
+        flex-shrink: 0;
     }
     
     .btn-close-white {

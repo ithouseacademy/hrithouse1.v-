@@ -20,6 +20,7 @@ urlpatterns = [
     path('xodim-qoshish/', views.xodim_qoshish, name='xodim_qoshish'),
     path('xodim/<int:pk>/tahrirlash/', views.xodim_tahrirlash, name='xodim_tahrirlash'),
     path('xodim/<int:pk>/ochirish/', views.xodim_ochirish, name='xodim_ochirish'),
+    path('xodim/<int:pk>/admin-toggle/', views.xodim_admin_toggle, name='xodim_admin_toggle'),
 
     # Arxivlash
     path('arxivlangan-xodimlar/', views.arxivlangan_xodimlar, name='arxivlangan_xodimlar'),
