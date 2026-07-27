@@ -494,10 +494,14 @@ def bonus_qoshish(request):
                 izoh = form.cleaned_data.get('izoh', '')
                 admin_name = request.user.get_full_name() or request.user.username
 
+                sabab_obj = form.cleaned_data['sabab']
                 for i in range(soni):
-                    record = form.save(commit=False)
-                    record.created_by = request.user
-                    record.save()
+                    record = BonusRecord.objects.create(
+                        xodim=xodim, sabab=sabab_obj,
+                        pul_miqdori=sabab_obj.pul_miqdori,
+                        ball_miqdori=sabab_obj.ball_miqdori,
+                        izoh=izoh, created_by=request.user
+                    )
 
                     eski_ball = xodim.reyting_ball
                     eski_pul = xodim.reyting_pul
@@ -595,10 +599,14 @@ def jarima_qoshish(request):
                 izoh = form.cleaned_data.get('izoh', '')
                 admin_name = request.user.get_full_name() or request.user.username
 
+                sabab_obj = form.cleaned_data['sabab']
                 for i in range(soni):
-                    record = form.save(commit=False)
-                    record.created_by = request.user
-                    record.save()
+                    record = JarimaRecord.objects.create(
+                        xodim=xodim, sabab=sabab_obj,
+                        pul_miqdori=sabab_obj.pul_miqdori,
+                        ball_miqdori=sabab_obj.ball_miqdori,
+                        izoh=izoh, created_by=request.user
+                    )
 
                     xodim.refresh_from_db()
                     now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
