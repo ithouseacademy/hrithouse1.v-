@@ -274,7 +274,7 @@
           <span class="text-xs">Profil</span>
         </a>
 
-        {% if user.is_superuser %}
+        {% if user.is_staff %}
         <a href="{% url 'admin_dashboard' %}"
            class="flex flex-col items-center justify-center space-y-1 text-gray-600">
           <i class="ri-settings-3-fill"></i>
