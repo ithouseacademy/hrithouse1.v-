@@ -147,6 +147,18 @@
                     </div>
                 </div>
 
+                <!-- Nechta marta -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="ri-repeat-line text-blue-600 mr-1"></i>
+                        Nechta marta qo'shish
+                    </label>
+                    <input type="number" name="soni" id="soni" value="1" min="1" max="50"
+                           class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="1">
+                    <p class="text-xs text-gray-500 mt-1">Bir vaqtda nechta bonus qo'shish kerak (1-50)</p>
+                </div>
+
                 <!-- Preview kartochkasi -->
                 <div id="previewCard" class="mb-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200 hidden">
                     <div class="flex items-center gap-3">
@@ -161,6 +173,7 @@
                                 <span class="text-green-600 font-semibold" id="previewPul">0 so'm</span>
                             </div>
                             <p class="text-xs text-gray-500 mt-1" id="previewSabab"></p>
+                            <p class="text-xs text-green-600 mt-1 font-semibold hidden" id="previewTotal"></p>
                         </div>
                     </div>
                 </div>
@@ -501,20 +514,32 @@ function updatePreview() {
     }
 
     izoh = document.getElementById('izoh').value;
+    const soni = parseInt(document.getElementById('soni').value) || 1;
+    const totalBall = parseInt(ball) * soni;
+    const totalPul = parseFloat(pul) * soni;
 
     // Preview kartochkasini yangilash
     document.getElementById('previewBall').textContent = ball + ' ball';
     document.getElementById('previewPul').textContent = parseInt(pul).toLocaleString() + ' so\'m';
     document.getElementById('previewSabab').textContent = sababNomi || 'Sabab kiritilmagan';
+
+    const previewTotal = document.getElementById('previewTotal');
+    if (soni > 1) {
+        previewTotal.textContent = `Jami: ${soni} x ${ball} ball = ${totalBall} ball | ${soni} x ${parseInt(pul).toLocaleString()} so'm = ${totalPul.toLocaleString()} so'm`;
+        previewTotal.classList.remove('hidden');
+    } else {
+        previewTotal.classList.add('hidden');
+    }
+
     previewCard.classList.remove('hidden');
 
-    // Yangi reytingni hisoblash
-    const newBall = parseInt(currentReytingBall) + parseInt(ball);
-    const newPul = parseFloat(currentReytingPul) + parseFloat(pul);
+    // Yangi reytingni hisoblash (jami)
+    const newBall = parseInt(currentReytingBall) + totalBall;
+    const newPul = parseFloat(currentReytingPul) + totalPul;
 
     // Telegram preview
     const xodimNomi = `${selectedOption.dataset.ism} ${selectedOption.dataset.familya}`;
-    const message = formatMessage(xodimNomi, sababNomi || 'Noma\'lum', ball, pul, izoh, currentReytingBall, currentReytingPul, newBall, newPul);
+    const message = formatMessage(xodimNomi, sababNomi || 'Noma\'lum', totalBall, totalPul, izoh, currentReytingBall, currentReytingPul, newBall, newPul);
     telegramMessagePreview.textContent = message;
     telegramPreview.classList.remove('hidden');
 }
@@ -563,6 +588,7 @@ document.getElementById('manualPul').addEventListener('input', updatePreview);
 document.getElementById('manualBall').addEventListener('input', updatePreview);
 document.getElementById('manualSabab').addEventListener('input', updatePreview);
 document.getElementById('izoh').addEventListener('input', updatePreview);
+document.getElementById('soni').addEventListener('input', updatePreview);
 
 // Mavjud sabablardan birini bosganda uni tanlash
 document.querySelectorAll('.ready-sabab').forEach(item => {
