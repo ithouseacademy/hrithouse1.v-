@@ -498,6 +498,10 @@ class SiteSettings(models.Model):
         verbose_name="Telegram Thread ID",
         help_text="Forum guruh uchun topic ID (bo'sh qolsa umumiy chatga yuboriladi)"
     )
+    restore_yechilgan_applied = models.BooleanField(
+        default=False, verbose_name="Restore bajarildi",
+        help_text="Deploy paytida yo'qolgan yechishlar bir marta qayta tiklangan (ikki marta qo'shilmasligi uchun)"
+    )
 
     class Meta:
         verbose_name = "Sayt sozlamalari"

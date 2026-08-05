@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.db.models import Sum
 from django.utils import timezone
 
-from main.models import Xodim
+from main.models import Xodim, SiteSettings
 
 
 # "Bonus pulidan 100,000 so'm yechildi. Sabab: ..."
@@ -94,13 +94,31 @@ class Command(BaseCommand):
             '--from-id', type=int, default=None,
             help="Shu tarix id sidan boshlab yechishlarni qo'shadi (--since/--until ni e'tiborsiz qoldiradi)",
         )
+        parser.add_argument(
+            '--auto', action='store_true',
+            help="Deploy uchun: faqat bir marta bajaradi (31-1 oraliq, --apply). "
+                 "Bir marta bajarilgan bo'lsa, o'tkazib yuboradi — ikki marta qo'shilmaydi",
+        )
 
     def handle(self, *args, **options):
         apply = options.get('apply')
+        auto = options.get('auto')
         only_id = options.get('only')
         from_id = options.get('from_id')
         since = options.get('since')
         until = options.get('until')
+
+        if auto:
+            settings = SiteSettings.get_instance()
+            if settings.restore_yechilgan_applied:
+                self.stdout.write(self.style.SUCCESS(
+                    "Restore allaqachon bajarilgan, o'tkazib yuborildi (ikki marta qo'shilmadi)."
+                ))
+                return
+            apply = True
+            from_id = None
+            since = None
+            until = None
 
         # Standart davr: 31 va 1 oraliq
         if from_id is None and since is None and until is None:
@@ -208,6 +226,13 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(
                 f"\nTugadi: {jami_ozgargan} ta xodim yangilandi."
             ))
+            if auto:
+                settings = SiteSettings.get_instance()
+                settings.restore_yechilgan_applied = True
+                settings.save(update_fields=['restore_yechilgan_applied'])
+                self.stdout.write(self.style.SUCCESS(
+                    "Restore bajarildi va belgilandi (keyingi deploy'larda takrorlanmaydi)."
+                ))
         else:
             self.stdout.write(self.style.SUCCESS(
                 f"\nDry-run: {jami_ozgargan} ta xodim o'zgaradi. "
