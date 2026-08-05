@@ -1,11 +1,10 @@
-import json
-import os
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand
 from django.db.models import Sum
+from django.utils import timezone
 
 from main.models import Xodim
 
@@ -55,21 +54,23 @@ def parse_sabab(sabab):
     return b_pul, j_pul, b_ball, j_ball
 
 
-def dump_cutoff_id():
-    """Eski dump faylidagi eng katta tarix id si (shundan keyingi yechishlar yo'qolgan bo'lishi mumkin)."""
-    fayl = os.path.join('main', 'fixtures', 'dumpdata.json')
-    if not os.path.exists(fayl):
-        return None
-    with open(fayl, encoding='utf-8') as f:
-        data = json.load(f)
-    ids = [d['pk'] for d in data if d['model'] == 'main.ozgartirishtarixi']
-    return max(ids) if ids else None
+def default_window():
+    """Standart davr: o'tgan oyning oxirgi kuni ... joriy oyning 1-kuni (31 va 1 oraliq)."""
+    bugun = timezone.localdate()
+    joriy_oy_1 = bugun.replace(day=1)
+    oldingi_oy_oxiri = joriy_oy_1 - timedelta(days=1)
+    return oldingi_oy_oxiri, joriy_oy_1
+
+
+def parse_date(s):
+    return datetime.strptime(s, '%Y-%m-%d').date()
 
 
 class Command(BaseCommand):
     help = (
         "Deploy paytida init_data eski dump bilan ustiga yozib qo'ygan "
-        "yechilgan pul/ball va bonus/jarima yig'indilarini qayta tiklaydi."
+        "yechilgan pul/ball va bonus/jarima yig'indilarini qayta tiklaydi.\n"
+        "Standart: o'tgan oy oxiri (31) va joriy oy 1-kuni oralig'idagi yechishlarni topadi."
     )
 
     def add_arguments(self, parser):
@@ -82,13 +83,16 @@ class Command(BaseCommand):
             help="Faqat bitta xodim id si (masalan: --only 12)",
         )
         parser.add_argument(
-            '--from-id', type=int, default=None,
-            help="Shu tarix id sidan boshlab yechishlarni qo'shadi "
-                 "(standart: dump faylidagi eng katta tarix id si)",
+            '--since', type=str, default=None,
+            help="Boshlanish sanasi (YYYY-MM-DD). Standart: o'tgan oyning oxirgi kuni",
         )
         parser.add_argument(
-            '--since', type=str, default=None,
-            help="Shu sanadan (YYYY-MM-DD) boshlab yechishlarni qo'shadi",
+            '--until', type=str, default=None,
+            help="Tugash sanasi (YYYY-MM-DD). Standart: joriy oyning 1-kuni",
+        )
+        parser.add_argument(
+            '--from-id', type=int, default=None,
+            help="Shu tarix id sidan boshlab yechishlarni qo'shadi (--since/--until ni e'tiborsiz qoldiradi)",
         )
 
     def handle(self, *args, **options):
@@ -96,11 +100,20 @@ class Command(BaseCommand):
         only_id = options.get('only')
         from_id = options.get('from_id')
         since = options.get('since')
+        until = options.get('until')
 
-        if from_id is None and since is None:
-            from_id = dump_cutoff_id()
+        # Standart davr: 31 va 1 oraliq
+        if from_id is None and since is None and until is None:
+            since_d, until_d = default_window()
+        else:
+            since_d = parse_date(since) if since else None
+            until_d = parse_date(until) if until else None
+
+        if from_id is not None:
+            self.stdout.write(self.style.NOTICE(f"Davr: tarix id > {from_id}"))
+        else:
             self.stdout.write(self.style.NOTICE(
-                f"Cutoff tarix id = {from_id} (dump faylidan aniqlangan)"
+                f"Davr: {since_d} ... {until_d}"
             ))
 
         qs = Xodim.objects.all().order_by('id')
@@ -110,19 +123,25 @@ class Command(BaseCommand):
         jami_ozgargan = 0
 
         for xodim in qs:
-            # Tarixdan (cutoffdan keyingi) yechilgan qiymatlarni yig'ish
+            # Tarixdan (davrdagi) yechilgan qiymatlarni yig'ish.
+            # Sana solishtirish Pythonda bajariladi (SQLite'da __date ishonchli emas).
             tarixlar = xodim.ozgartirish_tarixlari.all()
             if from_id is not None:
                 tarixlar = tarixlar.filter(pk__gt=from_id)
-            if since is not None:
-                sana = datetime.strptime(since, '%Y-%m-%d').date()
-                tarixlar = tarixlar.filter(sana__date__gte=sana)
 
             b_pul = Decimal('0')
             j_pul = Decimal('0')
             b_ball = 0
             j_ball = 0
             for t in tarixlar:
+                if t.sana:
+                    sana_d = timezone.localtime(t.sana).date()
+                else:
+                    sana_d = None
+                if since_d is not None and (sana_d is None or sana_d < since_d):
+                    continue
+                if until_d is not None and (sana_d is None or sana_d > until_d):
+                    continue
                 bp, jp, bb, jb = parse_sabab(t.sabab)
                 b_pul += bp
                 j_pul += jp
