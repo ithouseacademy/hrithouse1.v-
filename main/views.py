@@ -496,6 +496,8 @@ def bonus_qoshish(request):
 
                 sabab_obj = form.cleaned_data['sabab']
                 for i in range(soni):
+                    eski_ball = xodim.reyting_ball
+                    eski_pul = xodim.reyting_pul
                     record = BonusRecord.objects.create(
                         xodim=xodim, sabab=sabab_obj,
                         pul_miqdori=sabab_obj.pul_miqdori,
@@ -503,8 +505,6 @@ def bonus_qoshish(request):
                         izoh=izoh, created_by=request.user
                     )
 
-                    eski_ball = xodim.reyting_ball
-                    eski_pul = xodim.reyting_pul
                     xodim.refresh_from_db()
                     now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
                     msg = (
@@ -601,6 +601,8 @@ def jarima_qoshish(request):
 
                 sabab_obj = form.cleaned_data['sabab']
                 for i in range(soni):
+                    eski_ball = xodim.reyting_ball
+                    eski_pul = xodim.reyting_pul
                     record = JarimaRecord.objects.create(
                         xodim=xodim, sabab=sabab_obj,
                         pul_miqdori=sabab_obj.pul_miqdori,
@@ -620,6 +622,7 @@ def jarima_qoshish(request):
                         f"💰 Pul: -{record.pul_miqdori:,.0f} so'm\n"
                         f"📝 Izoh: {record.izoh or 'Yo\'q'}\n\n"
                         f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                        f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
                         f"👨‍💼 Admin: {admin_name}\n"
                         f"⏱️ Vaqt: {now}"
                     )
@@ -647,6 +650,8 @@ def jarima_qoshish(request):
                 admin_name = request.user.get_full_name() or request.user.username
 
                 for i in range(soni):
+                    eski_ball = xodim.reyting_ball
+                    eski_pul = xodim.reyting_pul
                     JarimaRecord.objects.create(
                         xodim=xodim, sabab=None,
                         pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
@@ -665,6 +670,7 @@ def jarima_qoshish(request):
                         f"💰 Pul: -{pul:,.0f} so'm\n"
                         f"📝 Izoh: {izoh or 'Yo\'q'}\n\n"
                         f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                        f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
                         f"👨‍💼 Admin: {admin_name}\n"
                         f"⏱️ Vaqt: {now}"
                     )

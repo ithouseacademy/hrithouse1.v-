@@ -1,6 +1,20 @@
 from django.db import migrations
 
 
+def fix_sequences_forward(apps, schema_editor):
+    if schema_editor.connection.vendor == 'postgresql':
+        with schema_editor.connection.cursor() as cursor:
+            for table in ('main_jarimarecord', 'main_bonusrecord'):
+                cursor.execute(
+                    f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), "
+                    f"COALESCE((SELECT MAX(id) FROM {table}), 1));"
+                )
+
+
+def fix_sequences_backward(apps, schema_editor):
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -8,12 +22,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL(
-            sql="SELECT setval(pg_get_serial_sequence('main_jarimarecord', 'id'), COALESCE((SELECT MAX(id) FROM main_jarimarecord), 1));",
-            reverse_sql="SELECT 1;",
-        ),
-        migrations.RunSQL(
-            sql="SELECT setval(pg_get_serial_sequence('main_bonusrecord', 'id'), COALESCE((SELECT MAX(id) FROM main_bonusrecord), 1));",
-            reverse_sql="SELECT 1;",
-        ),
+        migrations.RunPython(fix_sequences_forward, fix_sequences_backward),
     ]
