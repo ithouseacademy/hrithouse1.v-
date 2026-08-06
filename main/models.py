@@ -1,7 +1,7 @@
-from django.db import models
+from django.db import models, connection
 from django.contrib.auth.models import User
 from django.db.models import Sum
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -480,6 +480,42 @@ def update_xodim_after_jarima_save(sender, instance, created, **kwargs):
 def update_xodim_after_jarima_delete(sender, instance, **kwargs):
     """Jarima o'chirilganda xodim ma'lumotlarini yangilaydi"""
     instance.xodim.update_from_records()
+
+
+# ============================================================
+# PostgreSQL SEQUENCE AUTO-FIX
+# ============================================================
+
+@receiver(pre_save)
+def postgres_sequence_autofix(sender, instance, **kwargs):
+    """PostgreSQL'da yangi yozuv (pk=None) kiritilganda id sequence ni avtomatik moslaydi.
+
+    Muammo: init_data importi yoki bazani nusxalash paytida jadvalga eksplisit
+    (katta) id bilan yozuvlar qo'shiladi, lekin PostgreSQL sequence orqada qoladi.
+    Natijada navbatdagi INSERT "duplicate key value violates unique constraint
+    ..._pkey" xatosi bilan ishlamay qoladi (masalan: main_ozgartirishtarixi_pkey).
+
+    Ushbu signal har bir INSERT dan oldin sequence ni jadvaldagi eng katta id ga
+    moslab qo'yadi — shu bilan xato abadiy hal bo'ladi.
+    """
+    if connection.vendor != 'postgresql':
+        return
+    if getattr(instance, 'pk', None) is not None:
+        return
+
+    pk = sender._meta.pk
+    if pk is None or not isinstance(pk, (models.AutoField, models.BigAutoField, models.SmallAutoField)):
+        return
+
+    table = sender._meta.db_table
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"SELECT setval(pg_get_serial_sequence('{table}', 'id'), "
+                f"COALESCE((SELECT MAX(id) FROM {table}), 1))"
+            )
+    except Exception:
+        pass
 
 
 class SiteSettings(models.Model):
