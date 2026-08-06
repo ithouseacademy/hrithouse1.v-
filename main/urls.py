@@ -38,6 +38,7 @@ urlpatterns = [
     path('xodim/<int:pk>/bonus-pul-yechish/', views.bonus_pul_yechish, name='bonus_pul_yechish'),
     path('xodim/<int:pk>/jarima-pul-yechish/', views.jarima_pul_yechish, name='jarima_pul_yechish'),
     path('xodim/<int:pk>/reytingdan-yechish/', views.reytingdan_yechish, name='reytingdan_yechish'),
+    path('oylik-yechish/', views.oylik_yechish, name='oylik_yechish'),
     
     # Reyting va Hisobot (MUHIM - CSV va PDF ni qo'shdim)
     path('reytinglar/', views.reytinglar, name='reytinglar'),

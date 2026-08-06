@@ -1318,6 +1318,186 @@ def reytingdan_yechish(request, pk):
 
 
 # ============================================================
+# OYLIK YECHISH (oy bo'yicha bonus/jarima pullarini yechish)
+# ============================================================
+
+@staff_member_required
+def oylik_yechish(request):
+    bugun = timezone.now().date()
+
+    def tanlangan_davr(data):
+        try:
+            oy = int(data.get('oy', bugun.month))
+            yil = int(data.get('yil', bugun.year))
+        except (TypeError, ValueError):
+            oy = bugun.month
+            yil = bugun.year
+        return oy, yil
+
+    if request.method == 'POST':
+        tanlangan_oy, tanlangan_yil = tanlangan_davr(request.POST)
+        oy_boshi, oy_oxiri = oy_oraligi(tanlangan_yil, tanlangan_oy)
+        oy_nomi = OYLAR.get(tanlangan_oy, '')
+        oy_sabab = f"{oy_nomi} oyi uchun"
+        izoh = request.POST.get('izoh', '').strip()
+
+        # Tanlangan xodimlar (agar tanlanmagan bo'lsa - hammasi)
+        tanlangan_ids = request.POST.getlist('xodimlar')
+        if tanlangan_ids:
+            xodimlar = Xodim.objects.filter(
+                pk__in=tanlangan_ids, active=True, is_archived=False
+            )
+        else:
+            xodimlar = Xodim.objects.filter(active=True, is_archived=False)
+
+        bonus_map = {
+            row['xodim']: row['jami_pul']
+            for row in BonusRecord.objects.filter(
+                sana__date__gte=oy_boshi,
+                sana__date__lte=oy_oxiri
+            ).values('xodim').annotate(jami_pul=Sum('pul_miqdori'))
+        }
+        jarima_map = {
+            row['xodim']: row['jami_pul']
+            for row in JarimaRecord.objects.filter(
+                sana__date__gte=oy_boshi,
+                sana__date__lte=oy_oxiri
+            ).values('xodim').annotate(jami_pul=Sum('pul_miqdori'))
+        }
+
+        yechilganlar = 0
+        skip_allaqachon = 0
+        toliq_emas = 0
+        tanlanganlar_soni = 0
+
+        for xodim in xodimlar:
+            b_pul = bonus_map.get(xodim.pk, Decimal('0'))
+            j_pul = jarima_map.get(xodim.pk, Decimal('0'))
+            if b_pul <= 0 and j_pul <= 0:
+                continue
+            tanlanganlar_soni += 1
+
+            # Bu oy allaqachon yechilgan bo'lsa, takror yechmaymiz
+            if OzgartirishTarixi.objects.filter(
+                xodim=xodim, sabab__icontains=oy_sabab
+            ).exists():
+                skip_allaqachon += 1
+                continue
+
+            # Bonus pul yechish
+            if b_pul > 0:
+                mavjud = xodim.jami_bonus_pul
+                pul = min(b_pul, mavjud)
+                if pul <= 0:
+                    toliq_emas += 1
+                else:
+                    xodim.bonus_pul_yechilgan += pul
+                    xodim.reyting_pul = (xodim.bonus_pul - xodim.bonus_pul_yechilgan) - (xodim.jarima_pul - xodim.jarima_pul_yechilgan)
+                    xodim.save(update_fields=['bonus_pul_yechilgan', 'reyting_pul'])
+                    tarix_sabab = f"Bonus pulidan {pul:,.0f} so'm yechildi. Sabab: {oy_sabab}"
+                    if izoh:
+                        tarix_sabab += f". Izoh: {izoh}"
+                    OzgartirishTarixi.objects.create(
+                        xodim=xodim, admin=request.user,
+                        sabab=tarix_sabab,
+                    )
+                    yechilganlar += 1
+                    if pul < b_pul:
+                        toliq_emas += 1
+
+            # Jarima pul yechish
+            if j_pul > 0:
+                mavjud = xodim.jami_jarima_pul
+                pul = min(j_pul, mavjud)
+                if pul <= 0:
+                    toliq_emas += 1
+                else:
+                    xodim.jarima_pul_yechilgan += pul
+                    xodim.reyting_pul = (xodim.bonus_pul - xodim.bonus_pul_yechilgan) - (xodim.jarima_pul - xodim.jarima_pul_yechilgan)
+                    xodim.save(update_fields=['jarima_pul_yechilgan', 'reyting_pul'])
+                    tarix_sabab = f"Jarima pulidan {pul:,.0f} so'm yechildi. Sabab: {oy_sabab}"
+                    if izoh:
+                        tarix_sabab += f". Izoh: {izoh}"
+                    OzgartirishTarixi.objects.create(
+                        xodim=xodim, admin=request.user,
+                        sabab=tarix_sabab,
+                    )
+                    yechilganlar += 1
+                    if pul < j_pul:
+                        toliq_emas += 1
+
+        if yechilganlar:
+            messages.success(request, f"✅ {oy_nomi} oyi yechildi: {yechilganlar} ta amal bajarildi.")
+        else:
+            messages.info(request, f"{oy_nomi} oyi uchun yechiladigan ma'lumot topilmadi.")
+        if skip_allaqachon:
+            messages.warning(request, f"⚠️ {skip_allaqachon} ta xodim bu oy allaqachon yechilgan.")
+        if toliq_emas:
+            messages.warning(request, f"⚠️ {toliq_emas} ta holatda mavjud pul yetarli bo'lmagani uchun to'liq yechilmadi.")
+        return redirect(f"{reverse('oylik_yechish')}?oy={tanlangan_oy}&yil={tanlangan_yil}")
+
+    tanlangan_oy, tanlangan_yil = tanlangan_davr(request.GET)
+    oy_boshi, oy_oxiri = oy_oraligi(tanlangan_yil, tanlangan_oy)
+    oy_nomi = OYLAR.get(tanlangan_oy, '')
+    oy_sabab = f"{oy_nomi} oyi uchun"
+
+    xodimlar = Xodim.objects.filter(active=True, is_archived=False).order_by('ism', 'familya')
+
+    bonus_map = {
+        row['xodim']: row['jami_pul']
+        for row in BonusRecord.objects.filter(
+            sana__date__gte=oy_boshi,
+            sana__date__lte=oy_oxiri
+        ).values('xodim').annotate(jami_pul=Sum('pul_miqdori'))
+    }
+    jarima_map = {
+        row['xodim']: row['jami_pul']
+        for row in JarimaRecord.objects.filter(
+            sana__date__gte=oy_boshi,
+            sana__date__lte=oy_oxiri
+        ).values('xodim').annotate(jami_pul=Sum('pul_miqdori'))
+    }
+
+    yechilgan_ids = set(
+        OzgartirishTarixi.objects.filter(
+            sabab__icontains=oy_sabab
+        ).values_list('xodim_id', flat=True)
+    )
+
+    jadval = []
+    jami_bonus = Decimal('0')
+    jami_jarima = Decimal('0')
+    for xodim in xodimlar:
+        b_pul = bonus_map.get(xodim.pk, Decimal('0'))
+        j_pul = jarima_map.get(xodim.pk, Decimal('0'))
+        if b_pul <= 0 and j_pul <= 0:
+            continue
+        jami_bonus += b_pul
+        jami_jarima += j_pul
+        jadval.append({
+            'xodim': xodim,
+            'bonus_pul': float(b_pul),
+            'jarima_pul': float(j_pul),
+            'mavjud_bonus_pul': float(xodim.jami_bonus_pul),
+            'mavjud_jarima_pul': float(xodim.jami_jarima_pul),
+            'yechilgan': xodim.pk in yechilgan_ids,
+        })
+
+    return render(request, 'main/oylik_yechish.html', {
+        'jadval': jadval,
+        'oy_nomi': oy_nomi,
+        'tanlangan_oy': tanlangan_oy,
+        'tanlangan_yil': tanlangan_yil,
+        'oylar': OYLAR_LIST,
+        'yillar': range(bugun.year - 3, bugun.year + 1),
+        'oy_boshi': oy_boshi,
+        'oy_oxiri': oy_oxiri,
+        'jami_bonus_pul': float(jami_bonus),
+        'jami_jarima_pul': float(jami_jarima),
+    })
+
+
+# ============================================================
 # REYTINGLAR
 # ============================================================
 
