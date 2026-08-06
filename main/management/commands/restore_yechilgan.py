@@ -1,12 +1,15 @@
+import json
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
+from pathlib import Path
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db.models import Sum
 from django.utils import timezone
 
-from main.models import Xodim, SiteSettings
+from main.models import Xodim
 
 
 # "Bonus pulidan 100,000 so'm yechildi. Sabab: ..."
@@ -22,7 +25,7 @@ def parse_money(s):
 
 
 def parse_sabab(sabab):
-    """History matnidan yechilgan qiymatlarni qaytaradi."""
+    """Tarix matnidan yechilgan qiymatlarni qaytaradi."""
     b_pul = Decimal('0')
     j_pul = Decimal('0')
     b_ball = 0
@@ -54,23 +57,45 @@ def parse_sabab(sabab):
     return b_pul, j_pul, b_ball, j_ball
 
 
-def default_window():
-    """Standart davr: o'tgan oyning oxirgi kuni ... joriy oyning 1-kuni (31 va 1 oraliq)."""
-    bugun = timezone.localdate()
-    joriy_oy_1 = bugun.replace(day=1)
-    oldingi_oy_oxiri = joriy_oy_1 - timedelta(days=1)
-    return oldingi_oy_oxiri, joriy_oy_1
-
-
 def parse_date(s):
     return datetime.strptime(s, '%Y-%m-%d').date()
 
 
+def load_dump_base():
+    """dumpdata.json dan har xodimning dumpdagi bazaviy yechilgan qiymatlari va tarix cutoff id sini qaytaradi.
+
+    Idempotentlik shu yerga tayanadi: yechilgan qiymat har doim DUMDAGI bazaviy qiymatga
+    dump'dan keyin yaratilgan yechishlarni qo'shish bilan hisoblanadi. Shuning uchun
+    buyruq qayta ishga tushirilsa ham ikki marta qo'shilmaydi.
+    """
+    path = Path(settings.BASE_DIR) / 'main' / 'fixtures' / 'dumpdata.json'
+    with open(path, encoding='utf-8') as f:
+        data = json.load(f)
+
+    cutoff = 0
+    bases = {}
+    for obj in data:
+        model = obj['model']
+        if model == 'main.ozgartirishtarixi':
+            if obj['pk'] > cutoff:
+                cutoff = obj['pk']
+        elif model == 'main.xodim':
+            fld = obj['fields']
+            bases[obj['pk']] = {
+                'bonus_ball_yechilgan': int(fld.get('bonus_ball_yechilgan', 0)),
+                'bonus_pul_yechilgan': Decimal(str(fld.get('bonus_pul_yechilgan', 0))),
+                'jarima_ball_yechilgan': int(fld.get('jarima_ball_yechilgan', 0)),
+                'jarima_pul_yechilgan': Decimal(str(fld.get('jarima_pul_yechilgan', 0))),
+                'xarid_ball': int(fld.get('xarid_ball', 0)),
+            }
+    return bases, cutoff
+
+
 class Command(BaseCommand):
     help = (
-        "Deploy paytida init_data eski dump bilan ustiga yozib qo'ygan "
-        "yechilgan pul/ball va bonus/jarima yig'indilarini qayta tiklaydi.\n"
-        "Standart: o'tgan oy oxiri (31) va joriy oy 1-kuni oralig'idagi yechishlarni topadi."
+        "init_data eski dump bilan ustiga yozib qo'ygan yechilgan pul/ball qiymatlarini tiklaydi.\n"
+        "Idempotent: dumpdagi bazaviy qiymatga dump'dan keyingi barcha yechishlar qo'shiladi,\n"
+        "shuning uchun har deploy'da ishlatish xavfsiz (ikki marta qo'shilmaydi)."
     )
 
     def add_arguments(self, parser):
@@ -84,20 +109,19 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             '--since', type=str, default=None,
-            help="Boshlanish sanasi (YYYY-MM-DD). Standart: o'tgan oyning oxirgi kuni",
+            help="Faqat shu sanadan boshlab yozuvlarni hisobga oladi (YYYY-MM-DD)",
         )
         parser.add_argument(
             '--until', type=str, default=None,
-            help="Tugash sanasi (YYYY-MM-DD). Standart: joriy oyning 1-kuni",
+            help="Faqat shu sanagacha yozuvlarni hisobga oladi (YYYY-MM-DD)",
         )
         parser.add_argument(
             '--from-id', type=int, default=None,
-            help="Shu tarix id sidan boshlab yechishlarni qo'shadi (--since/--until ni e'tiborsiz qoldiradi)",
+            help="Faqat shu tarix id sidan katta yozuvlarni hisobga oladi",
         )
         parser.add_argument(
             '--auto', action='store_true',
-            help="Deploy uchun: faqat bir marta bajaradi (31-1 oraliq, --apply). "
-                 "Bir marta bajarilgan bo'lsa, o'tkazib yuboradi — ikki marta qo'shilmaydi",
+            help="Deploy uchun: dump'dan keyingi barcha yechishlarni tiklaydi va yozadi (--apply)",
         )
 
     def handle(self, *args, **options):
@@ -108,27 +132,20 @@ class Command(BaseCommand):
         since = options.get('since')
         until = options.get('until')
 
-        if auto:
-            settings = SiteSettings.get_instance()
-            if settings.restore_yechilgan_applied:
-                self.stdout.write(self.style.SUCCESS(
-                    "Restore allaqachon bajarilgan, o'tkazib yuborildi (ikki marta qo'shilmadi)."
-                ))
-                return
-            apply = True
-            from_id = None
-            since = None
-            until = None
+        bases, cutoff_id = load_dump_base()
 
-        # Standart davr: 31 va 1 oraliq
+        if auto:
+            apply = True
+
+        # Standart: dump'dan keyin yaratilgan barcha yozuvlar (id > cutoff)
         if from_id is None and since is None and until is None:
-            since_d, until_d = default_window()
-        else:
-            since_d = parse_date(since) if since else None
-            until_d = parse_date(until) if until else None
+            from_id = cutoff_id
+
+        since_d = parse_date(since) if since else None
+        until_d = parse_date(until) if until else None
 
         if from_id is not None:
-            self.stdout.write(self.style.NOTICE(f"Davr: tarix id > {from_id}"))
+            self.stdout.write(self.style.NOTICE(f"Davr: tarix id > {from_id} (dump cutoff)"))
         else:
             self.stdout.write(self.style.NOTICE(
                 f"Davr: {since_d} ... {until_d}"
@@ -141,8 +158,6 @@ class Command(BaseCommand):
         jami_ozgargan = 0
 
         for xodim in qs:
-            # Tarixdan (davrdagi) yechilgan qiymatlarni yig'ish.
-            # Sana solishtirish Pythonda bajariladi (SQLite'da __date ishonchli emas).
             tarixlar = xodim.ozgartirish_tarixlari.all()
             if from_id is not None:
                 tarixlar = tarixlar.filter(pk__gt=from_id)
@@ -174,11 +189,19 @@ class Command(BaseCommand):
             jarima_ball = jar['b'] or 0
             jarima_pul = jar['p'] or Decimal('0')
 
-            # Yangi yechilgan qiymatlar (joriyga qo'shib hisoblaymiz)
-            y_bonus_pul = xodim.bonus_pul_yechilgan + b_pul
-            y_jarima_pul = xodim.jarima_pul_yechilgan + j_pul
-            y_bonus_ball = xodim.bonus_ball_yechilgan + b_ball
-            y_jarima_ball = xodim.jarima_ball_yechilgan + j_ball
+            # Yechilgan qiymatlar: dump bazasi + dump'dan keyingi yechishlar (idempotent).
+            # Dump'da yo'q xodim (dump'dan keyin yaratilgan) — unga tegmaymiz.
+            base = bases.get(xodim.pk)
+            if base is not None:
+                y_bonus_pul = base['bonus_pul_yechilgan'] + b_pul
+                y_jarima_pul = base['jarima_pul_yechilgan'] + j_pul
+                y_bonus_ball = base['bonus_ball_yechilgan'] + b_ball
+                y_jarima_ball = base['jarima_ball_yechilgan'] + j_ball
+            else:
+                y_bonus_pul = xodim.bonus_pul_yechilgan
+                y_jarima_pul = xodim.jarima_pul_yechilgan
+                y_bonus_ball = xodim.bonus_ball_yechilgan
+                y_jarima_ball = xodim.jarima_ball_yechilgan
 
             jami_bonus_ball = bonus_ball - y_bonus_ball - xodim.xarid_ball
             jami_jarima_ball = jarima_ball - y_jarima_ball
@@ -198,7 +221,7 @@ class Command(BaseCommand):
                 ('reyting_pul', xodim.reyting_pul, reyting_pul),
             ]
 
-            farq = [ (nom, eski, yangi) for nom, eski, yangi in taqqos if eski != yangi ]
+            farq = [(nom, eski, yangi) for nom, eski, yangi in taqqos if eski != yangi]
             if not farq:
                 continue
 
@@ -226,13 +249,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(
                 f"\nTugadi: {jami_ozgargan} ta xodim yangilandi."
             ))
-            if auto:
-                settings = SiteSettings.get_instance()
-                settings.restore_yechilgan_applied = True
-                settings.save(update_fields=['restore_yechilgan_applied'])
-                self.stdout.write(self.style.SUCCESS(
-                    "Restore bajarildi va belgilandi (keyingi deploy'larda takrorlanmaydi)."
-                ))
         else:
             self.stdout.write(self.style.SUCCESS(
                 f"\nDry-run: {jami_ozgargan} ta xodim o'zgaradi. "
