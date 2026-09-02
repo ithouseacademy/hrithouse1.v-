@@ -4,6 +4,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # Healthcheck (Railway uchun - login talab qilmaydi)
+    path('health/', views.health, name='health'),
     # Auth
         path('profil-sozlamalari/', views.profil_sozlamalari, name='profil_sozlamalari'),
     path('login-ozgartirish/', views.login_ozgartirish, name='login_ozgartirish'),

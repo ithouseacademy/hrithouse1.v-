@@ -3002,3 +3002,9 @@ def export_sqlite_view(request):
         return HttpResponse('Xatolik: Vaqt tugadi (120s)', status=500)
     except Exception as e:
         return HttpResponse(f'Xatolik: {str(e)}', status=500)
+
+
+def health(request):
+    from django.db import connection
+    connection.ensure_connection()
+    return HttpResponse('OK', status=200)
