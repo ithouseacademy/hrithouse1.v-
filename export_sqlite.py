@@ -8,6 +8,7 @@ cursor = conn.cursor()
 
 data = []
 
+
 # Model mapping: sqlite table -> (django model, app_label)
 model_map = {
     'auth_user': 'auth.user',
