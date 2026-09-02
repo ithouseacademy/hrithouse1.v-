@@ -492,24 +492,67 @@ def bonus_qoshish(request):
             if xodim_id:
                 xodim_ids = [xodim_id]
 
-        if request.POST.get('sabab'):
-            sabab_obj = get_object_or_404(BonusSabab, pk=request.POST.get('sabab'))
-            izoh = request.POST.get('izoh', '')
-            admin_name = request.user.get_full_name() or request.user.username
-            qoshilgan_soni = 0
+        izoh = request.POST.get('izoh', '')
+        admin_name = request.user.get_full_name() or request.user.username
 
-            if xodim_ids:
-                for xodim_id in xodim_ids:
-                    xodim = get_object_or_404(Xodim, pk=xodim_id)
+        rows_data = []
+        seen_indices = set()
+        for key in request.POST:
+            if key.startswith('row-') and key.endswith('_mode'):
+                idx = key.split('_mode')[0]
+                if idx not in seen_indices:
+                    seen_indices.add(idx)
+                    mode = request.POST.get(f'{idx}_mode', 'ready')
+                    if mode == 'ready':
+                        sabab_id = request.POST.get(f'{idx}_sabab', '')
+                        if sabab_id:
+                            sabab_obj = get_object_or_404(BonusSabab, pk=sabab_id)
+                            rows_data.append({
+                                'mode': 'ready',
+                                'sabab': sabab_obj,
+                                'pul': sabab_obj.pul_miqdori,
+                                'ball': sabab_obj.ball_miqdori,
+                                'sabab_nom': sabab_obj.nom,
+                            })
+                    else:
+                        try:
+                            pul = float(request.POST.get(f'{idx}_manual_pul', 0) or 0)
+                            ball = int(request.POST.get(f'{idx}_manual_ball', 0) or 0)
+                        except ValueError:
+                            pul, ball = 0.0, 0
+                        sabab_nom = request.POST.get(f'{idx}_manual_sabab_nom', "Qo'lda kiritilgan")
+                        if pul > 0 or ball > 0:
+                            rows_data.append({
+                                'mode': 'manual',
+                                'sabab': None,
+                                'pul': Decimal(str(pul)),
+                                'ball': ball,
+                                'sabab_nom': sabab_nom,
+                            })
+
+        if xodim_ids and rows_data:
+            qoshilgan_soni = 0
+            for xodim_id in xodim_ids:
+                xodim = get_object_or_404(Xodim, pk=xodim_id)
+                for row in rows_data:
                     for i in range(soni):
                         eski_ball = xodim.reyting_ball
                         eski_pul = xodim.reyting_pul
-                        record = BonusRecord.objects.create(
-                            xodim=xodim, sabab=sabab_obj,
-                            pul_miqdori=sabab_obj.pul_miqdori,
-                            ball_miqdori=sabab_obj.ball_miqdori,
-                            izoh=izoh, created_by=request.user
-                        )
+                        if row['sabab']:
+                            record = BonusRecord.objects.create(
+                                xodim=xodim, sabab=row['sabab'],
+                                pul_miqdori=row['pul'],
+                                ball_miqdori=row['ball'],
+                                izoh=izoh, created_by=request.user
+                            )
+                        else:
+                            toliq_izoh = row['sabab_nom'] + (f". {izoh}" if izoh else '')
+                            record = BonusRecord.objects.create(
+                                xodim=xodim, sabab=None,
+                                pul_miqdori=Decimal(str(row['pul'])),
+                                ball_miqdori=row['ball'],
+                                izoh=toliq_izoh, created_by=request.user
+                            )
                         xodim.refresh_from_db()
                         now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
                         msg = (
@@ -517,7 +560,7 @@ def bonus_qoshish(request):
                             + (f" ({i+1}/{soni})" if soni > 1 else "")
                             + f"\n\n"
                             f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
-                            f"📋 Sabab: {record.sabab.nom if record.sabab else record.izoh}\n"
+                            f"📋 Sabab: {record.sabab.nom if record.sabab else row['sabab_nom']}\n"
                             f"📊 Ball: +{record.ball_miqdori} ball\n"
                             f"💰 Pul: +{record.pul_miqdori:,.0f} so'm\n"
                             f"📝 Izoh: {record.izoh or 'Yo\'q'}\n\n"
@@ -527,63 +570,16 @@ def bonus_qoshish(request):
                             f"⏱️ Vaqt: {now}"
                         )
                         send_telegram_message(msg, thread_id=None)
-                    qoshilgan_soni += 1
+                qoshilgan_soni += 1
 
-                if qoshilgan_soni > 1:
-                    messages.success(request, f"{qoshilgan_soni} ta xodimga bonus qo'shildi! (har biriga {soni} tadan)")
-                else:
-                    messages.success(request, "Bonus qo'shildi!")
-                return redirect('dashboard')
-            messages.error(request, "Kamida bitta xodimni tanlang!")
-        else:
-            try:
-                pul = float(request.POST.get('manual_pul', 0) or 0)
-                ball = int(request.POST.get('manual_ball', 0) or 0)
-            except ValueError:
-                pul, ball = 0.0, 0
+            total_records = len(rows_data) * soni * qoshilgan_soni
+            if qoshilgan_soni > 1:
+                messages.success(request, f"{qoshilgan_soni} ta xodimga {len(rows_data)} ta sababdan bonus qo'shildi! (jami {total_records} ta yozuv)")
+            else:
+                messages.success(request, f"{len(rows_data)} ta sababdan bonus qo'shildi!")
+            return redirect('dashboard')
 
-            if xodim_ids and (pul > 0 or ball > 0):
-                sabab_nom = request.POST.get('manual_sabab_nom', "Qo'lda kiritilgan")
-                izoh = request.POST.get('izoh', '')
-                toliq_izoh = sabab_nom + (f". {izoh}" if izoh else '')
-                admin_name = request.user.get_full_name() or request.user.username
-                qoshilgan_soni = 0
-
-                for xodim_id in xodim_ids:
-                    xodim = get_object_or_404(Xodim, pk=xodim_id)
-                    for i in range(soni):
-                        eski_ball = xodim.reyting_ball
-                        eski_pul = xodim.reyting_pul
-                        BonusRecord.objects.create(
-                            xodim=xodim, sabab=None,
-                            pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
-                            izoh=toliq_izoh, created_by=request.user
-                        )
-                        xodim.refresh_from_db()
-                        now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
-                        msg = (
-                            f"✅ <b>BONUS ✅</b>"
-                            + (f" ({i+1}/{soni})" if soni > 1 else "")
-                            + f"\n\n"
-                            f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
-                            f"📋 Sabab: {sabab_nom}\n"
-                            f"📊 Ball: +{ball} ball\n"
-                            f"💰 Pul: +{pul:,.0f} so'm\n"
-                            f"📝 Izoh: {izoh or 'Yo\'q'}\n\n"
-                            f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                            f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
-                            f"👨‍💼 Admin: {admin_name}\n"
-                            f"⏱️ Vaqt: {now}"
-                        )
-                        send_telegram_message(msg, thread_id=None)
-                    qoshilgan_soni += 1
-
-                if qoshilgan_soni > 1:
-                    messages.success(request, f"{qoshilgan_soni} ta xodimga bonus qo'shildi! (har biriga {soni} tadan)")
-                else:
-                    messages.success(request, "Bonus qo'shildi!")
-                return redirect('dashboard')
-            messages.error(request, "Xodim va miqdorlarni to'g'ri kiriting!")
+        messages.error(request, "Xodim va sabablarni to'g'ri kiriting!")
 
     sabablar = BonusSabab.objects.filter(active=True)
     return render(request, 'main/bonus_form.html', {
@@ -602,24 +598,67 @@ def jarima_qoshish(request):
             if xodim_id:
                 xodim_ids = [xodim_id]
 
-        if request.POST.get('sabab'):
-            sabab_obj = get_object_or_404(JarimaSabab, pk=request.POST.get('sabab'))
-            izoh = request.POST.get('izoh', '')
-            admin_name = request.user.get_full_name() or request.user.username
-            qoshilgan_soni = 0
+        izoh = request.POST.get('izoh', '')
+        admin_name = request.user.get_full_name() or request.user.username
 
-            if xodim_ids:
-                for xodim_id in xodim_ids:
-                    xodim = get_object_or_404(Xodim, pk=xodim_id)
+        rows_data = []
+        seen_indices = set()
+        for key in request.POST:
+            if key.startswith('row-') and key.endswith('_mode'):
+                idx = key.split('_mode')[0]
+                if idx not in seen_indices:
+                    seen_indices.add(idx)
+                    mode = request.POST.get(f'{idx}_mode', 'ready')
+                    if mode == 'ready':
+                        sabab_id = request.POST.get(f'{idx}_sabab', '')
+                        if sabab_id:
+                            sabab_obj = get_object_or_404(JarimaSabab, pk=sabab_id)
+                            rows_data.append({
+                                'mode': 'ready',
+                                'sabab': sabab_obj,
+                                'pul': sabab_obj.pul_miqdori,
+                                'ball': sabab_obj.ball_miqdori,
+                                'sabab_nom': sabab_obj.nom,
+                            })
+                    else:
+                        try:
+                            pul = float(request.POST.get(f'{idx}_manual_pul', 0) or 0)
+                            ball = int(request.POST.get(f'{idx}_manual_ball', 0) or 0)
+                        except ValueError:
+                            pul, ball = 0.0, 0
+                        sabab_nom = request.POST.get(f'{idx}_manual_sabab_nom', "Qo'lda kiritilgan")
+                        if pul > 0 or ball > 0:
+                            rows_data.append({
+                                'mode': 'manual',
+                                'sabab': None,
+                                'pul': Decimal(str(pul)),
+                                'ball': ball,
+                                'sabab_nom': sabab_nom,
+                            })
+
+        if xodim_ids and rows_data:
+            qoshilgan_soni = 0
+            for xodim_id in xodim_ids:
+                xodim = get_object_or_404(Xodim, pk=xodim_id)
+                for row in rows_data:
                     for i in range(soni):
                         eski_ball = xodim.reyting_ball
                         eski_pul = xodim.reyting_pul
-                        record = JarimaRecord.objects.create(
-                            xodim=xodim, sabab=sabab_obj,
-                            pul_miqdori=sabab_obj.pul_miqdori,
-                            ball_miqdori=sabab_obj.ball_miqdori,
-                            izoh=izoh, created_by=request.user
-                        )
+                        if row['sabab']:
+                            record = JarimaRecord.objects.create(
+                                xodim=xodim, sabab=row['sabab'],
+                                pul_miqdori=row['pul'],
+                                ball_miqdori=row['ball'],
+                                izoh=izoh, created_by=request.user
+                            )
+                        else:
+                            toliq_izoh = f"{row['sabab_nom']}. {izoh}".strip(' .')
+                            record = JarimaRecord.objects.create(
+                                xodim=xodim, sabab=None,
+                                pul_miqdori=Decimal(str(row['pul'])),
+                                ball_miqdori=row['ball'],
+                                izoh=toliq_izoh, created_by=request.user
+                            )
                         xodim.refresh_from_db()
                         now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
                         msg = (
@@ -627,7 +666,7 @@ def jarima_qoshish(request):
                             + (f" ({i+1}/{soni})" if soni > 1 else "")
                             + f"\n\n"
                             f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
-                            f"📋 Sabab: {record.sabab.nom if record.sabab else record.izoh}\n"
+                            f"📋 Sabab: {record.sabab.nom if record.sabab else row['sabab_nom']}\n"
                             f"📊 Ball: -{record.ball_miqdori} ball\n"
                             f"💰 Pul: -{record.pul_miqdori:,.0f} so'm\n"
                             f"📝 Izoh: {record.izoh or 'Yo\'q'}\n\n"
@@ -637,63 +676,16 @@ def jarima_qoshish(request):
                             f"⏱️ Vaqt: {now}"
                         )
                         send_telegram_message(msg, thread_id=None)
-                    qoshilgan_soni += 1
+                qoshilgan_soni += 1
 
-                if qoshilgan_soni > 1:
-                    messages.success(request, f"{qoshilgan_soni} ta xodimga jarima qo'shildi! (har biriga {soni} tadan)")
-                else:
-                    messages.success(request, "Jarima qo'shildi!")
-                return redirect('dashboard')
-            messages.error(request, "Kamida bitta xodimni tanlang!")
-        else:
-            try:
-                pul = float(request.POST.get('manual_pul', 0) or 0)
-                ball = int(request.POST.get('manual_ball', 0) or 0)
-            except ValueError:
-                pul, ball = 0.0, 0
+            total_records = len(rows_data) * soni * qoshilgan_soni
+            if qoshilgan_soni > 1:
+                messages.success(request, f"{qoshilgan_soni} ta xodimga {len(rows_data)} ta sababdan jarima qo'shildi! (jami {total_records} ta yozuv)")
+            else:
+                messages.success(request, f"{len(rows_data)} ta sababdan jarima qo'shildi!")
+            return redirect('dashboard')
 
-            if xodim_ids and (pul > 0 or ball > 0):
-                sabab_nom = request.POST.get('manual_sabab_nom', "Qo'lda kiritilgan")
-                izoh = request.POST.get('izoh', '')
-                toliq_izoh = f"{sabab_nom}. {izoh}".strip(' .')
-                admin_name = request.user.get_full_name() or request.user.username
-                qoshilgan_soni = 0
-
-                for xodim_id in xodim_ids:
-                    xodim = get_object_or_404(Xodim, pk=xodim_id)
-                    for i in range(soni):
-                        eski_ball = xodim.reyting_ball
-                        eski_pul = xodim.reyting_pul
-                        JarimaRecord.objects.create(
-                            xodim=xodim, sabab=None,
-                            pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
-                            izoh=toliq_izoh, created_by=request.user
-                        )
-                        xodim.refresh_from_db()
-                        now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
-                        msg = (
-                            f"🔴 <b>JARIMA ❗️</b>"
-                            + (f" ({i+1}/{soni})" if soni > 1 else "")
-                            + f"\n\n"
-                            f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
-                            f"📋 Sabab: {sabab_nom}\n"
-                            f"📊 Ball: -{ball} ball\n"
-                            f"💰 Pul: -{pul:,.0f} so'm\n"
-                            f"📝 Izoh: {izoh or 'Yo\'q'}\n\n"
-                            f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                            f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
-                            f"👨‍💼 Admin: {admin_name}\n"
-                            f"⏱️ Vaqt: {now}"
-                        )
-                        send_telegram_message(msg, thread_id=None)
-                    qoshilgan_soni += 1
-
-                if qoshilgan_soni > 1:
-                    messages.success(request, f"{qoshilgan_soni} ta xodimga jarima qo'shildi! (har biriga {soni} tadan)")
-                else:
-                    messages.success(request, "Jarima qo'shildi!")
-                return redirect('dashboard')
-            messages.error(request, "Xodim va miqdorlarni to'g'ri kiriting!")
+        messages.error(request, "Xodim va sabablarni to'g'ri kiriting!")
 
     sabablar = JarimaSabab.objects.filter(active=True)
     return render(request, 'main/jarima_form.html', {
