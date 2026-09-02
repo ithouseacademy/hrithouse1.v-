@@ -86,6 +86,7 @@ urlpatterns = [
     path('bildirishnomalar/ochilmagan-soni/', views.notification_unread_count, name='notification_unread_count'),
     path('bildirishnoma/<int:pk>/oqildi/', views.notification_mark_read, name='notification_mark_read'),
     path('bildirishnomalar/barchasi-oqildi/', views.notification_mark_all_read, name='notification_mark_all_read'),
+    path('admin-e-lon/<int:pk>/tushundim/', views.admin_announcement_mark_read, name='admin_announcement_mark_read'),
 
     # Push bildirishnomalar (PWA)
     path('push/subscribe/', views.push_subscribe, name='push_subscribe'),

@@ -16,3 +16,22 @@ def user_rank_context(request):
         except Exception:
             pass
     return {}
+
+
+def admin_announcements_context(request):
+    if request.user.is_authenticated and request.user.is_staff:
+        from main.models import AdminAnnouncement, AdminAnnouncementRead
+        read_ids = AdminAnnouncementRead.objects.filter(
+            user_id=request.user.id
+        ).values_list('announcement_id', flat=True)
+        unread = AdminAnnouncement.objects.filter(is_active=True).exclude(
+            id__in=read_ids
+        ).order_by('-created_at')
+        return {
+            'admin_announcements': unread,
+            'admin_announcements_bor': unread.exists(),
+        }
+    return {
+        'admin_announcements': [],
+        'admin_announcements_bor': False,
+    }

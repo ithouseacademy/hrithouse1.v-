@@ -214,7 +214,7 @@
                             <div class="mt-1 text-[9px] text-gray-600 bg-gray-50 rounded p-1">{{ bonus.izoh|truncatechars:50 }}</div>
                             {% endif %}
                         </div>
-                        {% if user.is_staff %}
+                        {% if user.is_staff and bonus.pk %}
                         <a href="{% url 'bonus_ochirish' bonus.pk %}" class="text-red-400 hover:text-red-600 p-1" onclick="return confirm('O\'chirmoqchimisiz?')">
                             <i class="ri-delete-bin-line text-[10px]"></i>
                         </a>
@@ -270,7 +270,7 @@
                             <div class="mt-1 text-[9px] text-gray-600 bg-gray-50 rounded p-1">{{ jarima.izoh|truncatechars:50 }}</div>
                             {% endif %}
                         </div>
-                        {% if user.is_staff %}
+                        {% if user.is_staff and jarima.pk %}
                         <a href="{% url 'jarima_ochirish' jarima.pk %}" class="text-red-400 hover:text-red-600 p-1" onclick="return confirm('O\'chirmoqchimisiz?')">
                             <i class="ri-delete-bin-line text-[10px]"></i>
                         </a>

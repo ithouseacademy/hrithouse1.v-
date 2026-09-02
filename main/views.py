@@ -53,7 +53,8 @@ from .forms import (
 from .services import (
     get_available_shop_ball, purchase_product,
     approve_order, reject_order,
-    send_notification, send_notification_to_admins
+    send_notification, send_notification_to_admins,
+    send_telegram_message
 )
 
 
@@ -485,95 +486,100 @@ def xodim_qayta_tiklash(request, pk):
 def bonus_qoshish(request):
     if request.method == 'POST':
         soni = max(1, min(50, int(request.POST.get('soni', 1) or 1)))
+        xodim_ids = request.POST.getlist('xodim')
+        if not xodim_ids:
+            xodim_id = request.POST.get('xodim')
+            if xodim_id:
+                xodim_ids = [xodim_id]
+
         if request.POST.get('sabab'):
-            form = BonusRecordForm(request.POST)
-            if form.is_valid():
-                from .services import send_telegram_message
-                xodim = form.cleaned_data['xodim']
-                sabab = form.cleaned_data.get('sabab')
-                izoh = form.cleaned_data.get('izoh', '')
-                admin_name = request.user.get_full_name() or request.user.username
+            sabab_obj = get_object_or_404(BonusSabab, pk=request.POST.get('sabab'))
+            izoh = request.POST.get('izoh', '')
+            admin_name = request.user.get_full_name() or request.user.username
+            qoshilgan_soni = 0
 
-                sabab_obj = form.cleaned_data['sabab']
-                for i in range(soni):
-                    eski_ball = xodim.reyting_ball
-                    eski_pul = xodim.reyting_pul
-                    record = BonusRecord.objects.create(
-                        xodim=xodim, sabab=sabab_obj,
-                        pul_miqdori=sabab_obj.pul_miqdori,
-                        ball_miqdori=sabab_obj.ball_miqdori,
-                        izoh=izoh, created_by=request.user
-                    )
+            if xodim_ids:
+                for xodim_id in xodim_ids:
+                    xodim = get_object_or_404(Xodim, pk=xodim_id)
+                    for i in range(soni):
+                        eski_ball = xodim.reyting_ball
+                        eski_pul = xodim.reyting_pul
+                        record = BonusRecord.objects.create(
+                            xodim=xodim, sabab=sabab_obj,
+                            pul_miqdori=sabab_obj.pul_miqdori,
+                            ball_miqdori=sabab_obj.ball_miqdori,
+                            izoh=izoh, created_by=request.user
+                        )
+                        xodim.refresh_from_db()
+                        now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
+                        msg = (
+                            f"✅ <b>BONUS ✅</b>"
+                            + (f" ({i+1}/{soni})" if soni > 1 else "")
+                            + f"\n\n"
+                            f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                            f"📋 Sabab: {record.sabab.nom if record.sabab else record.izoh}\n"
+                            f"📊 Ball: +{record.ball_miqdori} ball\n"
+                            f"💰 Pul: +{record.pul_miqdori:,.0f} so'm\n"
+                            f"📝 Izoh: {record.izoh or 'Yo\'q'}\n\n"
+                            f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                            f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
+                            f"👨‍💼 Admin: {admin_name}\n"
+                            f"⏱️ Vaqt: {now}"
+                        )
+                        send_telegram_message(msg, thread_id=None)
+                    qoshilgan_soni += 1
 
-                    xodim.refresh_from_db()
-                    now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
-                    msg = (
-                        f"✅ <b>BONUS ✅</b>"
-                        + (f" ({i+1}/{soni})" if soni > 1 else "")
-                        + f"\n\n"
-                        f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
-                        f"📋 Sabab: {record.sabab.nom if record.sabab else record.izoh}\n"
-                        f"📊 Ball: +{record.ball_miqdori} ball\n"
-                        f"💰 Pul: +{record.pul_miqdori:,.0f} so'm\n"
-                        f"📝 Izoh: {record.izoh or 'Yo\'q'}\n\n"
-                        f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                        f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
-                        f"👨‍💼 Admin: {admin_name}\n"
-                        f"⏱️ Vaqt: {now}"
-                    )
-                    send_telegram_message(msg, thread_id=None)
-
-                if soni > 1:
-                    messages.success(request, f"{soni} ta bonus qo'shildi!")
+                if qoshilgan_soni > 1:
+                    messages.success(request, f"{qoshilgan_soni} ta xodimga bonus qo'shildi! (har biriga {soni} tadan)")
                 else:
                     messages.success(request, "Bonus qo'shildi!")
                 return redirect('dashboard')
-            messages.error(request, 'Formada xatolik!')
+            messages.error(request, "Kamida bitta xodimni tanlang!")
         else:
-            xodim_id = request.POST.get('xodim')
             try:
                 pul = float(request.POST.get('manual_pul', 0) or 0)
                 ball = int(request.POST.get('manual_ball', 0) or 0)
             except ValueError:
                 pul, ball = 0.0, 0
 
-            if xodim_id and (pul > 0 or ball > 0):
-                xodim = get_object_or_404(Xodim, pk=xodim_id)
+            if xodim_ids and (pul > 0 or ball > 0):
                 sabab_nom = request.POST.get('manual_sabab_nom', "Qo'lda kiritilgan")
                 izoh = request.POST.get('izoh', '')
                 toliq_izoh = sabab_nom + (f". {izoh}" if izoh else '')
                 admin_name = request.user.get_full_name() or request.user.username
+                qoshilgan_soni = 0
 
-                for i in range(soni):
-                    eski_ball = xodim.reyting_ball
-                    eski_pul = xodim.reyting_pul
+                for xodim_id in xodim_ids:
+                    xodim = get_object_or_404(Xodim, pk=xodim_id)
+                    for i in range(soni):
+                        eski_ball = xodim.reyting_ball
+                        eski_pul = xodim.reyting_pul
+                        BonusRecord.objects.create(
+                            xodim=xodim, sabab=None,
+                            pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
+                            izoh=toliq_izoh, created_by=request.user
+                        )
+                        xodim.refresh_from_db()
+                        now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
+                        msg = (
+                            f"✅ <b>BONUS ✅</b>"
+                            + (f" ({i+1}/{soni})" if soni > 1 else "")
+                            + f"\n\n"
+                            f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                            f"📋 Sabab: {sabab_nom}\n"
+                            f"📊 Ball: +{ball} ball\n"
+                            f"💰 Pul: +{pul:,.0f} so'm\n"
+                            f"📝 Izoh: {izoh or 'Yo\'q'}\n\n"
+                            f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                            f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
+                            f"👨‍💼 Admin: {admin_name}\n"
+                            f"⏱️ Vaqt: {now}"
+                        )
+                        send_telegram_message(msg, thread_id=None)
+                    qoshilgan_soni += 1
 
-                    BonusRecord.objects.create(
-                        xodim=xodim, sabab=None,
-                        pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
-                        izoh=toliq_izoh, created_by=request.user
-                    )
-                    from .services import send_telegram_message
-                    xodim.refresh_from_db()
-                    now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
-                    msg = (
-                        f"✅ <b>BONUS ✅</b>"
-                        + (f" ({i+1}/{soni})" if soni > 1 else "")
-                        + f"\n\n"
-                        f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
-                        f"📋 Sabab: {sabab_nom}\n"
-                        f"📊 Ball: +{ball} ball\n"
-                        f"💰 Pul: +{pul:,.0f} so'm\n"
-                        f"📝 Izoh: {izoh or 'Yo\'q'}\n\n"
-                        f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                        f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
-                        f"👨‍💼 Admin: {admin_name}\n"
-                        f"⏱️ Vaqt: {now}"
-                    )
-                    send_telegram_message(msg, thread_id=None)
-
-                if soni > 1:
-                    messages.success(request, f"{soni} ta bonus qo'shildi!")
+                if qoshilgan_soni > 1:
+                    messages.success(request, f"{qoshilgan_soni} ta xodimga bonus qo'shildi! (har biriga {soni} tadan)")
                 else:
                     messages.success(request, "Bonus qo'shildi!")
                 return redirect('dashboard')
@@ -590,94 +596,100 @@ def bonus_qoshish(request):
 def jarima_qoshish(request):
     if request.method == 'POST':
         soni = max(1, min(50, int(request.POST.get('soni', 1) or 1)))
+        xodim_ids = request.POST.getlist('xodim')
+        if not xodim_ids:
+            xodim_id = request.POST.get('xodim')
+            if xodim_id:
+                xodim_ids = [xodim_id]
+
         if request.POST.get('sabab'):
-            form = JarimaRecordForm(request.POST)
-            if form.is_valid():
-                from .services import send_telegram_message
-                xodim = form.cleaned_data['xodim']
-                sabab = form.cleaned_data.get('sabab')
-                izoh = form.cleaned_data.get('izoh', '')
-                admin_name = request.user.get_full_name() or request.user.username
+            sabab_obj = get_object_or_404(JarimaSabab, pk=request.POST.get('sabab'))
+            izoh = request.POST.get('izoh', '')
+            admin_name = request.user.get_full_name() or request.user.username
+            qoshilgan_soni = 0
 
-                sabab_obj = form.cleaned_data['sabab']
-                for i in range(soni):
-                    eski_ball = xodim.reyting_ball
-                    eski_pul = xodim.reyting_pul
-                    record = JarimaRecord.objects.create(
-                        xodim=xodim, sabab=sabab_obj,
-                        pul_miqdori=sabab_obj.pul_miqdori,
-                        ball_miqdori=sabab_obj.ball_miqdori,
-                        izoh=izoh, created_by=request.user
-                    )
+            if xodim_ids:
+                for xodim_id in xodim_ids:
+                    xodim = get_object_or_404(Xodim, pk=xodim_id)
+                    for i in range(soni):
+                        eski_ball = xodim.reyting_ball
+                        eski_pul = xodim.reyting_pul
+                        record = JarimaRecord.objects.create(
+                            xodim=xodim, sabab=sabab_obj,
+                            pul_miqdori=sabab_obj.pul_miqdori,
+                            ball_miqdori=sabab_obj.ball_miqdori,
+                            izoh=izoh, created_by=request.user
+                        )
+                        xodim.refresh_from_db()
+                        now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
+                        msg = (
+                            f"🔴 <b>JARIMA ❗️</b>"
+                            + (f" ({i+1}/{soni})" if soni > 1 else "")
+                            + f"\n\n"
+                            f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                            f"📋 Sabab: {record.sabab.nom if record.sabab else record.izoh}\n"
+                            f"📊 Ball: -{record.ball_miqdori} ball\n"
+                            f"💰 Pul: -{record.pul_miqdori:,.0f} so'm\n"
+                            f"📝 Izoh: {record.izoh or 'Yo\'q'}\n\n"
+                            f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                            f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
+                            f"👨‍💼 Admin: {admin_name}\n"
+                            f"⏱️ Vaqt: {now}"
+                        )
+                        send_telegram_message(msg, thread_id=None)
+                    qoshilgan_soni += 1
 
-                    xodim.refresh_from_db()
-                    now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
-                    msg = (
-                        f"🔴 <b>JARIMA ❗️</b>"
-                        + (f" ({i+1}/{soni})" if soni > 1 else "")
-                        + f"\n\n"
-                        f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
-                        f"📋 Sabab: {record.sabab.nom if record.sabab else record.izoh}\n"
-                        f"📊 Ball: -{record.ball_miqdori} ball\n"
-                        f"💰 Pul: -{record.pul_miqdori:,.0f} so'm\n"
-                        f"📝 Izoh: {record.izoh or 'Yo\'q'}\n\n"
-                        f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                        f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
-                        f"👨‍💼 Admin: {admin_name}\n"
-                        f"⏱️ Vaqt: {now}"
-                    )
-                    send_telegram_message(msg, thread_id=None)
-
-                if soni > 1:
-                    messages.success(request, f"{soni} ta jarima qo'shildi!")
+                if qoshilgan_soni > 1:
+                    messages.success(request, f"{qoshilgan_soni} ta xodimga jarima qo'shildi! (har biriga {soni} tadan)")
                 else:
                     messages.success(request, "Jarima qo'shildi!")
                 return redirect('dashboard')
-            messages.error(request, 'Formada xatolik!')
+            messages.error(request, "Kamida bitta xodimni tanlang!")
         else:
-            xodim_id = request.POST.get('xodim')
             try:
                 pul = float(request.POST.get('manual_pul', 0) or 0)
                 ball = int(request.POST.get('manual_ball', 0) or 0)
             except ValueError:
                 pul, ball = 0.0, 0
 
-            if xodim_id and (pul > 0 or ball > 0):
-                xodim = get_object_or_404(Xodim, pk=xodim_id)
+            if xodim_ids and (pul > 0 or ball > 0):
                 sabab_nom = request.POST.get('manual_sabab_nom', "Qo'lda kiritilgan")
                 izoh = request.POST.get('izoh', '')
                 toliq_izoh = f"{sabab_nom}. {izoh}".strip(' .')
                 admin_name = request.user.get_full_name() or request.user.username
+                qoshilgan_soni = 0
 
-                for i in range(soni):
-                    eski_ball = xodim.reyting_ball
-                    eski_pul = xodim.reyting_pul
-                    JarimaRecord.objects.create(
-                        xodim=xodim, sabab=None,
-                        pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
-                        izoh=toliq_izoh, created_by=request.user
-                    )
-                    from .services import send_telegram_message
-                    xodim.refresh_from_db()
-                    now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
-                    msg = (
-                        f"🔴 <b>JARIMA ❗️</b>"
-                        + (f" ({i+1}/{soni})" if soni > 1 else "")
-                        + f"\n\n"
-                        f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
-                        f"📋 Sabab: {sabab_nom}\n"
-                        f"📊 Ball: -{ball} ball\n"
-                        f"💰 Pul: -{pul:,.0f} so'm\n"
-                        f"📝 Izoh: {izoh or 'Yo\'q'}\n\n"
-                        f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
-                        f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
-                        f"👨‍💼 Admin: {admin_name}\n"
-                        f"⏱️ Vaqt: {now}"
-                    )
-                    send_telegram_message(msg, thread_id=None)
+                for xodim_id in xodim_ids:
+                    xodim = get_object_or_404(Xodim, pk=xodim_id)
+                    for i in range(soni):
+                        eski_ball = xodim.reyting_ball
+                        eski_pul = xodim.reyting_pul
+                        JarimaRecord.objects.create(
+                            xodim=xodim, sabab=None,
+                            pul_miqdori=Decimal(str(pul)), ball_miqdori=ball,
+                            izoh=toliq_izoh, created_by=request.user
+                        )
+                        xodim.refresh_from_db()
+                        now = timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M')
+                        msg = (
+                            f"🔴 <b>JARIMA ❗️</b>"
+                            + (f" ({i+1}/{soni})" if soni > 1 else "")
+                            + f"\n\n"
+                            f"👤 Xodim: {xodim.ism} {xodim.familya}\n"
+                            f"📋 Sabab: {sabab_nom}\n"
+                            f"📊 Ball: -{ball} ball\n"
+                            f"💰 Pul: -{pul:,.0f} so'm\n"
+                            f"📝 Izoh: {izoh or 'Yo\'q'}\n\n"
+                            f"📊 Yangi reyting: {xodim.reyting_ball} ball ({xodim.reyting_pul:,.0f} so'm)\n"
+                            f"   (Oldingi: {eski_ball} ball / {eski_pul:,.0f} so'm)\n"
+                            f"👨‍💼 Admin: {admin_name}\n"
+                            f"⏱️ Vaqt: {now}"
+                        )
+                        send_telegram_message(msg, thread_id=None)
+                    qoshilgan_soni += 1
 
-                if soni > 1:
-                    messages.success(request, f"{soni} ta jarima qo'shildi!")
+                if qoshilgan_soni > 1:
+                    messages.success(request, f"{qoshilgan_soni} ta xodimga jarima qo'shildi! (har biriga {soni} tadan)")
                 else:
                     messages.success(request, "Jarima qo'shildi!")
                 return redirect('dashboard')
@@ -2857,6 +2869,16 @@ def notification_mark_all_read(request):
     Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
     messages.success(request, "Barcha bildirishnomalar o'qildi!")
     return redirect('notification_list')
+
+
+@staff_member_required
+def admin_announcement_mark_read(request, pk):
+    from .models import AdminAnnouncement, AdminAnnouncementRead
+    announcement = get_object_or_404(AdminAnnouncement, pk=pk, is_active=True)
+    AdminAnnouncementRead.objects.get_or_create(
+        user_id=request.user.id, announcement=announcement
+    )
+    return redirect(request.META.get('HTTP_REFERER') or 'admin_dashboard')
 
 
 # ============================================================

@@ -63,26 +63,44 @@
             <form method="POST" id="jarimaForm" onsubmit="return handleFormSubmit(event)">
                 {% csrf_token %}
 
-                <!-- Xodim tanlash -->
+                <!-- Xodim tanlash (KO'P TANLASH) -->
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="ri-user-line text-red-500 mr-1"></i>
-                        Xodim
+                        Xodim(lar) <span class="text-xs text-gray-400">(2-3 tani tanlash mumkin)</span>
                     </label>
-                    <select name="xodim" id="xodimSelect" class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" required>
-                        <option value="" class="text-gray-400">Xodimni tanlang</option>
+                    <div class="flex gap-2 mb-2">
+                        <button type="button" id="selectAllBtn" class="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-all font-medium">
+                            <i class="ri-check-double-line mr-1"></i>Hammasini tanlash
+                        </button>
+                        <button type="button" id="deselectAllBtn" class="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-all font-medium">
+                            <i class="ri-close-line mr-1"></i>Hammasini bekor qilish
+                        </button>
+                        <span id="selectedCount" class="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-lg font-medium hidden">
+                            <i class="ri-user-line mr-1"></i><span id="countText">0</span> ta tanlangan
+                        </span>
+                    </div>
+                    <div class="border border-gray-200 rounded-lg max-h-60 overflow-y-auto" id="xodimList">
                         {% for xodim in form.fields.xodim.queryset %}
-                        <option value="{{ xodim.id }}"
-                                data-ism="{{ xodim.ism }}"
-                                data-familya="{{ xodim.familya }}"
-                                data-reyting-ball="{{ xodim.reyting_ball }}"
-                                data-reyting-pul="{{ xodim.reyting_pul }}"
-                                data-bonus-ball="{{ xodim.bonus_ball }}"
-                                data-jarima-ball="{{ xodim.jarima_ball }}">
-                            {{ xodim.ism }} {{ xodim.familya }} ({{ xodim.telefon }}) - Reyting: {{ xodim.reyting_ball }} ball
-                        </option>
+                        <label class="flex items-center gap-3 p-3 hover:bg-red-50 transition-colors cursor-pointer border-b border-gray-100 last:border-b-0 xodim-item">
+                            <input type="checkbox" name="xodim" value="{{ xodim.id }}"
+                                   class="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2 xodim-checkbox"
+                                   data-ism="{{ xodim.ism }}"
+                                   data-familya="{{ xodim.familya }}"
+                                   data-reyting-ball="{{ xodim.reyting_ball }}"
+                                   data-reyting-pul="{{ xodim.reyting_pul }}"
+                                   data-bonus-ball="{{ xodim.bonus_ball }}"
+                                   data-jarima-ball="{{ xodim.jarima_ball }}">
+                            <div class="flex-1">
+                                <span class="font-medium text-gray-900">{{ xodim.ism }} {{ xodim.familya }}</span>
+                                <span class="text-xs text-gray-500 ml-2">({{ xodim.telefon }})</span>
+                            </div>
+                            <span class="text-xs px-2 py-1 rounded-full {% if xodim.reyting_ball > 0 %}bg-green-100 text-green-700{% elif xodim.reyting_ball < 0 %}bg-red-100 text-red-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+                                {{ xodim.reyting_ball }} ball
+                            </span>
+                        </label>
                         {% endfor %}
-                    </select>
+                    </div>
                 </div>
 
                 <!-- Rejim tanlash: Tayyor sabab yoki Qo'lda kiritish -->
@@ -375,52 +393,40 @@ async function handleFormSubmit(event) {
     statusDiv.classList.remove('hidden');
 
     try {
-        // Xodim ma'lumotlarini olish
-        const xodimSelect = document.getElementById('xodimSelect');
-        const selectedOption = xodimSelect.options[xodimSelect.selectedIndex];
-
-        if (!selectedOption || !selectedOption.value) {
-            alert('Iltimos, xodimni tanlang!');
+        // Tanlangan xodimlarni olish
+        const selectedXodimlar = getSelectedXodimlar();
+        if (selectedXodimlar.length === 0) {
+            alert('Iltimos, kamida bitta xodimni tanlang!');
             submitBtn.innerHTML = originalBtnText;
             submitBtn.disabled = false;
             return false;
         }
 
-        const xodimNomi = `${selectedOption.dataset.ism} ${selectedOption.dataset.familya}`;
-        const currentReytingBall = selectedOption.dataset.reytingBall || '0';
-        const currentReytingPul = selectedOption.dataset.reytingPul || '0';
-
         // Jarima ma'lumotlarini olish
         let sababNomi, ball, pul, izoh;
 
         if (!document.getElementById('readyMode').classList.contains('hidden')) {
-            // Tayyor sabab
             const sababSelect = document.getElementById('sababSelect');
             const selectedSabab = sababSelect.options[sababSelect.selectedIndex];
-
             if (!selectedSabab || !selectedSabab.value) {
                 alert('Iltimos, jarima sababini tanlang!');
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
                 return false;
             }
-
             sababNomi = selectedSabab.dataset.nom;
             ball = selectedSabab.dataset.ball || '0';
             pul = selectedSabab.dataset.pul || '0';
         } else {
-            // Qo'lda kiritish
             sababNomi = document.getElementById('manualSabab').value;
             ball = document.getElementById('manualBall').value || '0';
             pul = document.getElementById('manualPul').value || '0';
-
             if (!sababNomi) {
                 alert('Iltimos, sabab nomini kiriting!');
                 submitBtn.innerHTML = originalBtnText;
                 submitBtn.disabled = false;
                 return false;
             }
-
             if (ball === '0' && pul === '0') {
                 alert('Iltimos, ball yoki pul miqdorini kiriting!');
                 submitBtn.innerHTML = originalBtnText;
@@ -431,26 +437,27 @@ async function handleFormSubmit(event) {
 
         izoh = document.getElementById('izoh').value;
 
-        // Yangi reytingni hisoblash
-        const newBall = parseInt(currentReytingBall) - parseInt(ball);
-        const newPul = parseFloat(currentReytingPul) - parseFloat(pul);
+        // Har bir tanlangan xodimga Telegram xabar yuborish
+        statusDiv.innerHTML = `<div class="p-3 rounded-lg bg-yellow-100 text-yellow-800">📤 ${selectedXodimlar.length} ta xodimga Telegram xabar yuborilmoqda...</div>`;
 
-        // Telegram xabar yuborish (reyting bilan)
-        const telegramMessage = formatMessage(xodimNomi, sababNomi, ball, pul, izoh, currentReytingBall, currentReytingPul, newBall, newPul);
+        for (const xodim of selectedXodimlar) {
+            const currentBall = parseInt(xodim.reytingBall) || 0;
+            const currentPul = parseFloat(xodim.reytingPul) || 0;
+            const totalBall = parseInt(ball) * (parseInt(document.getElementById('soni').value) || 1);
+            const totalPul = parseFloat(pul) * (parseInt(document.getElementById('soni').value) || 1);
+            const newBall = currentBall - totalBall;
+            const newPul = currentPul - totalPul;
 
-        console.log('Yuborilayotgan xabar:', telegramMessage);
-
-        statusDiv.innerHTML = '<div class="p-3 rounded-lg bg-yellow-100 text-yellow-800">📤 Telegram xabar yuborilmoqda...</div>';
-
-        const sent = await sendToTelegram(telegramMessage);
-
-        if (sent) {
-            statusDiv.innerHTML = '<div class="p-3 rounded-lg bg-green-100 text-green-800">✅ Telegram xabar muvaffaqiyatli yuborildi!</div>';
-        } else {
-            statusDiv.innerHTML = '<div class="p-3 rounded-lg bg-orange-100 text-orange-800">⚠️ Telegram xabar yuborilmadi! Lekin jarima saqlanadi.</div>';
+            const telegramMessage = formatMessage(
+                `${xodim.ism} ${xodim.familya}`, sababNomi, totalBall, totalPul,
+                izoh, xodim.reytingBall, xodim.reytingPul, newBall, newPul
+            );
+            await sendToTelegram(telegramMessage);
         }
 
-        // Formani serverga yuborish
+        statusDiv.innerHTML = `<div class="p-3 rounded-lg bg-green-100 text-green-800">✅ ${selectedXodimlar.length} ta xodimga Telegram xabar yuborildi!</div>`;
+
+        // Formani serverga yuborish (xodim[] formatda)
         setTimeout(() => {
             form.submit();
         }, 1000);
@@ -458,7 +465,6 @@ async function handleFormSubmit(event) {
     } catch (error) {
         console.error('Xatolik:', error);
         statusDiv.innerHTML = '<div class="p-3 rounded-lg bg-red-100 text-red-800">❌ Xatolik yuz berdi! Jarima saqlanadi.</div>';
-
         setTimeout(() => {
             form.submit();
         }, 1000);
@@ -467,6 +473,57 @@ async function handleFormSubmit(event) {
     return false;
 }
 
+// Tanlangan xodimlarni olish yordamchi funksiyasi
+function getSelectedXodimlar() {
+    const checkboxes = document.querySelectorAll('.xodim-checkbox:checked');
+    const xodimlar = [];
+    checkboxes.forEach(cb => {
+        xodimlar.push({
+            id: cb.value,
+            ism: cb.dataset.ism,
+            familya: cb.dataset.familya,
+            reytingBall: cb.dataset.reytingBall || '0',
+            reytingPul: cb.dataset.reytingPul || '0',
+            bonusBall: cb.dataset.bonusBall || '0',
+            jarimaBall: cb.dataset.jarimaBall || '0'
+        });
+    });
+    return xodimlar;
+}
+
+// Tanlangan xodimlar sonini yangilash
+function updateSelectedCount() {
+    const count = document.querySelectorAll('.xodim-checkbox:checked').length;
+    const countEl = document.getElementById('selectedCount');
+    const countText = document.getElementById('countText');
+    if (count > 0) {
+        countEl.classList.remove('hidden');
+        countText.textContent = count;
+    } else {
+        countEl.classList.add('hidden');
+    }
+}
+
+// Select All / Deselect All
+document.getElementById('selectAllBtn').addEventListener('click', function() {
+    document.querySelectorAll('.xodim-checkbox').forEach(cb => { cb.checked = true; });
+    updateSelectedCount();
+    updatePreview();
+});
+document.getElementById('deselectAllBtn').addEventListener('click', function() {
+    document.querySelectorAll('.xodim-checkbox').forEach(cb => { cb.checked = false; });
+    updateSelectedCount();
+    updatePreview();
+});
+
+// Har bir checkbox uchun event listener
+document.querySelectorAll('.xodim-checkbox').forEach(cb => {
+    cb.addEventListener('change', function() {
+        updateSelectedCount();
+        updatePreview();
+    });
+});
+
 // Previewni yangilash (reyting bilan)
 function updatePreview() {
     const previewCard = document.getElementById('previewCard');
@@ -474,26 +531,29 @@ function updatePreview() {
     const telegramPreview = document.getElementById('telegramPreview');
     const telegramMessagePreview = document.getElementById('telegramMessagePreview');
 
-    const xodimSelect = document.getElementById('xodimSelect');
-    const selectedOption = xodimSelect.options[xodimSelect.selectedIndex];
+    const selectedXodimlar = getSelectedXodimlar();
 
-    if (!selectedOption || !selectedOption.value) {
+    if (selectedXodimlar.length === 0) {
         previewCard.classList.add('hidden');
         reytingPreview.classList.add('hidden');
         telegramPreview.classList.add('hidden');
         return;
     }
 
-    // Xodimning hozirgi reytingini ko'rsatish
-    const currentReytingBall = selectedOption.dataset.reytingBall || '0';
-    const currentReytingPul = selectedOption.dataset.reytingPul || '0';
-    const currentBonusBall = selectedOption.dataset.bonusBall || '0';
-    const currentJarimaBall = selectedOption.dataset.jarimaBall || '0';
+    // Birinchi xodimning reytingini ko'rsatish (preview uchun)
+    const first = selectedXodimlar[0];
+    const currentReytingBall = first.reytingBall || '0';
+    const currentReytingPul = first.reytingPul || '0';
 
     document.getElementById('currentReytingBall').innerHTML = currentReytingBall + ' ball';
     document.getElementById('currentReytingPul').innerHTML = parseInt(currentReytingPul).toLocaleString() + ' so\'m';
-    document.getElementById('currentBonusBall').innerHTML = currentBonusBall;
-    document.getElementById('currentJarimaBall').innerHTML = currentJarimaBall;
+
+    // Bonus/Jarima ballni ham ko'rsatish
+    const bonusBallEl = document.getElementById('currentBonusBall');
+    const jarimaBallEl = document.getElementById('currentJarimaBall');
+    if (bonusBallEl) bonusBallEl.innerHTML = first.bonusBall || '0';
+    if (jarimaBallEl) jarimaBallEl.innerHTML = first.jarimaBall || '0';
+
     reytingPreview.classList.remove('hidden');
 
     let sababNomi = '', ball = '0', pul = '0', izoh;
@@ -534,8 +594,11 @@ function updatePreview() {
     document.getElementById('previewSabab').textContent = sababNomi || 'Sabab kiritilmagan';
 
     const previewTotal = document.getElementById('previewTotal');
-    if (soni > 1) {
-        previewTotal.textContent = `Jami: ${soni} x ${ball} ball = ${totalBall} ball | ${soni} x ${parseInt(pul).toLocaleString()} so'm = ${totalPul.toLocaleString()} so'm`;
+    if (soni > 1 || selectedXodimlar.length > 1) {
+        let text = '';
+        if (soni > 1) text += `${soni} x ${ball} ball = ${totalBall} ball | ${soni} x ${parseInt(pul).toLocaleString()} so'm = ${totalPul.toLocaleString()} so'm`;
+        if (selectedXodimlar.length > 1) text += (text ? ' | ' : '') + `${selectedXodimlar.length} ta xodimga bir xilda`;
+        previewTotal.textContent = text;
         previewTotal.classList.remove('hidden');
     } else {
         previewTotal.classList.add('hidden');
@@ -548,7 +611,9 @@ function updatePreview() {
     const newPul = parseFloat(currentReytingPul) - totalPul;
 
     // Telegram preview
-    const xodimNomi = `${selectedOption.dataset.ism} ${selectedOption.dataset.familya}`;
+    const xodimNomi = selectedXodimlar.length > 1
+        ? `${first.ism} ${first.familya} va ${selectedXodimlar.length - 1} nafar boshqa`
+        : `${first.ism} ${first.familya}`;
     const message = formatMessage(xodimNomi, sababNomi || 'Noma\'lum', totalBall, totalPul, izoh, currentReytingBall, currentReytingPul, newBall, newPul);
     telegramMessagePreview.textContent = message;
     telegramPreview.classList.remove('hidden');
@@ -592,7 +657,6 @@ document.getElementById('manualModeBtn').addEventListener('click', function() {
 });
 
 // Event listenerlar
-document.getElementById('xodimSelect').addEventListener('change', updatePreview);
 document.getElementById('sababSelect').addEventListener('change', updatePreview);
 document.getElementById('manualPul').addEventListener('input', updatePreview);
 document.getElementById('manualBall').addEventListener('input', updatePreview);

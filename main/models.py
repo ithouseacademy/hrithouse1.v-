@@ -557,3 +557,35 @@ class SiteSettings(models.Model):
     def get_instance(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+class AdminAnnouncement(models.Model):
+    """Adminlarga yangi funksiya/ma'lumot beriladigan e'lon"""
+    key = models.CharField(max_length=100, unique=True, verbose_name="Kalit (unik)")
+    title = models.CharField(max_length=200, verbose_name="Sarlavha")
+    text = models.TextField(verbose_name="Matn")
+    is_active = models.BooleanField(default=True, verbose_name="Faol")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Admin e'loni"
+        verbose_name_plural = "Admin e'lonlari"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class AdminAnnouncementRead(models.Model):
+    """Qaysi admin qaysi e'lonni 'tushundim' qilgani"""
+    user_id = models.PositiveIntegerField(verbose_name="Admin ID")
+    announcement = models.ForeignKey(AdminAnnouncement, on_delete=models.CASCADE, related_name='reads')
+    read_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "O'qilgan e'lon"
+        verbose_name_plural = "O'qilgan e'lonlar"
+        unique_together = ('user_id', 'announcement')
+
+    def __str__(self):
+        return f"Admin #{self.user_id} - {self.announcement.title}"

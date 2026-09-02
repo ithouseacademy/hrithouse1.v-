@@ -237,6 +237,39 @@
       </div>
       {% endif %}
 
+      {% if admin_announcements_bor and user.is_staff %}
+      {% for e in admin_announcements %}
+      <!-- E'lon MODAL (ekran o'rtasida) -->
+      <div class="announcement-modal fixed inset-0 z-[100] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.55);">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden announcement-panel">
+          <div class="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <i class="ri-sparkling-2-fill text-white text-xl"></i>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase tracking-wider text-blue-100 font-medium">Yangi yangilanish</p>
+              <h3 class="font-bold text-white flex items-center gap-1">
+                <i class="ri-star-fill text-yellow-400"></i> {{ e.title }}
+              </h3>
+            </div>
+          </div>
+          <div class="p-5">
+            <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{{ e.text }}</p>
+            <div class="mt-5">
+              <a href="{% url 'admin_announcement_mark_read' e.pk %}"
+                 class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors">
+                <i class="ri-check-double-line text-lg"></i> Tushundim
+              </a>
+              <p class="text-[10px] text-gray-400 text-center mt-2">
+                <i class="ri-information-line"></i> Tushundim tugmasini bossangiz keyingi safar ko'rinmaydi
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      {% endif %}
+
       {% block content %}{% endblock %}
     </main>
 
